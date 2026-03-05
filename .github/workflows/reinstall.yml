@@ -1,0 +1,23 @@
+# Manual workflow: reinstall extension and optionally smoke-test with serve-web.
+# Requires Cursor CLI on the runner (e.g. self-hosted runner with Cursor installed).
+# On GitHub-hosted runners, cursor is not installed — job will fail at install step.
+# Use for: local testing, self-hosted CI, or validating the reinstall script.
+name: Reinstall Extension
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reinstall:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Reinstall extension
+        run: npm run reinstall
+        env:
+          DRIVE_MCP_PORT: 7891

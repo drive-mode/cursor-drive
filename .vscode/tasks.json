@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "watch",
+      "type": "npm",
+      "script": "watch",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "source": "ts",
+        "applyTo": "allDocuments",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {"regexp": "Starting compilation in watch mode"},
+          "endsPattern": {"regexp": "Found 0 errors\\. Watching for file changes\\."}
+        }
+      },
+      "group": {"kind": "build", "isDefault": true}
+    },
+    {
+      "label": "compile",
+      "type": "npm",
+      "script": "compile",
+      "problemMatcher": "$tsc",
+      "group": "build"
+    },
+    {
+      "label": "package-extension",
+      "type": "shell",
+      "command": "npx vsce package --no-dependencies --out out/cursor-drive.vsix",
+      "dependsOn": "compile",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "install-extension",
+      "type": "shell",
+      "command": "cursor --install-extension out/cursor-drive.vsix",
+      "dependsOn": "package-extension",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "browser-dev-prep",
+      "type": "shell",
+      "command": "echo Prepared",
+      "dependsOn": "install-extension",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "test",
+      "type": "npm",
+      "script": "test",
+      "problemMatcher": [],
+      "group": "test"
+    }
+  ]
+}

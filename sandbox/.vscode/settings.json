@@ -1,0 +1,20 @@
+{
+  "cursorDrive.mcp.port": 7892,
+  "cursorDrive.defaultSubMode": "agent",
+  "cursorDrive.tts.enabled": true,
+  "cursorDrive.tts.speed": 1,
+  "cursorDrive.tts.maxSpokenSentences": 3,
+  "cursorDrive.tts.interruptOnInput": true,
+  "cursorDrive.voice.autoActivateMicOnToggle": true,
+  "cursorDrive.voice.showListeningFeedback": true,
+  "cursorDrive.voice.chatOpenCommand": "workbench.action.chat.open",
+  "cursorDrive.voice.micCommand": "workbench.action.chat.startVoiceChat",
+  "cursorDrive.wakeWord": "wake",
+  "cursorDrive.submitWord": "send it",
+  "cursorDrive.promptOptimizer.enabled": true,
+  "cursorDrive.promptOptimizer.autoApprove": true,
+  "cursorDrive.agentScreen.enabled": true,
+  "cursorDrive.agentScreen.autoOpen": true,
+  "cursorDrive.operators.maxConcurrent": 3,
+  "cursorDrive.operators.defaultPermissionPreset": "standard"
+}

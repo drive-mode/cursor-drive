@@ -1,0 +1,30 @@
+---
+description: Tiered model routing — assign every LLM operation to the cheapest capable tier
+alwaysApply: true
+---
+
+# Tiered Model Routing
+
+Before making any LLM call, assign it to the correct tier:
+
+| Tier | Model class | When to use |
+|------|------------|-------------|
+| **0** | None (code only) | Decision is fully deterministic: regex, YAML, hash, arithmetic |
+| **1** | Cheapest (Haiku/flash/mini) | Small input, short structured output: classification, extraction, yes/no |
+| **2** | User's model | Main implementation work: code gen, plan writing, multi-file edits |
+| **3** | Reasoning (Opus/o1) | Complex semantic analysis — **only on explicit user request** |
+
+## Rules
+
+1. **Never auto-escalate.** If Tier 1 returns `confidence: "low"`, surface a hint and stop. Do not call Tier 3 automatically.
+2. **Minimise context at every tier.** Tier 1 gets a diff or snapshot — never full file contents. Tier 3 uses dynamic context discovery (ask Tier 1 which files to load first).
+3. **Generated artifacts are not agent context.** `plan-master.diagram.md`, `registry.yaml`, `plan-graph.yaml` are for humans and scripts. Never load them into a prompt as a matter of routine.
+4. **Tier 0 is the default.** If a decision can be made without a model, it must be.
+
+## In this codebase
+
+- `src/modelSelector.ts` — TypeScript tier selection (`routing` | `planning` | `execution` | `reasoning`)
+- `.cursor/hooks/dep-auditor.py` — Tier 1 dep triage (Haiku, falls back to Tier 0 rule-based)
+- `.cursor/hooks/plan-runner.py` — Tier 0 plan governance
+
+See `docs/architecture/adr/ADR-0010-tiered-model-routing.md` for the full decision record.

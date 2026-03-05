@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "python .cursor/hooks/drive-preprocessor.py beforeSubmitPrompt"
+      },
+      {
+        "command": "python .cursor/hooks/plan-runner.py beforeSubmitPrompt"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "python .cursor/hooks/plan-runner.py sessionStart"
+      }
+    ],
+    "stop": [
+      {
+        "command": "python .cursor/hooks/plan-runner.py stop"
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "python .cursor/hooks/plan-runner.py subagentStop"
+      }
+    ]
+  }
+}

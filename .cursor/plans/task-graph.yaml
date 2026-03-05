@@ -1,0 +1,195 @@
+version: 1
+description: >
+  Task-level dependency graph for Cursor Drive. Aggregates every TODO from every
+  plan, recording inter-plan ordering relationships and per-task status.
+  Managed by plan-governor agent. Regenerate with:
+    python .cursor/hooks/plan-runner.py sync-registry
+last_synced: "2026-02-25T14:00:00Z"
+total_plans: 11
+total_todos: 97
+completed_todos: 97
+
+# ── Dependency order ──────────────────────────────────────────────────────────
+# Phase 1 (parallel): architecture-vision-foundation, cursor-docs-cleanup,
+#                     browser-dev-workflow, terminology-sas-overhaul
+# Phase 2 (parallel): hook-prompt-pipeline, native-mode-alignment,
+#                     senior-engineer-ux, agent-orchestration-frameworks
+# Phase 3:            pipeline-wiring-mvp
+# Phase 4:            quality-performance
+# Active:             openclaw_capability_scrape_8fa228d1
+
+plans:
+
+  - planId: architecture-vision-foundation
+    name: Architecture & Vision Foundation
+    phase: 1
+    state: completed
+    dependsOn: []
+    todos:
+      - {id: avf-01-adr-mode-wrapper,       status: completed, summary: Write ADR-0008 drive-mode-wrapper-architecture.md}
+      - {id: avf-02-adr-hook-ingress,        status: completed, summary: Write ADR-0009 hook-based-prompt-interception.md}
+      - {id: avf-03-adr-native-mode-compat,  status: completed, summary: Write ADR-0011 native-mode-compatibility.md}
+      - {id: avf-04-adr-voice-integration,   status: completed, summary: Write ADR-0012 voice-input-integration.md}
+      - {id: avf-05-adr-mode-state,          status: completed, summary: Write ADR-0013 mode-state-management.md}
+      - {id: avf-06-fix-adr-numbering,       status: completed, summary: Rename ADR-0001 to ADR-0007}
+      - {id: avf-07-update-adr-0001,         status: completed, summary: Update ADR-0001 with @drive removal rationale}
+      - {id: avf-08-vision-invariants-rule,  status: completed, summary: Create vision-invariants.mdc rule}
+      - {id: avf-09-adr-agent-orchestration, status: completed, summary: Write ADR-0014 agent-orchestration-strategy.md}
+
+  - planId: cursor-docs-cleanup
+    name: .cursor Cleanup & Docs Alignment
+    phase: 1
+    state: completed
+    dependsOn: [architecture-vision-foundation]
+    todos:
+      - {id: cdc-01-remove-dead-rules,       status: completed, summary: Delete brief-context.mdc and refactor-file-migration.mdc}
+      - {id: cdc-02-plan-governance-rule,    status: completed, summary: Create plan-governance.mdc consolidating four rules}
+      - {id: cdc-03-arch-rule-fix,           status: completed, summary: Update architecture-before-coding.mdc to glob trigger}
+      - {id: cdc-04-remove-dead-commands,    status: completed, summary: Delete brainstorm.md execute-plan.md write-plan.md}
+      - {id: cdc-05-hook-cleanup,            status: completed, summary: Remove doc-reminder.py from hooks}
+      - {id: cdc-06-remove-stale-artifacts,  status: completed, summary: Delete .plan-state-snapshot.json and mcp-env script}
+      - {id: cdc-07-rewrite-handoff,         status: completed, summary: Rewrite cursor-drive-handoff.md for mode-wrapper}
+      - {id: cdc-08-simplify-plan-audit-deps, status: completed, summary: Simplify plan-audit-deps.md}
+      - {id: cdc-09-skill-updates,           status: completed, summary: Trim SKILL files; delete plan-orchestration-spec}
+      - {id: cdc-10-archive-completed-plans, status: completed, summary: Move completed plans to archive}
+      - {id: cdc-11-update-arch-docs,        status: completed, summary: Remove @drive references from architecture docs}
+      - {id: cdc-12-update-walkthrough-journey, status: completed, summary: Update walkthrough and user journey docs}
+      - {id: cdc-13-update-prds,             status: completed, summary: Update PRDs for mode-wrapper model}
+      - {id: cdc-14-update-naming-design,    status: completed, summary: Update naming and UX design docs}
+      - {id: cdc-15-resync-plan-infra,       status: completed, summary: Re-sync plan-graph.yaml and registry.yaml}
+
+  - planId: browser-dev-workflow
+    name: Browser Dev Workflow
+    phase: 1
+    state: completed
+    dependsOn: []
+    todos:
+      - {id: bdw-01-serve-web-research, status: completed, summary: Research --extensionDevelopmentPath with cursor serve-web}
+      - {id: bdw-02-launch-config,      status: completed, summary: Add Dev Drive in browser launch configuration}
+      - {id: bdw-03-dev-script,         status: completed, summary: Create serve-web-dev.ps1 script}
+      - {id: bdw-04-live-testing-docs,  status: completed, summary: Add browser-based testing to live-testing.md}
+      - {id: bdw-05-playwright-setup,   status: completed, summary: Set up Playwright for browser testing}
+      - {id: bdw-06-visual-regression,  status: completed, summary: Add visual regression tests for AgentScreen}
+      - {id: bdw-07-mcp-coordination,   status: completed, summary: Document MCP server coordination with serve-web}
+      - {id: bdw-08-browser-test-script, status: completed, summary: Create test-browser.ps1 script}
+
+  - planId: terminology-sas-overhaul
+    name: Terminology and S-AS Overhaul
+    phase: 1
+    state: completed
+    dependsOn: []
+    todos:
+      - {id: tso-01-adr-terminology,      status: completed, summary: Write ADR-0016 drive-terminology-and-hierarchy.md}
+      - {id: tso-02-config-schema,         status: completed, summary: Update package.json config schema for operators}
+      - {id: tso-03-commands-update,       status: completed, summary: Update commands and keybindings for operators}
+      - {id: tso-04-src-registry-rename,   status: completed, summary: Rename agentRegistry.ts to operatorRegistry.ts}
+      - {id: tso-05-src-agentscreen-rename, status: completed, summary: Rename shareScreen.ts to agentScreen.ts}
+      - {id: tso-06-extension-ui-strings,  status: completed, summary: Update extension.ts UI strings for operators}
+      - {id: tso-07-mcp-tools-migration,   status: completed, summary: Update MCP tools with backward-compatible aliases}
+      - {id: tso-08-sas-enhanced-clicks,   status: completed, summary: Enhance agentScreen.ts click interactivity}
+      - {id: tso-09-sas-plan-progress,     status: completed, summary: Add plan progress overlay to agentScreen}
+      - {id: tso-10-sas-display-modes,     status: completed, summary: Implement agentScreen.displayMode config}
+      - {id: tso-11-docs-terminology-update, status: completed, summary: Update docs to use operator terminology}
+      - {id: tso-12-cursor-skills-commands-update, status: completed, summary: Update .cursor skills and commands}
+
+  - planId: hook-prompt-pipeline
+    name: Hook-Based Prompt Pipeline
+    phase: 2
+    state: completed
+    dependsOn: [architecture-vision-foundation]
+    todos:
+      - {id: hpp-01-hook-contract,          status: completed, summary: Research and document beforeSubmitPrompt hook contract}
+      - {id: hpp-02-pipeline-design,        status: completed, summary: Write prompt-pipeline-design.md 8 stages}
+      - {id: hpp-03-extension-orchestration, status: completed, summary: Implement pipeline orchestration in extension}
+      - {id: hpp-04-drive-active-gate,      status: completed, summary: Add Drive-active check as first gate}
+      - {id: hpp-05-hook-extension-boundary, status: completed, summary: Document hook/extension boundary}
+      - {id: hpp-06-pipeline-tests,         status: completed, summary: Add pipeline.test.ts with 5 test cases}
+
+  - planId: native-mode-alignment
+    name: Native Mode Alignment
+    phase: 2
+    state: completed
+    dependsOn: [architecture-vision-foundation]
+    todos:
+      - {id: nma-01-route-mode-refactor, status: completed, summary: Refactor router.ts RouteMode to Cursor-native modes}
+      - {id: nma-02-submode-mapping,     status: completed, summary: Update driveMode.ts SubMode to plan/agent/ask/debug/off}
+      - {id: nma-03-quickpick-debug,     status: completed, summary: Add debug to setSubMode QuickPick}
+      - {id: nma-04-mcp-tool-update,     status: completed, summary: Update drive_set_mode MCP tool}
+      - {id: nma-05-statusbar-mode-reflect, status: completed, summary: Update statusBar to display new mode names}
+      - {id: nma-06-router-tests,        status: completed, summary: Update router tests for new mode enum}
+
+  - planId: senior-engineer-ux
+    name: Senior Engineer UX Philosophy
+    phase: 2
+    state: completed
+    dependsOn: [architecture-vision-foundation]
+    todos:
+      - {id: seu-01-philosophy-doc,    status: completed, summary: Write senior-engineer-pair-programming.md}
+      - {id: seu-02-steering-behavior, status: completed, summary: Expand drive-persona SKILL steering section}
+      - {id: seu-03-pairing-rhythm,    status: completed, summary: Document pair-programming rhythm in SKILL}
+      - {id: seu-04-teaching-moments,  status: completed, summary: Add teaching moments guidance to SKILL}
+      - {id: seu-05-proactive-behavior, status: completed, summary: Expand proactive behavior model}
+      - {id: seu-06-response-examples, status: completed, summary: Add response examples to SKILL}
+      - {id: seu-07-ux-adr,            status: completed, summary: Write ADR-0015 senior-engineer-interaction-model}
+
+  - planId: agent-orchestration-frameworks
+    name: Agent Orchestration Frameworks
+    phase: 2
+    state: completed
+    dependsOn: [architecture-vision-foundation]
+    todos:
+      - {id: aof-01-adr-orchestration,  status: completed, summary: Write ADR-0014 agent-orchestration-strategy}
+      - {id: aof-02-a2a-research,       status: completed, summary: Research and document A2A spec v0.1.0}
+      - {id: aof-03-comms-agent-rescue, status: completed, summary: Move CommsAgent from tests to src}
+      - {id: aof-04-agent-event-bus,    status: completed, summary: Add EventEmitter to OperatorRegistry}
+      - {id: aof-05-a2a-agent-card,     status: completed, summary: Implement A2A Agent Card endpoint at /.well-known/agent.json}
+      - {id: aof-06-a2a-task-endpoints, status: completed, summary: Implement A2A Task CRUD POST /tasks endpoints}
+      - {id: aof-07-claude-code-bridge, status: completed, summary: Prototype Claude Code Agent Teams MCP bridge}
+      - {id: aof-08-registry-v2-design, status: completed, summary: Design AgentRegistry v2 architecture doc}
+      - {id: aof-09-mcp-agent-tools,    status: completed, summary: Add operator_update_memory operator_delegate MCP tools}
+      - {id: aof-10-strands-eval,       status: completed, summary: Evaluate AWS Strands Agents TypeScript SDK}
+      - {id: aof-11-openclaw-research,  status: completed, summary: Document OpenClaw integration assessment}
+
+  - planId: pipeline-wiring-mvp
+    name: Pipeline Wiring & MVP Features
+    phase: 3
+    state: completed
+    dependsOn: [hook-prompt-pipeline, native-mode-alignment]
+    todos:
+      - {id: pwm-01-wire-filler-sanitizer,  status: completed, summary: Wire fillerCleaner glossaryExpander sanitizer into pipeline}
+      - {id: pwm-02-wire-approval-gates,    status: completed, summary: Wire approvalGates.checkPrompt as pre-routing gate}
+      - {id: pwm-03-wire-router-modelselector, status: completed, summary: Wire router and modelSelector into pipeline output}
+      - {id: pwm-04-wire-session-memory,    status: completed, summary: Wire sessionMemory.buildContextString into pipeline}
+      - {id: pwm-05-prompt-optimizer,       status: completed, summary: Implement src/promptOptimizer.ts}
+      - {id: pwm-06-wake-submit-words,      status: completed, summary: Implement wake word and submit word activation}
+      - {id: pwm-07-tangent-wiring,         status: completed, summary: Detect tangent keyword and spawn operator}
+      - {id: pwm-08-registration-fixes,     status: completed, summary: Fix installPluginToWorkspace and statusBar wiring}
+
+  - planId: quality-performance
+    name: Quality & Performance
+    phase: 4
+    state: completed
+    dependsOn: [pipeline-wiring-mvp]
+    todos:
+      - {id: qp-01-activation-fix,         status: completed, summary: Complete extension activation fix with Output Channel}
+      - {id: qp-02-tests-core,             status: completed, summary: Add tests for extension driveMode statusBar operatorRegistry}
+      - {id: qp-03-tests-mcp-pipeline,     status: completed, summary: Add tests for MCP server and pipeline orchestration}
+      - {id: qp-04-tests-pipeline-modules, status: completed, summary: Verify tests for all pipeline modules}
+      - {id: qp-05-model-utils,            status: completed, summary: Extract shared LM selection logic to src/modelUtils.ts}
+      - {id: qp-06-config-regex-caching,   status: completed, summary: Cache config reads and precompile regexes}
+      - {id: qp-07-registry-map-bounds,    status: completed, summary: Refactor OperatorRegistry to Map; cap queues}
+
+  - planId: openclaw_capability_scrape_8fa228d1
+    name: OpenClaw Capability Scrape
+    phase: active
+    state: completed
+    dependsOn: []
+    todos:
+      - {id: depth-tool-policy,         status: completed, summary: Per-operator tool policy with depth restriction}
+      - {id: operator-memory-isolation, status: completed, summary: Per-operator memory isolation in sessionMemory}
+      - {id: session-compaction,        status: completed, summary: Session compaction with pre-compaction flush}
+      - {id: pipeline-checkpoints,      status: completed, summary: Pipeline approval checkpoints for pause/resume}
+      - {id: layered-policy-cascade,    status: completed, summary: Layered tool policy cascade in toolAllowlist}
+      - {id: subagent-context-reduction, status: completed, summary: Sub-agent context reduction in drive-persona SKILL}
+      - {id: skill-gating,              status: completed, summary: Skill gating with requires section in SKILL.md}
+      - {id: persistent-memory,         status: completed, summary: Persistent Markdown memory module (src/persistentMemory.ts)}

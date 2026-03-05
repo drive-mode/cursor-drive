@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; style-src {{CSP_SOURCE}} 'nonce-{{CSP_NONCE}}'; script-src {{CSP_SOURCE}} 'nonce-{{CSP_NONCE}}';">
+  <title>Drive</title>
+  <style nonce="{{CSP_NONCE}}">
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--vscode-font-family), system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--vscode-editor-foreground);
+      background: var(--vscode-sideBar-background);
+      margin: 0;
+      padding: 16px;
+      min-height: 100%;
+    }
+
+    .card {
+      background: var(--vscode-editor-background);
+      border: 1px solid var(--vscode-widget-border, transparent);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card.drive-on {
+      border-color: var(--vscode-testing-iconPassed, #4ec9b0);
+      box-shadow: 0 0 0 1px rgba(78, 201, 176, 0.15);
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 10px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .status-dot.on {
+      background: var(--vscode-testing-iconPassed, #4ec9b0);
+      box-shadow: 0 0 8px rgba(78, 201, 176, 0.4);
+    }
+
+    .status-dot.off {
+      background: var(--vscode-descriptionForeground);
+      opacity: 0.6;
+    }
+
+    .toggle-switch {
+      width: 40px;
+      height: 22px;
+      border-radius: 11px;
+      background: var(--vscode-widget-border);
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-switch.on {
+      background: var(--vscode-testing-iconPassed, #4ec9b0);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-switch.on::after {
+      transform: translateX(18px);
+    }
+
+    .mode-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--vscode-badge-background);
+      color: var(--vscode-badge-foreground);
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+    }
+
+    .btn-primary:hover {
+      background: var(--vscode-button-hoverBackground);
+    }
+
+    .btn-secondary {
+      background: var(--vscode-list-hoverBackground, transparent);
+      color: var(--vscode-foreground);
+    }
+
+    .btn-secondary:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .operator-item {
+      padding: 8px 0;
+      font-size: 12px;
+      border-bottom: 1px solid var(--vscode-widget-border);
+      transition: background 0.1s ease;
+    }
+
+    .operator-item:hover {
+      background: var(--vscode-list-hoverBackground, transparent);
+    }
+
+    .operator-item:last-child {
+      border-bottom: none;
+    }
+
+    .operator-name {
+      font-weight: 600;
+    }
+
+    .operator-task {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .empty-ops {
+      font-style: italic;
+      color: var(--vscode-descriptionForeground);
+      font-size: 12px;
+      padding: 8px 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--vscode-widget-border);
+    }
+
+    .panel-header h2 {
+      font-size: 12px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .btn-icon {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--vscode-icon-foreground);
+    }
+
+    .btn-icon:hover {
+      background: var(--vscode-toolbar-hoverBackground);
+      color: var(--vscode-foreground);
+    }
+
+    .settings-panel {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .settings-panel.visible {
+      display: block;
+    }
+
+    .settings-row {
+      margin-bottom: 10px;
+    }
+
+    .settings-row label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--vscode-descriptionForeground);
+      margin-bottom: 3px;
+    }
+
+    .settings-row input[type="text"],
+    .settings-row input[type="number"] {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 12px;
+      border: 1px solid var(--vscode-input-border);
+      background: var(--vscode-input-background);
+      color: var(--vscode-input-foreground);
+      border-radius: 4px;
+    }
+
+    .settings-row input:focus {
+      outline: 1px solid var(--vscode-focusBorder);
+    }
+
+    .settings-row .hint {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 2px;
+    }
+
+    .settings-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .settings-actions .btn {
+      flex: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="panel-header">
+    <h2>Drive</h2>
+    <button class="btn-icon" id="btn-settings" data-testid="btn-settings" aria-label="Drive settings"
+      title="Drive settings">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path
+          d="M14.5 9.5v-3l-1.5.5a5.5 5.5 0 0 0-.5-1.2l1.4-1.4-2.1-2.1-1.4 1.4c-.3-.2-.8-.4-1.2-.5L9.5 1.5h-3l.5 1.5a5.5 5.5 0 0 0-1.2.5L4.4 2.1 2.3 4.2l1.4 1.4c-.2.3-.4.8-.5 1.2L1.5 6.5v3l1.5-.5c.1.4.3.9.5 1.2l-1.4 1.4 2.1 2.1 1.4-1.4c.3.2.8.4 1.2.5l-.5 1.5h3l-.5-1.5c.4-.1.9-.3 1.2-.5l1.4 1.4 2.1-2.1-1.4-1.4c.2-.3.4-.8.5-1.2l1.5.5zm-6.5 3a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="card" id="status-card">
+    <div class="status-row">
+      <div class="status-label">
+        <span class="status-dot off" id="status-dot" aria-hidden="true"></span>
+        <span id="status-text">Off</span>
+      </div>
+      <button class="toggle-switch off" id="toggle-switch" data-testid="btn-toggle" role="switch" aria-checked="false"
+        aria-label="Toggle Drive mode"></button>
+    </div>
+    <div id="mode-text"></div>
+    <div id="mic-status" class="mic-status"
+      style="display:none; font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 4px;">
+      <span aria-hidden="true">🎤</span> Mic on — say wake word to start
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-voice" data-testid="btn-voice">Open Chat & Start Voice</button>
+      <button class="btn btn-secondary" id="btn-set-mode" data-testid="btn-set-mode">Change Mode</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">Operators</div>
+    <div id="operators-list"></div>
+    <div class="actions" style="margin-top: 8px;">
+      <button class="btn btn-secondary" id="btn-operators" data-testid="btn-operators">Manage</button>
+      <button class="btn btn-secondary" id="btn-spawn" data-testid="btn-spawn">Spawn Operator</button>
+    </div>
+  </div>
+  <div class="card">
+    <button class="btn btn-secondary" id="btn-agent-screen" data-testid="btn-agent-screen" style="width:100%">Show Agent
+      Screen</button>
+  </div>
+
+  <div class="card settings-panel" id="settings-panel">
+    <div class="section-title">Quick Settings</div>
+    <div class="settings-row">
+      <label for="input-wakeWord">Wake word(s)</label>
+      <input type="text" id="input-wakeWord" placeholder="hey drive, wake" data-key="wakeWord" />
+      <span class="hint">Comma-separated. Say to activate Drive.</span>
+    </div>
+    <div class="settings-row">
+      <label for="input-submitWord">Submit word(s)</label>
+      <input type="text" id="input-submitWord" placeholder="send it, go" data-key="submitWord" />
+      <span class="hint">Comma-separated. Say to send the prompt.</span>
+    </div>
+    <div class="settings-row">
+      <label for="input-tangentKeyword">Tangent keyword</label>
+      <input type="text" id="input-tangentKeyword" placeholder="tangent" data-key="agents.tangentKeyword" />
+      <span class="hint">Say to spawn a new operator.</span>
+    </div>
+    <div class="settings-row">
+      <label for="input-namePool">Agent names</label>
+      <input type="text" id="input-namePool" placeholder="Alpha, Beta, Gamma" data-key="operators.namePool" />
+      <span class="hint">Comma-separated. Used when spawning operators.</span>
+    </div>
+    <div class="settings-row">
+      <label><input type="checkbox" id="input-autoMic" data-key="voice.autoActivateMicOnToggle" /> Auto mic when Drive
+        on</label>
+    </div>
+    <div class="settings-actions">
+      <button class="btn btn-secondary" id="btn-open-full-settings">Open full settings</button>
+    </div>
+  </div>
+
+  <script nonce="{{CSP_NONCE}}">
+    function render(state) {
+      const card = document.getElementById('status-card');
+      const dot = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      const mode = document.getElementById('mode-text');
+      const toggle = document.getElementById('toggle-switch');
+      const voiceBtn = document.getElementById('btn-voice');
+      const opsList = document.getElementById('operators-list');
+      if (card) card.className = 'card' + (state.active ? ' drive-on' : '');
+      if (dot) dot.className = 'status-dot ' + (state.active ? 'on' : 'off');
+      if (text) text.textContent = state.active ? 'On' : 'Off';
+      if (toggle) {
+        toggle.className = 'toggle-switch ' + (state.active ? 'on' : 'off');
+        toggle.setAttribute('aria-checked', state.active ? 'true' : 'false');
+      }
+      if (mode) {
+        mode.innerHTML = state.active ? '<span class="mode-badge">' + escapeHtml(state.subMode) + '</span>' : '';
+      }
+      var micStatus = document.getElementById('mic-status');
+      if (micStatus) micStatus.style.display = state.active ? 'block' : 'none';
+      if (voiceBtn) voiceBtn.textContent = state.active ? 'Open Chat & Start Voice' : 'Open Chat & Start Voice';
+      if (opsList) {
+        if (state.operators.length === 0) {
+          opsList.innerHTML = '<div class="empty-ops">No active operators</div>';
+        } else {
+          opsList.innerHTML = state.operators.map(function (o) {
+            return '<div class="operator-item"><span class="operator-name">' + escapeHtml(o.name) + '</span>' +
+              (o.task ? '<div class="operator-task">' + escapeHtml(o.task) + '</div>' : '') + '</div>';
+          }).join('');
+        }
+      }
+      var c = state.config;
+      if (c) {
+        var w = document.getElementById('input-wakeWord');
+        var s = document.getElementById('input-submitWord');
+        var t = document.getElementById('input-tangentKeyword');
+        var n = document.getElementById('input-namePool');
+        var m = document.getElementById('input-autoMic');
+        if (w) w.value = c.wakeWord || '';
+        if (s) s.value = c.submitWord || '';
+        if (t) t.value = c.tangentKeyword || '';
+        if (n) n.value = c.namePool || '';
+        if (m) m.checked = !!c.autoActivateMicOnToggle;
+      }
+    }
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    window.addEventListener('message', function (e) {
+      const msg = e.data;
+      if (msg && msg.type === 'state' && msg.state) render(msg.state);
+    });
+    const vscodeApi = acquireVsCodeApi();
+    document.getElementById('toggle-switch').onclick = function () { vscodeApi.postMessage({ type: 'toggle' }); };
+    document.getElementById('btn-set-mode').onclick = function () { vscodeApi.postMessage({ type: 'setMode' }); };
+    document.getElementById('btn-voice').onclick = function () { vscodeApi.postMessage({ type: 'activateVoice' }); };
+    document.getElementById('btn-operators').onclick = function () { vscodeApi.postMessage({ type: 'operators' }); };
+    document.getElementById('btn-spawn').onclick = function () { vscodeApi.postMessage({ type: 'spawnOperator' }); };
+    document.getElementById('btn-agent-screen').onclick = function () { vscodeApi.postMessage({ type: 'showAgentScreen' }); };
+    document.getElementById('btn-open-full-settings').onclick = function () { vscodeApi.postMessage({ type: 'openSettings' }); };
+
+    document.getElementById('btn-settings').onclick = function () {
+      var panel = document.getElementById('settings-panel');
+      panel.classList.toggle('visible');
+    };
+
+    function saveConfig(input) {
+      var key = input.dataset.key;
+      var value = input.type === 'checkbox' ? input.checked : input.value;
+      vscodeApi.postMessage({ type: 'updateConfig', key: key, value: value });
+    }
+    ['input-wakeWord', 'input-submitWord', 'input-tangentKeyword', 'input-namePool'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('blur', function () { saveConfig(el); });
+    });
+    var autoMic = document.getElementById('input-autoMic');
+    if (autoMic) autoMic.addEventListener('change', function () { saveConfig(autoMic); });
+  </script>
+</body>
+
+</html>

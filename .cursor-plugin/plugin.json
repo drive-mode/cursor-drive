@@ -1,0 +1,26 @@
+{
+  "name": "cursor-drive",
+  "displayName": "Cursor Drive",
+  "version": "0.3.1",
+  "description": "AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen. Senior engineer on call — faster.",
+  "author": {
+    "name": "Drive Mode"
+  },
+  "homepage": "https://github.com/drive-mode/cursor-drive#readme",
+  "repository": "https://github.com/drive-mode/cursor-drive",
+  "license": "UNLICENSED",
+  "keywords": [
+    "drive",
+    "pair-programming",
+    "voice",
+    "multi-agent",
+    "tts",
+    "share-screen"
+  ],
+  "logo": "assets/logo.svg",
+  "agents": "agents/",
+  "skills": "skills/",
+  "rules": "rules/",
+  "commands": "commands/",
+  "hooks": "hooks/hooks.json"
+}

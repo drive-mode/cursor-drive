@@ -1,0 +1,27 @@
+---
+description: Operator hierarchy and permission rules
+alwaysApply: true
+---
+
+# Operator Hierarchy and Permissions
+
+## Depth and parent rules
+
+- Operators spawned by other operators default to **readonly** preset.
+- Children cannot exceed parent preset — cascade applies at spawn time.
+- Cascade dismiss: when an operator is dismissed, all its children are also dismissed.
+- Use `checkPermissionForOperator()` for operator-aware permission checks (not name-based `checkPermission()`).
+
+## Permission presets
+
+| Preset | Capabilities |
+|--------|--------------|
+| readonly | fileRead, gitRead, modelCall |
+| standard | + fileWrite, terminalExecute, gitWrite |
+| full | + webSearch |
+
+## Implementation
+
+- `operatorRegistry.spawn()` accepts `parentId` and `preset`; child preset is capped by parent.
+- `toolAllowlist.checkPermissionForOperator(op, capability)` uses effective preset (registry + config overrides).
+- Config overrides (`cursorDrive.agents.permissions.overrides`) can only restrict, never grant beyond registry preset.

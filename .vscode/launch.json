@@ -1,0 +1,58 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dev: Drive in sandbox",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "${workspaceFolder}/sandbox",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extension=anysphere.cursor-socket",
+        "--disable-extension=anysphere.cursor-resolver-helper"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "sourceMaps": true,
+      "preLaunchTask": "watch",
+      "presentation": {
+        "group": "Drive Dev",
+        "order": 1
+      }
+    },
+    {
+      "name": "Dev: Drive in repo root",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "${workspaceFolder}",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extension=anysphere.cursor-socket",
+        "--disable-extension=anysphere.cursor-resolver-helper"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "sourceMaps": true,
+      "preLaunchTask": "watch",
+      "presentation": {
+        "group": "Drive Dev",
+        "order": 2
+      }
+    },
+    {
+      "name": "Dev: Drive in browser",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/launch-serve-web.mjs",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "browser-dev-prep",
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "Drive Dev",
+        "order": 3
+      }
+    }
+  ]
+}

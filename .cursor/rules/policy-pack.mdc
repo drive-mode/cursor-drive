@@ -1,0 +1,30 @@
+---
+description: Policy pack - privacy defaults, approval gates, testing, minimal-diff
+alwaysApply: true
+---
+
+# Policy Pack (F1)
+
+## Privacy Defaults
+
+- Strict mode is default: no raw audio retention, no transcript persistence.
+- Never log or persist user transcripts or audio payloads unless debug mode is explicitly enabled.
+- Redact secrets in all log output; omit sensitive values when logging config.
+
+## Approval Gates
+
+- High-impact actions (pr_create, code_change) require explicit approval gates.
+- Do not bypass policy checks; denied actions must block with actionable reasons.
+- Use the approval gates module (`approvalGates`) for high-impact action checks.
+
+## Testing Expectations
+
+- Every new module must have corresponding tests.
+- Tests must cover success, timeout, cancel, and transient failure paths where applicable.
+- Run `npm test` before committing; all tests must pass.
+
+## Minimal-Diff Discipline
+
+- Prefer smallest safe change; avoid unnecessary churn.
+- Preserve architectural boundaries; do not cross module boundaries without explicit contracts.
+- When adding features, follow existing patterns in the codebase.

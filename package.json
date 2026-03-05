@@ -1,0 +1,542 @@
+{
+  "name": "cursor-drive",
+  "publisher": "drive-mode",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drive-mode/cursor-drive"
+  },
+  "displayName": "Cursor Drive",
+  "description": "Your AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen. Integrates via Cursor Plugin + MCP server.",
+  "version": "0.3.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cursorDrive.toggle",
+        "title": "Toggle Drive Mode",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.setSubMode",
+        "title": "Set Drive Mode",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.exit",
+        "title": "Exit Drive Mode",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.showAgentScreen",
+        "title": "Show Agent Screen",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.clearAgentScreen",
+        "title": "Clear Agent Screen",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.speak",
+        "title": "Test TTS Speak",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.stopSpeaking",
+        "title": "Stop Speaking",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.operators",
+        "title": "Manage Operators",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.spawnOperator",
+        "title": "Spawn New Operator",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.diagnose",
+        "title": "Diagnose Drive APIs",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.installPluginToWorkspace",
+        "title": "Install Drive Plugin to Workspace",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.discoverAPIs",
+        "title": "Discover Available APIs",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.discoverAllCommands",
+        "title": "Discover All Cursor Commands (full list by prefix)",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.discoverVoiceCommands",
+        "title": "Discover Voice Commands (chat + mic)",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.activateVoiceInput",
+        "title": "Activate Voice Input (open chat + mic)",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.stopVoice",
+        "title": "Stop Voice Input",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.focusAgentView",
+        "title": "Focus Agent View (open Agents panel + layout)",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.reloadMcp",
+        "title": "Reload MCP Client",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.openWebviewDevTools",
+        "title": "Open AgentScreen Developer Tools",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.injectFilesToComposer",
+        "title": "Inject Active File into Composer",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.confirmTangent",
+        "title": "Confirm Tangent Agent",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.focusDrivePanel",
+        "title": "Focus Drive Panel",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.setApiKey",
+        "title": "Set Cursor API Key (Cloud Agents)",
+        "category": "Drive"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "cursorDrive.toggle",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d",
+        "when": "editorTextFocus || terminalFocus"
+      },
+      {
+        "command": "cursorDrive.showAgentScreen",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "editorTextFocus || terminalFocus"
+      },
+      {
+        "command": "cursorDrive.activateVoiceInput",
+        "key": "ctrl+shift+m",
+        "mac": "cmd+shift+m"
+      },
+      {
+        "command": "cursorDrive.focusAgentView",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      },
+      {
+        "command": "cursorDrive.confirmTangent",
+        "key": "ctrl+shift+y",
+        "mac": "cmd+shift+y"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cursorDrive",
+          "title": "Drive",
+          "icon": "assets/logo.svg"
+        }
+      ]
+    },
+    "views": {
+      "cursorDrive": [
+        {
+          "id": "cursorDrive.panel",
+          "name": "Drive",
+          "type": "webview"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Cursor Drive",
+      "properties": {
+        "cursorDrive.defaultSubMode": {
+          "type": "string",
+          "enum": [
+            "plan",
+            "agent",
+            "ask",
+            "debug"
+          ],
+          "enumDescriptions": [
+            "Clarify goals and generate a plan artifact before execution",
+            "Execute autonomously — propose code changes and commands",
+            "Read-only exploration — no file changes",
+            "Diagnose issues with evidence-first debugging steps"
+          ],
+          "default": "agent",
+          "description": "Default sub-mode applied when drive mode activates"
+        },
+        "cursorDrive.tts.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable text-to-speech responses. Drive will speak agent responses aloud."
+        },
+        "cursorDrive.tts.voice": {
+          "type": "string",
+          "default": "",
+          "description": "Voice name to use for TTS. Leave blank for system default. For Windows: e.g. 'Microsoft David Desktop'. For macOS: e.g. 'Alex'."
+        },
+        "cursorDrive.tts.speed": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.5,
+          "maximum": 2,
+          "description": "Speech rate multiplier. 1.0 is normal speed."
+        },
+        "cursorDrive.tts.maxSpokenSentences": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum sentences spoken per response. Remainder is still shown in chat."
+        },
+        "cursorDrive.tts.interruptOnInput": {
+          "type": "boolean",
+          "default": true,
+          "description": "Stop speaking immediately when the user sends a new message."
+        },
+        "cursorDrive.operators.maxConcurrent": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Max simultaneous Drive operators. Each operator is a senior autonomous worker that can spawn its own subagents."
+        },
+        "cursorDrive.operators.maxSubAgentsPerOperator": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 16,
+          "description": "Max Cursor Task-tool subagents each operator can spawn concurrently."
+        },
+        "cursorDrive.operators.defaultPermissionPreset": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "readonly",
+            "full"
+          ],
+          "enumDescriptions": [
+            "Standard tool permissions",
+            "Read-only access only",
+            "Full access to all tools"
+          ],
+          "default": "standard",
+          "description": "Default permission preset for new operators."
+        },
+        "cursorDrive.operators.namePool": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Alpha",
+            "Beta",
+            "Gamma",
+            "Delta",
+            "Epsilon",
+            "Zeta",
+            "Eta",
+            "Theta"
+          ],
+          "description": "Names assigned to operators when spawned (first available used)."
+        },
+        "cursorDrive.agentScreen.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the Agent Screen (S-AS) panel that shows operator activity in real time."
+        },
+        "cursorDrive.agentScreen.autoOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open the Agent Screen panel when Drive activates."
+        },
+        "cursorDrive.agentScreen.displayMode": {
+          "type": "string",
+          "enum": [
+            "tab",
+            "panel",
+            "bottomLog"
+          ],
+          "enumDescriptions": [
+            "Webview panel beside editor",
+            "Panel in bottom area",
+            "Minimal Output Channel log"
+          ],
+          "default": "tab",
+          "description": "How the Agent Screen is displayed."
+        },
+        "cursorDrive.agentScreen.clickBehavior": {
+          "type": "string",
+          "enum": [
+            "openInEditor",
+            "openInNewWindow"
+          ],
+          "enumDescriptions": [
+            "Open file in current editor",
+            "Open file in new window"
+          ],
+          "default": "openInEditor",
+          "description": "Behavior when clicking file paths in the Agent Screen."
+        },
+        "cursorDrive.agentScreen.showPlanProgress": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show plan progress overlay (active plan, TODO counts) in the Agent Screen."
+        },
+        "cursorDrive.statusBar.showModeLabel": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true, status bar shows 'Drive > Agent' (or Plan/Ask/Debug). When false, in agent mode shows only 'Drive' (or 'Drive | Operator') so 'Drive' is the main label."
+        },
+        "cursorDrive.statusBar.activeBackground": {
+          "type": "string",
+          "default": "",
+          "description": "Optional hex color (e.g. #0e639c) for status bar when Drive is active. Empty uses theme (statusBarItem.warningBackground)."
+        },
+        "cursorDrive.composer.driveActiveBorderColor": {
+          "type": "string",
+          "default": "#e51400",
+          "description": "Hex color for a thin border around the composer send button when Drive mode is active. Used when Cursor supports extension-driven composer styling. Empty = no border."
+        },
+        "cursorDrive.mcp.port": {
+          "type": "number",
+          "default": 7891,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "Preferred port for the Drive MCP server. If in use, Drive tries the next ports (e.g. 7892, 7893). Register in .cursor/mcp.json with the actual port shown in the Drive output channel."
+        },
+        "cursorDrive.mcp.enableApps": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable MCP Apps: agent_screen_* tools return ui:// resource for inline rendering in chat (Cursor 2.6+)."
+        },
+        "cursorDrive.cursorCli.command": {
+          "type": "string",
+          "default": "agent",
+          "description": "Cursor CLI command: 'agent' (standalone from cursor.com/install) or 'cursor' (then uses 'cursor agent -p ...'). Used for cursor_cli_run and POST /run."
+        },
+        "cursorDrive.cursorCli.timeoutSeconds": {
+          "type": "number",
+          "default": 300,
+          "minimum": 60,
+          "maximum": 3600,
+          "description": "Max seconds for a Cursor CLI run (cursor_cli_run and POST /run)."
+        },
+        "cursorDrive.wakeWord": {
+          "type": "string",
+          "default": "hey drive",
+          "description": "Voice phrase that activates Drive when inactive."
+        },
+        "cursorDrive.voice.autoActivateMicOnToggle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open the chat panel and start Cursor's voice input when Drive mode is toggled on."
+        },
+        "cursorDrive.voice.chatOpenCommand": {
+          "type": "string",
+          "default": "workbench.action.chat.open",
+          "description": "VS Code command used to open the chat panel when activating voice input."
+        },
+        "cursorDrive.voice.chatOpenFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Fallback commands if chatOpenCommand fails. Tried in order: composer.openComposer, composer.openAsPane, composer.focusComposer."
+        },
+        "cursorDrive.voice.micCommand": {
+          "type": "string",
+          "default": "composer.toggleVoiceDictation",
+          "description": "Command to activate the microphone. Default composer.toggleVoiceDictation works when startVoiceChat is context-gated. Leave blank to use built-in fallback chain."
+        },
+        "cursorDrive.voice.micCommandFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Fallback commands if micCommand fails. Try composer.toggleVoiceDictation if startVoiceChat doesn't exist in your Cursor version."
+        },
+        "cursorDrive.voice.stopCommand": {
+          "type": "string",
+          "default": "workbench.action.chat.stopListeningAndSubmit",
+          "description": "Command used by cursorDrive.stopVoice to submit the current voice dictation. Falls back to stopListening (cancel) if unavailable."
+        },
+        "cursorDrive.voice.stopCommandFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Fallback commands if stopCommand fails."
+        },
+        "cursorDrive.voice.showListeningFeedback": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, show a brief 'Listening…' toast when voice input (mic) is activated."
+        },
+        "cursorDrive.voice.activateMicDelayMs": {
+          "type": "number",
+          "default": 400,
+          "minimum": 0,
+          "maximum": 2000,
+          "description": "Milliseconds to wait after opening chat before firing the mic command. The mic button may not be ready until the chat panel has rendered. Increase if mic activation fails."
+        },
+        "cursorDrive.syncNativeMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "When switching Drive sub-modes, also call the matching Cursor native composerMode.* command to keep Cursor's UI in sync."
+        },
+        "cursorDrive.operators.autoInjectOpenFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically inject the active editor file into Composer when spawning a new operator."
+        },
+        "cursorDrive.submitWord": {
+          "type": "string",
+          "default": "send it",
+          "description": "Voice phrase that confirms and submits the prompt; bypasses prompt optimizer when present."
+        },
+        "cursorDrive.promptOptimizer.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable AI prompt rewriting for voice/dictation prompts."
+        },
+        "cursorDrive.promptOptimizer.autoApprove": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip approval QuickPick; auto-use optimized prompt when available."
+        },
+        "cursorDrive.agents.tangentKeyword": {
+          "type": "string",
+          "default": "tangent",
+          "description": "Keyword that triggers operator spawning (e.g. 'tangent refactor auth' spawns an operator for that task)."
+        },
+        "cursorDrive.agents.tangentConfirmationTimeout": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "maximum": 60000,
+          "description": "Milliseconds to wait before re-prompting for tangent confirmation ('Before I begin, I need your confirmation')."
+        },
+        "cursorDrive.agents.autoConfirmTangent": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip tangent agent confirmation flow; spawn and begin immediately."
+        },
+        "cursorDrive.agents.delegateConfirmation": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow another agent to confirm on behalf of the user (via MCP or hotkey)."
+        },
+        "cursorDrive.privacy.transcriptPersistence": {
+          "type": "boolean",
+          "default": false,
+          "description": "Store transcripts locally when Drive is active (disabled by default per ADR-0005)."
+        },
+        "cursorDrive.privacy.transcriptRetentionDays": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 365,
+          "description": "Days to keep transcript logs before auto-deletion. Only applies when transcriptPersistence is enabled."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build:plugin": "node scripts/build-plugin.mjs",
+    "bundle:mcp-app": "node scripts/bundle-mcp-app.mjs",
+    "vscode:prepublish": "npm run bundle:mcp-app && npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "jest",
+    "dev-loop": "node sandbox/dev-loop.mjs",
+    "dev-loop:serve": "node sandbox/dev-loop.mjs --serve-web",
+    "reinstall": "node scripts/reinstall-extension.mjs",
+    "reinstall:serve-web": "node scripts/reinstall-extension.mjs --serve-web",
+    "reinstall:dev-sandbox": "node scripts/reinstall-extension.mjs --dev-sandbox",
+    "test:browser": "playwright test",
+    "cloudflare:create-token": "node scripts/create-cloudflare-token.mjs",
+    "cloudflare:trigger": "node scripts/trigger-cloudflare-test.mjs",
+    "cloudflare:verify": "node scripts/verify-cloudflare-token.mjs"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.ts"
+    ],
+    "moduleNameMapper": {
+      "^vscode$": "<rootDir>/tests/__mocks__/vscode.ts",
+      "^(\\.\\.?/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.test.json"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.7.1",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "^0.14.1",
+    "@modelcontextprotocol/ext-apps": "^1.1.2",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^4.3.6"
+  },
+  "optionalDependencies": {
+    "say": "^0.16.0"
+  }
+}
