@@ -1,0 +1,25 @@
+{
+  "name": "cursor-drive",
+  "displayName": "Cursor Drive",
+  "version": "0.3.0",
+  "description": "AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen. Senior engineer on call — faster.",
+  "author": {
+    "name": "harrison halperin",
+    "email": "harrisonhalperin@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "drive",
+    "pair-programming",
+    "voice",
+    "multi-agent",
+    "tts",
+    "share-screen"
+  ],
+  "logo": "assets/logo.svg",
+  "agents": "agents/",
+  "skills": "skills/",
+  "rules": "rules/",
+  "commands": "commands/",
+  "hooks": "hooks/hooks.json"
+}

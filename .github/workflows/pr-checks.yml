@@ -1,0 +1,32 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+jobs:
+  label-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  enforce-branch-naming:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name convention
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Checking branch name: $BRANCH"
+          if [[ "$BRANCH" =~ ^(feature|bugfix|release|hotfix|cursor|dependabot)/ ]]; then
+            echo "✅ Branch name '$BRANCH' follows convention."
+          else
+            echo "::error::Branch name '$BRANCH' does not follow convention."
+            echo "Use one of: feature/*, bugfix/*, release/*, hotfix/*, cursor/*"
+            exit 1
+          fi

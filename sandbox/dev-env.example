@@ -1,0 +1,15 @@
+# Dev-loop port overrides (copy to .env or set in shell)
+# Used by: node sandbox/dev-loop.mjs
+
+# MCP server port (Drive/S-AS). Extension reads cursorDrive.mcp.port.
+# Default: 7891. Auto-selects next free port if in use.
+# DRIVE_MCP_PORT=7891
+
+# serve-web port (when using --serve-web).
+# Default: 8000. Auto-selects next free port if in use.
+# SERVE_WEB_PORT=8000
+
+# Examples:
+#   PowerShell:  $env:DRIVE_MCP_PORT=7892; node sandbox/dev-loop.mjs
+#   Cmd:         set DRIVE_MCP_PORT=7892 && node sandbox/dev-loop.mjs
+#   Bash:        DRIVE_MCP_PORT=7892 node sandbox/dev-loop.mjs

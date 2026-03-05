@@ -1,0 +1,451 @@
+version: 1
+description: Cursor Drive plan dependency graph. Controls execution order and completion
+  gates.
+settings:
+  on_todo_complete:
+  - require_reconciliation: true
+  - run: npm test
+  - run: npm run compile
+states:
+- pending
+- in_progress
+- completed
+- cancelled
+plans:
+- id: cursor-drive
+  file: .cursor/plans/cursor-drive.plan.md
+  title: Cursor Drive — Root Plan
+  plan_type: project
+  state: in_progress
+  priority: high
+  tags:
+  - cursor-drive
+  - extension
+  - drive-mode
+  depends_on: []
+  child_plan_ids: []
+  completion_criteria:
+  - All child plans completed.
+  - Extension compiles and passes all tests.
+  - All 5 PRDs have P0 acceptance criteria satisfied.
+  - Mode-wrapper vision codified in ADRs and vision-invariants rule.
+  - beforeSubmitPrompt pipeline operational end-to-end.
+  evidence:
+  - .cursor/plans/cursor-drive.plan.md
+  - docs/architecture/README.md
+- id: readme-redesign
+  file: .cursor/plans/readme-redesign.plan.md
+  title: README Redesign
+  plan_type: task
+  state: pending
+  priority: medium
+  tags:
+  - docs
+  - readme
+  depends_on: []
+  parent_plan_id: cursor-drive
+- id: architecture-vision-foundation
+  file: .cursor/plans/archive/architecture-vision-foundation.plan.md
+  title: Architecture & Vision Foundation
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - architecture
+  - adr
+  - vision
+  - rules
+  - archived
+  depends_on: []
+  _archived: true
+- id: cursor-docs-cleanup
+  file: .cursor/plans/archive/cursor-docs-cleanup.plan.md
+  title: .cursor Cleanup & Docs Alignment
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - docs
+  - cursor
+  - cleanup
+  - rules
+  - commands
+  - archived
+  depends_on:
+  - architecture-vision-foundation
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: browser-dev-workflow
+  file: .cursor/plans/archive/browser-dev-workflow.plan.md
+  title: Browser Dev Workflow
+  plan_type: task
+  state: completed
+  priority: medium
+  tags:
+  - devex
+  - testing
+  - playwright
+  - serve-web
+  - visual-regression
+  - archived
+  depends_on: []
+  _archived: true
+- id: terminology-sas-overhaul
+  file: .cursor/plans/archive/terminology-sas-overhaul.plan.md
+  title: Terminology and S-AS Overhaul
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - terminology
+  - rename
+  - operator
+  - agent-screen
+  - config
+  - ux
+  - archived
+  depends_on: []
+  _archived: true
+- id: hook-prompt-pipeline
+  file: .cursor/plans/archive/hook-prompt-pipeline.plan.md
+  title: Hook-Based Prompt Pipeline
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - pipeline
+  - hooks
+  - beforeSubmitPrompt
+  - typescript
+  - archived
+  depends_on:
+  - architecture-vision-foundation
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: native-mode-alignment
+  file: .cursor/plans/archive/native-mode-alignment.plan.md
+  title: Native Mode Alignment
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - router
+  - modes
+  - typescript
+  - refactor
+  - archived
+  depends_on:
+  - architecture-vision-foundation
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: senior-engineer-ux
+  file: .cursor/plans/archive/senior-engineer-ux.plan.md
+  title: Senior Engineer UX Philosophy
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - ux
+  - persona
+  - pair-programming
+  - philosophy
+  - archived
+  depends_on:
+  - architecture-vision-foundation
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: agent-orchestration-frameworks
+  file: .cursor/plans/archive/agent-orchestration-frameworks.plan.md
+  title: Agent Orchestration Frameworks
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - a2a
+  - agent-teams
+  - multi-agent
+  - mcp
+  - orchestration
+  - archived
+  depends_on:
+  - architecture-vision-foundation
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: pipeline-wiring-mvp
+  file: .cursor/plans/archive/pipeline-wiring-mvp.plan.md
+  title: Pipeline Wiring & MVP Features
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - pipeline
+  - mvp
+  - typescript
+  - wiring
+  - archived
+  depends_on:
+  - hook-prompt-pipeline
+  - native-mode-alignment
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: quality-performance
+  file: .cursor/plans/archive/quality-performance.plan.md
+  title: Quality & Performance
+  plan_type: task
+  state: completed
+  priority: medium
+  tags:
+  - tests
+  - coverage
+  - optimization
+  - performance
+  - archived
+  depends_on:
+  - pipeline-wiring-mvp
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: subagent-plan-execution
+  file: .cursor/plans/archive/subagent-plan-execution.plan.md
+  title: Subagent Plan Execution
+  plan_type: task
+  state: completed
+  priority: high
+  tags:
+  - orchestration
+  - subagents
+  - execution
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: mvp-gaps
+  file: .cursor/plans/archive/mvp-gaps.plan.md
+  title: MVP Gaps (superseded)
+  plan_type: task
+  state: cancelled
+  priority: low
+  tags:
+  - superseded
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: test-coverage
+  file: .cursor/plans/archive/test-coverage.plan.md
+  title: Test Coverage (superseded)
+  plan_type: task
+  state: cancelled
+  priority: low
+  tags:
+  - superseded
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: code-optimization
+  file: .cursor/plans/archive/code-optimization.plan.md
+  title: Code Optimization (superseded)
+  plan_type: task
+  state: cancelled
+  priority: low
+  tags:
+  - superseded
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: fix-extension-activation
+  file: .cursor/plans/archive/fix_extension_activation_a1a62737.plan.md
+  title: Fix Extension Activation (superseded)
+  plan_type: task
+  state: cancelled
+  priority: low
+  tags:
+  - superseded
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: new-plans-integration
+  file: .cursor/plans/archive/new_plans_integration_535bf867.plan.md
+  title: New Plans Integration
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - meta
+  - integration
+  - archived
+  depends_on: []
+  _archived: true
+- id: cursor-drive-planning-overhaul
+  file: .cursor/plans/archive/cursor_drive_planning_overhaul_032e7619.plan.md
+  title: Cursor Drive Planning Overhaul
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - meta
+  - planning
+  - archived
+  depends_on: []
+  _archived: true
+- id: terminology-sas-overhaul-meta
+  file: .cursor/plans/archive/terminology_and_s-as_overhaul_8de6f12f.plan.md
+  title: Terminology and S-AS Overhaul (meta)
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - meta
+  - planning
+  - archived
+  depends_on: []
+  _archived: true
+- id: docs-overhaul
+  file: .cursor/plans/archive/docs-overhaul.plan.md
+  title: Docs Overhaul
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: hh-migration-followup
+  file: .cursor/plans/archive/hh-migration-followup.plan.md
+  title: hh Migration Follow-up
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: drive-mode-installable-ui
+  file: .cursor/plans/archive/drive-mode-installable-ui.plan.md
+  title: Drive Mode Installable UI Build
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: bugbot-git-cicd
+  file: .cursor/plans/archive/bugbot-rules-and-git-strategy.plan.md
+  title: BugBot Rules & Git/CICD Strategy
+  plan_type: workstream
+  state: completed
+  priority: low
+  tags:
+  - archived
+  depends_on: []
+  parent_plan_id: cursor-drive
+  _archived: true
+- id: mvp-consolidation-overhaul
+  file: .cursor/plans/archive/mvp_consolidation_overhaul_03ed2135.plan.md
+  title: MVP Consolidation Overhaul
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - archived
+  depends_on: []
+  _archived: true
+- id: plan-graph-diagram-automation
+  file: .cursor/plans/archive/plan-graph-diagram-automation_05cdb5a9.plan.md
+  title: Plan Graph Diagram Automation
+  plan_type: task
+  state: completed
+  priority: low
+  tags:
+  - archived
+  depends_on: []
+  _archived: true
+- id: cursor_drive_state_sync_95317c89
+  file: .cursor/plans/cursor_drive_state_sync_95317c89.plan.md
+  title: Cursor Drive state sync
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: openclaw_capability_scrape_8fa228d1
+  file: .cursor/plans/openclaw_capability_scrape_8fa228d1.plan.md
+  title: OpenClaw Capability Scrape
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: wire_and_fix_drive_886a9ffa
+  file: .cursor/plans/wire_and_fix_drive_886a9ffa.plan.md
+  title: Wire and Fix Drive
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: drive_ux_polish_and_auto-mcp_deb68d21
+  file: .cursor/plans/drive_ux_polish_and_auto-mcp_deb68d21.plan.md
+  title: Drive UX Polish and Auto-MCP
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: voice_user_journey_storyboard_59290404
+  file: .cursor/plans/voice_user_journey_storyboard_59290404.plan.md
+  title: Voice User Journey Storyboard
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: s_as_screen_capture_impl
+  file: .cursor/plans/s_as_screen_capture_impl.plan.md
+  title: S-AS Screen Capture Implementation
+  plan_type: task
+  state: pending
+  parent_plan_id: cursor-drive
+  depends_on: []
+- id: cursor_native_commands_wire_4b8e2c17
+  file: .cursor/plans/cursor_native_commands_wire_4b8e2c17.plan.md
+  title: Cursor Native Commands Wire-up
+  plan_type: task
+  state: pending
+  parent_plan_id: cursor-drive
+  tags:
+  - commands
+  - ux
+  - voice
+  - diagnostics
+  - mode-sync
+  depends_on:
+  - wire_and_fix_drive_886a9ffa
+- id: repo_review_and_bugfix_plan_9f907bcf
+  file: .cursor/plans/repo_review_and_bugfix_plan_9f907bcf.plan.md
+  title: Repo Review And Bugfix Plan
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: sdk_and_protocol_research_6c42aa0c
+  file: .cursor/plans/sdk_and_protocol_research_6c42aa0c.plan.md
+  title: SDK and Protocol Research
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: chat_memory_and_proceed_f300d563
+  file: .cursor/plans/chat_memory_and_proceed_f300d563.plan.md
+  title: Chat memory and proceed
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: project_cleanup_and_reset_11e351b6
+  file: .cursor/plans/project_cleanup_and_reset_11e351b6.plan.md
+  title: Project cleanup and reset
+  plan_type: task
+  state: pending
+  depends_on: []
+workflows:
+  on_plan_start:
+  - validate_dependencies_complete: true
+  - notify: 'Starting plan: {plan_id}'
+  on_plan_complete:
+  - run_checks: true
+  - update_registry: true
+  - notify: 'Plan complete: {plan_id}'

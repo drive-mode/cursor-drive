@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80" fill="none">
+  <defs>
+    <linearGradient id="grey-mid" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4a4a4a"/>
+      <stop offset="50%" stop-color="#6a6a6a"/>
+      <stop offset="100%" stop-color="#3a3a3a"/>
+    </linearGradient>
+    <linearGradient id="grey-front" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0e0e0"/>
+      <stop offset="100%" stop-color="#9a9a9a"/>
+    </linearGradient>
+  </defs>
+  <!-- Car outline (black) -->
+  <path d="M22 52 L22 42 L28 38 L38 36 L52 34 L68 36 L78 40 L92 38 L98 42 L102 48 L100 52 L96 54 L92 52 L88 56 L78 56 L72 52 L58 54 L42 54 L32 56 L24 54 Z" fill="#1a1a1a" stroke="#0a0a0a" stroke-width="0.8"/>
+  <!-- Roof & rear (black) -->
+  <path d="M52 34 L68 36 L78 40 L78 44 L72 46 L58 46 L52 44 Z" fill="#0a0a0a"/>
+  <!-- Mid-section facets (greys) -->
+  <path d="M38 36 L52 34 L52 44 L42 46 L38 44 Z" fill="#3a3a3a"/>
+  <path d="M42 46 L52 44 L58 46 L58 52 L52 54 L42 54 Z" fill="url(#grey-mid)"/>
+  <path d="M58 46 L72 46 L72 52 L58 52 Z" fill="#2a2a2a"/>
+  <path d="M68 36 L78 40 L78 44 L72 46 L68 44 Z" fill="#252525"/>
+  <!-- Diamond/facet accent (white edge lines implied by adjacent white) -->
+  <path d="M48 40 L54 38 L58 42 L56 46 L50 46 Z" fill="#7a7a7a"/>
+  <!-- Front section (white) -->
+  <path d="M78 40 L92 38 L98 42 L98 48 L92 52 L88 56 L78 56 L78 44 Z" fill="#ffffff"/>
+  <path d="M88 42 L96 40 L100 44 L98 48 L92 48 Z" fill="#f0f0f0"/>
+  <!-- Headlight slits -->
+  <path d="M90 44 L94 44 L94 46 L90 46 Z" fill="#0a0a0a"/>
+  <path d="M94 43 L98 43 L98 45 L94 45 Z" fill="#0a0a0a"/>
+  <!-- Front bumper / lower (light grey) -->
+  <path d="M92 52 L96 54 L100 52 L98 48 L92 48 Z" fill="#b0b0b0"/>
+  <!-- Rear quarter (black) -->
+  <path d="M22 42 L28 38 L38 36 L38 44 L32 46 L24 44 Z" fill="#0a0a0a"/>
+  <!-- Wheel 1 (black tire + white crescent) -->
+  <circle cx="42" cy="54" r="6" fill="#0a0a0a"/>
+  <path d="M42 49 A4 4 0 0 1 42 59 A2.6 2.6 0 0 0 42 49" fill="#ffffff"/>
+  <!-- Wheel 2 -->
+  <circle cx="78" cy="54" r="6" fill="#0a0a0a"/>
+  <path d="M78 49 A4 4 0 0 1 78 59 A2.6 2.6 0 0 0 78 49" fill="#ffffff"/>
+  <!-- Outline stroke (emphasize silhouette) -->
+  <path d="M22 52 L22 42 L28 38 L38 36 L52 34 L68 36 L78 40 L92 38 L98 42 L102 48 L100 52 L96 54 L92 52 L88 56 L78 56 L72 52 L58 54 L42 54 L32 56 L24 54 Z" fill="none" stroke="#0a0a0a" stroke-width="0.6"/>
+</svg>

@@ -1,0 +1,26 @@
+extension:
+  - changed-files:
+      - any-glob-to-any-file: "src/**"
+
+plugin:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "rules/**"
+          - "agents/**"
+          - "commands/**"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file: "docs/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: "tests/**"
+
+bugbot:
+  - changed-files:
+      - any-glob-to-any-file: ".cursor/BUGBOT.md"
