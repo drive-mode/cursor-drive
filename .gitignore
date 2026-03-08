@@ -1,36 +1,54 @@
+# Build / runtime
 out/
 node_modules/
 *.vsix
 .vscode-test/
-.env
 playwright-report/
 test-results/
-# Plan frontmatter change cache (local only)
+*.tsbuildinfo
+coverage/
+
+# .cursor (project-specific)
 .cursor/plans/.plan-frontmatter-hash
-# Debug probe session logs (hh-policy: no persistence unless debug enabled)
+.cursor/drive-bridge.json
 .cursor/debug-*.log
-# sandbox/.cursor is a Windows junction after running setup-drive-dev.ps1
-# Git tracks junctions as plain directories; ignore its contents to avoid
-# accidentally committing duplicates of .cursor/ files.
-sandbox/.cursor/
 .cursor/hooks/__pycache__/
+.cursor/plans/archive/
+sandbox/.cursor/
 
 # OS
 .DS_Store
 Thumbs.db
 
 # IDE / editor
+.vscode/
+.idea/
+*.sublime*
+*.code-workspace
 *.swp
 *.swo
-.idea/
+*.viminfo
+*.bak
+*~
+*.user
+.history/
+*.log
+*.pid
+.cache/
+*.orig
 
-# Build / artifacts
-*.tsbuildinfo
-coverage/
-
-# Commit-rewrite artifact (legacy script leftover)
-datemap-rewrite.txt
-
-# Local env variants
+# Secrets / privacy
+.env
 .env.local
 .env.*.local
+secrets.json
+secrets.*.json
+private.*
+identity.*
+tokens.*
+auth.*
+/.logs/
+
+# Local / misc
+scripts/
+.logs

@@ -1,0 +1,38 @@
+# Dependencies / build
+node_modules/
+out/
+*.tsbuildinfo
+coverage/
+.vscode-test/
+playwright-report/
+test-results/
+*.vsix
+
+# Runtime / generated
+.cursor/drive-bridge.json
+.cursor/debug-*.log
+.cursor/plans/.plan-frontmatter-hash
+.cursor/plans/archive/
+.cursor/hooks/__pycache__/
+sandbox/
+
+# Secrets / env
+.env
+.env.*
+secrets.json
+secrets.*.json
+private.*
+identity.*
+tokens.*
+auth.*
+
+# Logs / caches
+*.log
+.cache/
+.logs
+/.logs/
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.history/
