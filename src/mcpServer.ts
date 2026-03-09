@@ -6,7 +6,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { z } from "zod";
 import { speak, stop as ttsStop } from "./tts.js";
 import { AgentScreenPanel } from "./agentScreen.js";
-import { DriveModeManager, SubMode } from "./driveMode.js";
+import { DriveModeManager, CursorMode } from "./driveMode.js";
 import { OperatorRegistry } from "./operatorRegistry.js";
 import { SessionMemory } from "./sessionMemory.js";
 import { runPipeline, getPipelineStats } from "./pipeline.js";
@@ -455,13 +455,13 @@ export class DriveMcpServer {
           driveMgr.setActive(false);
           return { content: [{ type: "text" as const, text: "mode set to off" }] };
         }
-        const subModeMap: Record<string, SubMode> = {
+        const cursorModeMap: Record<string, CursorMode> = {
           ask: "ask",
           agent: "agent",
           plan: "plan",
           debug: "debug",
         };
-        const subMode = subModeMap[mode] ?? "agent";
+        const cursorMode = cursorModeMap[mode] ?? "agent";
         const requireConfirm = vscode.workspace.getConfiguration("cursorDrive").get<boolean>("modeSwitching.requireConfirmation", true);
         if (requireConfirm) {
           const choice = await vscode.window.showQuickPick(
@@ -472,7 +472,7 @@ export class DriveMcpServer {
             return { content: [{ type: "text" as const, text: "mode switch cancelled by user" }] };
           }
         }
-        driveMgr.setSubMode(subMode as SubMode);
+        driveMgr.setSubMode(cursorMode);
         driveMgr.setActive(true);
         return { content: [{ type: "text" as const, text: `mode set to ${mode}` }] };
       }

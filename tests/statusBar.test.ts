@@ -25,6 +25,7 @@ describe("createDriveStatusBar", () => {
     const mgr = {
       active: false,
       subMode: "agent",
+      cursorMode: "agent" as const,
       onDidChange: (listener: (state: unknown) => void) => {
         driveListener = listener;
         return { dispose: jest.fn() };
@@ -50,10 +51,11 @@ describe("createDriveStatusBar", () => {
     };
     (vscode.window.createStatusBarItem as jest.Mock).mockReturnValue(item);
 
-    const mgrState = { active: true, subMode: "debug" };
+    const mgrState = { active: true, subMode: "debug" as const, cursorMode: "debug" as const };
     const mgr = {
       get active() { return mgrState.active; },
-      get subMode() { return mgrState.subMode as "debug"; },
+      get subMode() { return mgrState.subMode; },
+      get cursorMode() { return mgrState.cursorMode; },
       onDidChange: (listener: () => void) => {
         driveListener = listener;
         return { dispose: jest.fn() };
@@ -66,7 +68,7 @@ describe("createDriveStatusBar", () => {
     createDriveStatusBar(mgr, registry);
     driveListener?.();
 
-    expect(item.text).toContain("Drive > Debug");
+    expect(item.text).toContain("Drive › Debug");
     expect(item.text).toContain("Alpha");
   });
 
@@ -83,10 +85,11 @@ describe("createDriveStatusBar", () => {
       };
       (vscode.window.createStatusBarItem as jest.Mock).mockReturnValue(item);
 
-      const mgrState = { active: true, subMode };
+      const mgrState = { active: true, subMode, cursorMode: subMode };
       const mgr = {
         get active() { return mgrState.active; },
         get subMode() { return mgrState.subMode; },
+        get cursorMode() { return mgrState.cursorMode; },
         onDidChange: () => ({ dispose: jest.fn() }),
       } as unknown as Parameters<typeof createDriveStatusBar>[0];
 
@@ -96,7 +99,7 @@ describe("createDriveStatusBar", () => {
       createDriveStatusBar(mgr, registry);
 
       const modeLabel = subMode.charAt(0).toUpperCase() + subMode.slice(1);
-      expect(item.text).toContain(`Drive > ${modeLabel}`);
+      expect(item.text).toContain(`Drive › ${modeLabel}`);
       expect(item.text).toContain("Alpha");
     });
   });
@@ -112,10 +115,11 @@ describe("createDriveStatusBar", () => {
     };
     (vscode.window.createStatusBarItem as jest.Mock).mockReturnValue(item);
 
-    const mgrState = { active: true, subMode: "agent" as const };
+    const mgrState = { active: true, subMode: "agent" as const, cursorMode: "agent" as const };
     const mgr = {
       get active() { return mgrState.active; },
       get subMode() { return mgrState.subMode; },
+      get cursorMode() { return mgrState.cursorMode; },
       onDidChange: () => ({ dispose: jest.fn() }),
     } as unknown as Parameters<typeof createDriveStatusBar>[0];
 
@@ -123,7 +127,7 @@ describe("createDriveStatusBar", () => {
 
     createDriveStatusBar(mgr, registry);
 
-    expect(item.text).toContain("Drive > Agent");
+    expect(item.text).toContain("Drive › Agent");
     expect(item.text).not.toContain("No Operator");
     expect(item.text).not.toContain("|");
   });
@@ -139,10 +143,11 @@ describe("createDriveStatusBar", () => {
     };
     (vscode.window.createStatusBarItem as jest.Mock).mockReturnValue(item);
 
-    const mgrState = { active: true, subMode: "agent" as const };
+    const mgrState = { active: true, subMode: "agent" as const, cursorMode: "agent" as const };
     const mgr = {
       get active() { return mgrState.active; },
       get subMode() { return mgrState.subMode; },
+      get cursorMode() { return mgrState.cursorMode; },
       onDidChange: () => ({ dispose: jest.fn() }),
     } as unknown as Parameters<typeof createDriveStatusBar>[0];
 

@@ -18,7 +18,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { createDriveModeManager, SubMode } from "./driveMode.js";
+import { createDriveModeManager, CursorMode } from "./driveMode.js";
 import { createDriveStatusBar } from "./statusBar.js";
 import { speak, stop as ttsStop, isEnabled as ttsEnabled } from "./tts.js";
 import { AgentScreenPanel } from "./agentScreen.js";
@@ -437,7 +437,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
         return;
       }
-      const modeMap: Record<string, SubMode> = {
+      const modeMap: Record<string, CursorMode> = {
         Plan: "plan",
         Agent: "agent",
         Ask: "ask",
@@ -451,7 +451,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         // Sync Cursor's native mode if configured
         const syncNative = vscode.workspace.getConfiguration("cursorDrive").get<boolean>("syncNativeMode", true);
         if (syncNative) {
-          const nativeCmdMap: Partial<Record<SubMode, string>> = {
+          const nativeCmdMap: Partial<Record<CursorMode, string>> = {
             plan: "composerMode.plan",
             agent: "composerMode.agent",
             ask: "composerMode.chat",

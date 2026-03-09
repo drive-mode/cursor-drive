@@ -1,0 +1,57 @@
+# workflow-priors.yaml
+# Auto-updated by diff.py after each /context optimize run.
+# Human-editable. Version control this file.
+version: 1
+updated_at: null
+
+workflows:
+  code-review:
+    sessions: 0
+    avg_tokens_before: null
+    avg_tokens_after: null
+    p50_savings_pct: null
+    reliable_excludes: []
+    reliable_outlines:
+      - "**/*.test.ts"
+      - "**/*.spec.py"
+    always_full:
+      - "README.md"
+    notes: "Seeded prior — not yet learned from sessions"
+
+  plan-executor:
+    sessions: 0
+    avg_tokens_before:
+    avg_tokens_after:
+    p50_savings_pct:
+    reliable_excludes:
+    - "**/*.lock"
+    - "**/node_modules/**"
+    reliable_outlines: []
+    always_full:
+    - "README.md"
+    - "AGENTS.md"
+    notes: "Seeded prior — not yet learned from sessions"
+
+  debugging:
+    sessions: 0
+    avg_tokens_before:
+    avg_tokens_after:
+    p50_savings_pct:
+    reliable_excludes: []
+    reliable_outlines:
+    - "docs/**"
+    always_full: []
+    notes: "Seeded prior — not yet learned from sessions"
+
+  unknown:
+    sessions: 0
+    avg_tokens_before:
+    avg_tokens_after:
+    p50_savings_pct:
+    reliable_excludes:
+    - "**/*.lock"
+    - "**/node_modules/**"
+    - "**/.git/**"
+    reliable_outlines: []
+    always_full: []
+    notes: "Default prior for undetected workflow types"

@@ -37,6 +37,8 @@ export class AgentScreenPanel {
   private readonly outputChannel: vscode.OutputChannel | undefined;
   private readonly extensionUri: vscode.Uri;
   private disposed = false;
+  private _pendingEvents: ActivityEvent[] = [];
+  private static readonly MAX_QUEUE = 200;
 
   private constructor(
     extensionUri: vscode.Uri,
@@ -147,9 +149,13 @@ export class AgentScreenPanel {
       }
       return;
     }
-    if (this.panel) {
-      void this.panel.webview.postMessage({ ...event, timestamp: event.timestamp ?? Date.now() });
+    if (!this.panel) return;
+    if (!this.panel.visible) {
+      this._pendingEvents.push(event);
+      if (this._pendingEvents.length >= AgentScreenPanel.MAX_QUEUE) this._pendingEvents.shift();
+      return;
     }
+    void this.panel.webview.postMessage({ ...event, timestamp: event.timestamp ?? Date.now() });
   }
 
   logActivity(operatorName: string, text: string): void {

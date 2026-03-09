@@ -149,7 +149,7 @@ export async function runPipeline(
 
   // pwm-06: Wake word — if inactive and starts with any wake word, activate and strip
   let activatedByWakeWord = false;
-  const wakeWordRaw = cfg.get<string>("wakeWord", "hey drive");
+  const wakeWordRaw = cfg.get<string>("wakeWord", "drive mode");
   const wakeWords = wakeWordRaw
     ? wakeWordRaw.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean)
     : [];
@@ -180,6 +180,41 @@ export async function runPipeline(
         tangentAck: "How can I help?",
       };
     }
+  }
+
+  // Sleep word — if active and starts with any sleep word, deactivate and strip
+  const sleepWordRaw = cfg.get<string>("sleepWord", "park mode");
+  const sleepWords = sleepWordRaw
+    ? sleepWordRaw.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean)
+    : [];
+  const sleepWordMatch = sleepWords
+    .filter((w) => text.toLowerCase().startsWith(w))
+    .sort((a, b) => b.length - a.length)[0];
+  if (ctx.driveActive && ctx.setActive && sleepWordMatch) {
+    ctx.setActive(false);
+    text = text.slice(sleepWordMatch.length).trim();
+    speak("Drive sleeping");
+    void vscode.window.setStatusBarMessage("$(debug-pause) Drive sleeping", 5000);
+    if (!text) {
+      pipelineStats.passThruCount++;
+      updateAvgLatency(Date.now() - startTime);
+      return {
+        ok: true,
+        prompt: "",
+        route: { mode: "ask", reason: "Sleep word — Drive deactivated" },
+        model: "execution",
+        tangentAck: "Drive sleeping",
+      };
+    }
+    // Text remains: pass stripped text through (Drive now inactive)
+    pipelineStats.passThruCount++;
+    updateAvgLatency(Date.now() - startTime);
+    return {
+      ok: true,
+      prompt: text,
+      route: { mode: "ask", reason: "Sleep word — Drive deactivated, prompt passed through" },
+      model: "execution",
+    };
   }
 
   // hpp-04: Drive-active gate — skip pipeline when still inactive (and not just activated by wake word)

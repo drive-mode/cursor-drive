@@ -124,18 +124,16 @@ Ordered by impact on making Drive a better multi-operator pair-programming syste
 
 ### What was completed
 
-
-| TODO                       | Outcome                                                                          | Evidence                                                                                                                     |
-| -------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| depth-tool-policy          | Per-operator tool policy with depth-based restriction; cascade dismiss on parent | `operatorRegistry.ts` depth > 0 → readonly preset; `dismiss()` cascades to children; `toolAllowlist.ts` uses registry preset |
-| operator-memory-isolation  | Per-operator memory isolation with visibility filtering                          | `sessionMemory.ts` `forOperator(id, visibility)` with isolated/shared/collaborative                                          |
-| session-compaction         | Compaction when entries exceed budget; pre-compaction decision extraction        | `sessionMemory.ts` `compact()`, `compaction-summary` type, pre-compaction flush                                              |
-| pipeline-checkpoints       | Stage can emit checkpoint to pause for user confirmation                         | `pipeline.ts` `requestCheckpoint()`, returns `{ ok: "checkpoint", reason }`                                                  |
-| layered-policy-cascade     | Operator preset > parent restriction > global; deny wins                         | `toolAllowlist.ts` `getEffectivePresetForOperator()`, name override can only restrict                                        |
-| subagent-context-reduction | Minimal context when spawning subagents                                          | `.cursor/skills/drive-persona/SKILL.md` "Spawning Cursor subagents" section                                                  |
-| skill-gating               | Optional `requires` in SKILL.md frontmatter; skip unmatched skills               | `pluginInstaller.ts` `parseSkillRequires`, `checkSkillRequires`, bins/env/os                                                 |
-| persistent-memory          | Skeleton module (deferred wiring)                                                | `src/persistentMemory.ts` with `.drive/MEMORY.md` + daily logs, keyword search                                               |
-
+| TODO | Outcome | Evidence |
+|------|---------|----------|
+| depth-tool-policy | Per-operator tool policy with depth-based restriction; cascade dismiss on parent | `operatorRegistry.ts` depth > 0 → readonly preset; `dismiss()` cascades to children; `toolAllowlist.ts` uses registry preset |
+| operator-memory-isolation | Per-operator memory isolation with visibility filtering | `sessionMemory.ts` `forOperator(id, visibility)` with isolated/shared/collaborative |
+| session-compaction | Compaction when entries exceed budget; pre-compaction decision extraction | `sessionMemory.ts` `compact()`, `compaction-summary` type, pre-compaction flush |
+| pipeline-checkpoints | Stage can emit checkpoint to pause for user confirmation | `pipeline.ts` `requestCheckpoint()`, returns `{ ok: "checkpoint", reason }` |
+| layered-policy-cascade | Operator preset > parent restriction > global; deny wins | `toolAllowlist.ts` `getEffectivePresetForOperator()`, name override can only restrict |
+| subagent-context-reduction | Minimal context when spawning subagents | `.cursor/skills/drive-persona/SKILL.md` "Spawning Cursor subagents" section |
+| skill-gating | Optional `requires` in SKILL.md frontmatter; skip unmatched skills | `pluginInstaller.ts` `parseSkillRequires`, `checkSkillRequires`, bins/env/os |
+| persistent-memory | Skeleton module (deferred wiring) | `src/persistentMemory.ts` with `.drive/MEMORY.md` + daily logs, keyword search |
 
 ### What was verified
 

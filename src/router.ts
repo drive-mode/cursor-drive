@@ -1,7 +1,10 @@
 export type RouteMode = "plan" | "agent" | "ask" | "debug";
 
+export type CursorMode = "ask" | "agent" | "plan" | "debug";
+
 export interface RouteDecision {
   mode: RouteMode;
+  suggestedMode?: CursorMode;
   reason: string;
 }
 

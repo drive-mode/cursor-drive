@@ -363,8 +363,13 @@
         },
         "cursorDrive.wakeWord": {
           "type": "string",
-          "default": "hey drive",
-          "description": "Voice phrase that activates Drive when inactive."
+          "default": "drive mode",
+          "description": "Voice phrase that activates Drive when inactive. Comma-separated for multiple phrases."
+        },
+        "cursorDrive.sleepWord": {
+          "type": "string",
+          "default": "park mode",
+          "description": "Voice phrase that deactivates Drive when active. Comma-separated for multiple phrases."
         },
         "cursorDrive.voice.autoActivateMicOnToggle": {
           "type": "boolean",

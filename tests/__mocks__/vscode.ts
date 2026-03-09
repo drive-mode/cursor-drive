@@ -54,6 +54,8 @@ export const window = {
       onDidReceiveMessage: jest.fn(() => ({ dispose: jest.fn() })),
       cspSource: "vscode-resource:",
     },
+    visible: true,
+    onDidChangeViewState: jest.fn(() => ({ dispose: jest.fn() })),
     onDidDispose: jest.fn(() => ({ dispose: jest.fn() })),
     reveal: jest.fn(),
     dispose: jest.fn(),

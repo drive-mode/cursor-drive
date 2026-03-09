@@ -108,13 +108,13 @@ describe("runPipeline", () => {
         sessionMemory: mockSessionMemory(""),
         setActive,
       };
-      const result = await runPipeline("hey drive add a login page", ctx);
+      const result = await runPipeline("drive mode add a login page", ctx);
       expect(setActive).toHaveBeenCalledWith(true);
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.prompt).toContain("add");
         expect(result.prompt).toContain("login");
-        expect(result.prompt).not.toContain("hey drive");
+        expect(result.prompt).not.toContain("drive mode");
       }
     });
 
@@ -130,7 +130,7 @@ describe("runPipeline", () => {
         sessionMemory: mockSessionMemory(""),
         setActive: jest.fn(),
       };
-      await runPipeline("hey drive refactor auth", ctx);
+      await runPipeline("drive mode refactor auth", ctx);
 
       expect(speak).toHaveBeenCalledWith("Drive listening. How can I help?");
       expect(vscode.window.setStatusBarMessage).toHaveBeenCalledWith(
@@ -145,12 +145,49 @@ describe("runPipeline", () => {
         sessionMemory: mockSessionMemory(""),
         setActive: jest.fn(),
       };
-      const result = await runPipeline("hey drive", ctx);
+      const result = await runPipeline("drive mode", ctx);
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.prompt).toBe("");
         expect(result.tangentAck).toBe("How can I help?");
         expect(result.route.reason).toContain("Wake word only");
+      }
+    });
+  });
+
+  describe("sleep word", () => {
+    it("deactivates Drive and strips sleep word when active", async () => {
+      const setActive = jest.fn();
+      const ctx: DriveContext = {
+        driveActive: true,
+        sessionMemory: mockSessionMemory(""),
+        setActive,
+      };
+      const result = await runPipeline("park mode add a test", ctx);
+      expect(setActive).toHaveBeenCalledWith(false);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.prompt).toContain("add");
+        expect(result.prompt).toContain("test");
+        expect(result.prompt).not.toContain("park mode");
+        expect(result.route.reason).toContain("Sleep word");
+      }
+    });
+
+    it("returns early with tangentAck when sleep word is submitted alone", async () => {
+      const setActive = jest.fn();
+      const ctx: DriveContext = {
+        driveActive: true,
+        sessionMemory: mockSessionMemory(""),
+        setActive,
+      };
+      const result = await runPipeline("park mode", ctx);
+      expect(setActive).toHaveBeenCalledWith(false);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.prompt).toBe("");
+        expect(result.tangentAck).toBe("Drive sleeping");
+        expect(result.route.reason).toContain("Sleep word");
       }
     });
   });

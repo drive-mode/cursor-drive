@@ -27,12 +27,12 @@ export function createDriveStatusBar(
         ? ` | ${foreground.name}${backgroundSuffix}`
         : backgroundCount > 0 ? ` (+${backgroundCount})` : "";
 
-      const inAgentMode = mgr.subMode === "agent";
+      const inAgentMode = mgr.cursorMode === "agent";
       const hideModeForAgent = !showModeLabel && inAgentMode;
-      const modeLabel = mgr.subMode === "off" ? "Off" : mgr.subMode.charAt(0).toUpperCase() + mgr.subMode.slice(1);
+      const modeLabel = mgr.cursorMode === "off" ? "Off" : mgr.cursorMode.charAt(0).toUpperCase() + mgr.cursorMode.slice(1);
       const text = hideModeForAgent
         ? `$(play-circle) Drive${operatorSuffix}`
-        : `$(play-circle) Drive > ${modeLabel}${operatorSuffix}`;
+        : `$(play-circle) Drive › ${modeLabel}${operatorSuffix}`;
       item.text = text;
       item.backgroundColor = activeBackground
         ? activeBackground.startsWith("#")

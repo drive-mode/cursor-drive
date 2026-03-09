@@ -1,7 +1,19 @@
 ---
 name: Wake word triggers mic
+planId: wake-word-triggers-mic
+planType: task
+parentPlanId: cursor-drive
 overview: When the wake word is detected in submitted text, immediately trigger composer.toggleVoiceDictation (via cursorDrive.activateVoiceInput) so the mic is on for the next utterance, enabling a hands-free follow-up without the user clicking the mic again.
-todos: []
+todos:
+  - id: ww-01-add-activate
+    content: "In src/pipeline.ts after TTS and status bar (lines 165-166) in the wake-word block, add void vscode.commands.executeCommand('cursorDrive.activateVoiceInput')."
+    status: completed
+  - id: ww-02-docs-commands
+    content: "In docs/reference/cursor-native-commands.md add note that wake-word detection triggers mic activation for the next turn."
+    status: completed
+  - id: ww-03-verify
+    content: "Run npm run compile and npm test; verify wake-word flow with Drive off then 'hey drive' submission."
+    status: pending
 isProject: false
 ---
 

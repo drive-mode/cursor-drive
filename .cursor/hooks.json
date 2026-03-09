@@ -11,6 +11,9 @@
     ],
     "sessionStart": [
       {
+        "command": "python .cursor/hooks/plan-save-to-workspace.py"
+      },
+      {
         "command": "python .cursor/hooks/plan-runner.py sessionStart"
       }
     ],

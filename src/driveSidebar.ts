@@ -110,7 +110,7 @@ export class DriveSidebarProvider implements vscode.WebviewViewProvider {
     const namePool = cfg.get<string[]>("operators.namePool", []);
     return {
       active: driveMgr?.active ?? false,
-      subMode: driveMgr?.subMode ?? "agent",
+      subMode: driveMgr?.cursorMode ?? "agent",
       operators,
       config: {
         wakeWord: cfg.get<string>("wakeWord", "hey drive"),

@@ -1,0 +1,40 @@
+{
+  "skill_name": "context",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-report",
+      "prompt": "/context",
+      "expected_output": "Token breakdown by category with percentages, workflow type detected, and at least one actionable recommendation",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "optimize-with-confirmation",
+      "prompt": "/context optimize",
+      "expected_output": "Agent shows proposal before applying, pauses for confirmation when a full->exclude change is proposed",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "prior-cold-start",
+      "prompt": "/context optimize",
+      "expected_output": "When no prior exists for detected workflow, agent falls back to flag-based heuristics and notes that this is session 1 of learning",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "prior-warm-start",
+      "prompt": "Run /context report and tell me what the prior says about this codebase",
+      "expected_output": "Agent surfaces the prior for the detected workflow type, including session count and learned patterns",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "learn-after-session",
+      "prompt": "/context diff — I just finished a debugging session, it went well",
+      "expected_output": "Agent updates workflow-priors.yaml with outcome=success, reports what patterns were reinforced",
+      "files": []
+    }
+  ]
+}

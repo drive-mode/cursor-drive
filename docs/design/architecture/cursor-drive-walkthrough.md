@@ -148,7 +148,7 @@ $(circle-slash) Drive          ← inactive (default color)
 
 **What it does:** Runs an AI rewrite of the cleaned prompt using the cheapest available model, then shows the user the original vs. optimized version and waits for approval before proceeding.
 
-Note: `promptOptimizer.ts` is not yet implemented. Tracked in [`.cursor/plans/mvp-gaps.plan.md`](../../../.cursor/plans/mvp-gaps.plan.md).
+Note: `promptOptimizer.ts` is not yet implemented. Tracked in [`.cursor/plans/archive/mvp-gaps.plan.md`](../../../.cursor/plans/archive/mvp-gaps.plan.md).
 
 **The full flow:**
 

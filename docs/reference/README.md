@@ -10,7 +10,7 @@ Lookup tables generated from source. When source changes, update these docs.
 | [mcp-overview.md](mcp-overview.md) | — | MCP concepts, transport, registration, Apps, security — maps our implementation to the MCP guide |
 | [mcp-tools.md](mcp-tools.md) | `src/mcpServer.ts` | Operator and Agent Screen (S-AS) tools, TTS, drive mode — parameters and return values |
 | [commands-and-shortcuts.md](commands-and-shortcuts.md) | `package.json` | All VS Code commands, keybindings, and their behavior |
-| [mcp-user-setup.md](mcp-user-setup.md) | — | User-level MCP (e.g. GitHub) without wrapper; .env at `C:\Users\harri\.env\` |
+| [mcp-user-setup.md](mcp-user-setup.md) | — | User-level MCP (e.g. GitHub) without wrapper; .env at `%USERPROFILE%\.env\` |
 
 **Operator and Agent Screen (S-AS) tools** → [mcp-tools.md](mcp-tools.md).
 
