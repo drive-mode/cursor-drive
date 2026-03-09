@@ -49,6 +49,7 @@ tokens.*
 auth.*
 /.logs/
 
-# Local / misc
+# Local / misc (sync scripts in .local/ — never tracked)
+.local/
 scripts/
 .logs
