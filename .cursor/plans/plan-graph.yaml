@@ -1599,6 +1599,338 @@ plans:
   plan_type: task
   state: pending
   depends_on: []
+- id: cursor-drive-v1
+  file: .cursor/plans/cursor-drive-v1.plan.md
+  title: cursor-drive-v1
+  plan_type: project
+  state: pending
+  depends_on: []
+- id: plan-governance
+  file: .cursor/plans/plan-governance.plan.md
+  title: plan-governance
+  plan_type: project
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: orchestration
+  file: .cursor/plans/orchestration.plan.md
+  title: orchestration
+  plan_type: project
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: voice-wake-word
+  file: .cursor/plans/voice-wake-word.plan.md
+  title: voice-wake-word
+  plan_type: project
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: agent-cli-normalization
+  file: .cursor/plans/agent-cli-normalization.plan.md
+  title: Agent CLI Normalization
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: agent-screen-implementation
+  file: .cursor/plans/agent-screen-implementation.plan.md
+  title: Agent Screen Implementation
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: agent-skills-review
+  file: .cursor/plans/agent-skills-review.plan.md
+  title: Agent Skills Review
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: automation-plugin-strategy
+  file: .cursor/plans/automation-plugin-strategy.plan.md
+  title: Automation and Plugin Strategy
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: black-box-terminal-popup-fix
+  file: .cursor/plans/black-box-terminal-popup-fix.plan.md
+  title: Black box terminal popup fix
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: chat-memory-proceed
+  file: .cursor/plans/chat-memory-proceed.plan.md
+  title: Chat memory and proceed
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: cloudflare-setup-phases
+  file: .cursor/plans/cloudflare-setup-phases.plan.md
+  title: Cloudflare Setup Phases
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: code-optimizer-plan
+  file: .cursor/plans/code-optimizer-plan.plan.md
+  title: code-optimizer-plan
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: cursor-drive-automation-optimizer
+  file: .cursor/plans/cursor-drive-automation-optimizer.plan.md
+  title: cursor-drive-automation-optimizer
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: cursor-drive-implementation
+  file: .cursor/plans/cursor-drive-implementation.plan.md
+  title: cursor-drive-implementation
+  plan_type: project
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: cursor-primitives-complete-bootstrap
+  file: .cursor/plans/cursor-primitives-complete-bootstrap.plan.md
+  title: cursor-primitives-complete-bootstrap
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: drive-mcp-app-vs-extension
+  file: .cursor/plans/drive-mcp-app-vs-extension.plan.md
+  title: Drive MCP app vs extension
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: drive-mode-full-build
+  file: .cursor/plans/drive-mode-full-build.plan.md
+  title: Drive Mode Full Build
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: drive-mode-next-sprint
+  file: .cursor/plans/drive-mode-next-sprint.plan.md
+  title: Drive mode next sprint
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: drive-ux-polish-auto-mcp
+  file: .cursor/plans/drive-ux-polish-auto-mcp.plan.md
+  title: Drive UX Polish and Auto-MCP
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: fork-branch-review-merge
+  file: .cursor/plans/fork-branch-review-merge.plan.md
+  title: Fork branch review and merge
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: get-cursor-drive-working
+  file: .cursor/plans/get-cursor-drive-working.plan.md
+  title: Get Cursor Drive Working
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: mcp-apps-implementation
+  file: .cursor/plans/mcp-apps-implementation.plan.md
+  title: MCP Apps Implementation
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: orchestration-and-hooks
+  file: .cursor/plans/orchestration-and-hooks.plan.md
+  title: Orchestration and hooks
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: orchestration
+- id: plans-audit-and-cleanup
+  file: .cursor/plans/plans-audit-and-cleanup.plan.md
+  title: Plans audit and cleanup
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: plan-governance
+- id: pr-merge-workflow-primitives-16960eb3
+  file: .cursor/plans/pr-merge-workflow-primitives-16960eb3.plan.md
+  title: PR Merge Workflow Primitives
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: push-repo-and-develop-branch
+  file: .cursor/plans/push-repo-and-develop-branch.plan.md
+  title: Push repo and develop branch
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: remove-github-push-code
+  file: .cursor/plans/remove-github-push-code.plan.md
+  title: Remove GitHub Push Code
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: repo-health-and-cleanup
+  file: .cursor/plans/repo-health-and-cleanup.plan.md
+  title: Repo health and cleanup
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: repo-refactor-cleanup-63b3c416
+  file: .cursor/plans/repo-refactor-cleanup-63b3c416.plan.md
+  title: repo-refactor-cleanup
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: s-as-execution-command-discovery
+  file: .cursor/plans/s-as-execution-command-discovery.plan.md
+  title: S-AS Execution and Command Discovery
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: security-review-structure
+  file: .cursor/plans/security-review-structure.plan.md
+  title: Security Review Plan Structure
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: src-directory-analysis-refactor-c1c3cd0d
+  file: .cursor/plans/src-directory-analysis-refactor-c1c3cd0d.plan.md
+  title: src directory analysis and refactor
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: tangent-agent-ux-features-aa4c1cff
+  file: .cursor/plans/tangent-agent-ux-features-aa4c1cff.plan.md
+  title: Tangent Agent UX Features
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: terminology-sas-overhaul-2894f9d7
+  file: .cursor/plans/terminology-sas-overhaul-2894f9d7.plan.md
+  title: Terminology and S-AS Overhaul
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: using-cursor-drive-f2c4aeb5
+  file: .cursor/plans/using-cursor-drive-f2c4aeb5.plan.md
+  title: Using Cursor Drive
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: voice-features
+  file: .cursor/plans/voice-features.plan.md
+  title: Voice features (wake, sleep, fallback)
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: voice-wake-word
+- id: adr-prd-audit-and-graph
+  file: .cursor/plans/adr-prd-audit-and-graph.plan.md
+  title: ADR PRD Audit and Graph
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: extension-reinstall-automation-c57f7a37
+  file: .cursor/plans/extension-reinstall-automation-c57f7a37.plan.md
+  title: Extension Reinstall Automation
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: plans-review-and-consolidation
+  file: .cursor/plans/plans-review-and-consolidation.plan.md
+  title: Review and consolidate plans
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: plan-governance
+- id: extension-reinstall-automation
+  file: .cursor/plans/extension-reinstall-automation.plan.md
+  title: Extension Reinstall Automation
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: pr-merge-workflow-primitives
+  file: .cursor/plans/pr-merge-workflow-primitives.plan.md
+  title: PR Merge Workflow Primitives
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: repo-refactor-cleanup
+  file: .cursor/plans/repo-refactor-cleanup.plan.md
+  title: repo-refactor-cleanup
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: src-directory-analysis-refactor
+  file: .cursor/plans/src-directory-analysis-refactor.plan.md
+  title: src directory analysis and refactor
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: tangent-agent-ux-features
+  file: .cursor/plans/tangent-agent-ux-features.plan.md
+  title: Tangent Agent UX Features
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: terminology-sas-overhaul
+  file: .cursor/plans/terminology-sas-overhaul.plan.md
+  title: Terminology and S-AS Overhaul
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: using-cursor-drive
+  file: .cursor/plans/using-cursor-drive.plan.md
+  title: Using Cursor Drive
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
+- id: final_worktree_and_harrison_pm_cd5d7fd8
+  file: .cursor/plans/final_worktree_and_harrison_pm_cd5d7fd8.plan.md
+  title: Final Worktree and Harrison/PM
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: multi-root_workspace_config_8c349042
+  file: .cursor/plans/multi-root_workspace_config_8c349042.plan.md
+  title: Multi-Root Workspace Config
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: plan_todos_ensure_hook_0c19e79e
+  file: .cursor/plans/plan_todos_ensure_hook_0c19e79e.plan.md
+  title: Plan Todos Ensure Hook
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: roler_git_recovery_plan_f091c943
+  file: .cursor/plans/roler_git_recovery_plan_f091c943.plan.md
+  title: Roler Git Recovery Plan
+  plan_type: task
+  state: pending
+  depends_on: []
 workflows:
   on_plan_start:
   - validate_dependencies_complete: true

@@ -1,5 +1,5 @@
 ---
-planId: cursor_drive_state_sync_95317c89
+planId: cursor-drive-state-sync
 planType: task
 parentPlanId: cursor-drive
 childPlanIds: []
@@ -7,6 +7,7 @@ dependsOn: []
 name: Cursor Drive state sync
 overview: "Single task plan that syncs the codebase with plan files: verify and close terminology tso-06, wire sessionMemory.addTurn in the pipeline response path, update root plan workstream statuses, and run plan-sync. Structured for subagent execution with clear batches and delegation."
 todos: []
+state: completed
 isProject: false
 ---
 
@@ -42,8 +43,6 @@ flowchart LR
   BatchB --> BatchC
 ```
 
-
-
 - **Batch A** (one subagent): Read-only verification of extension.ts, then edit two plan files. No code changes.
 - **Batch B** (one subagent): Implement addTurn in mcpServer.ts only.
 - **Batch C**: Run plan-sync (main or subagent). Depends on Batch A so that root plan frontmatter is correct before sync.
@@ -78,15 +77,13 @@ flowchart LR
 
 **Verified (no changes needed):**
 
-
-| Batch | Item                          | Status                                                                                                                                                                             |
-| ----- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A     | tso-06 in code                | extension.ts uses "Drive Operators", "No active operators", spawnOperator, showAgentScreen, clearAgentScreen. terminology-sas-overhaul.plan.md (archived) shows tso-06 completed.  |
-| A     | Root workstream todos         | cursor-drive.plan.md has workstream-arch, workstream-hook, workstream-mode, workstream-pipeline, workstream-cleanup, workstream-quality, workstream-terminology-sas all completed. |
-| B     | addTurn in drive_run_pipeline | mcpServer.ts line 319: `sessionMemory.addTurn(result.prompt.slice(0, 200))` when `result.ok === true`.                                                                             |
-| B     | addTurn in POST /pipeline     | mcpServer.ts line 431: `sessionMemory.addTurn(result.prompt.slice(0, 200))` when `result.ok === true`.                                                                             |
-| C     | plan-sync                     | `python .cursor/hooks/plan-runner.py sync-registry` — 28 plans synced, decision: allow.                                                                                            |
-
+| Batch | Item | Status |
+|-------|------|--------|
+| A | tso-06 in code | extension.ts uses "Drive Operators", "No active operators", spawnOperator, showAgentScreen, clearAgentScreen. terminology-sas-overhaul.plan.md (archived) shows tso-06 completed. |
+| A | Root workstream todos | cursor-drive.plan.md has workstream-arch, workstream-hook, workstream-mode, workstream-pipeline, workstream-cleanup, workstream-quality, workstream-terminology-sas all completed. |
+| B | addTurn in drive_run_pipeline | mcpServer.ts line 319: `sessionMemory.addTurn(result.prompt.slice(0, 200))` when `result.ok === true`. |
+| B | addTurn in POST /pipeline | mcpServer.ts line 431: `sessionMemory.addTurn(result.prompt.slice(0, 200))` when `result.ok === true`. |
+| C | plan-sync | `python .cursor/hooks/plan-runner.py sync-registry` — 28 plans synced, decision: allow. |
 
 **Phase gate:** `npm run compile` and `npm test` pass (17 test suites, 183 tests).
 
