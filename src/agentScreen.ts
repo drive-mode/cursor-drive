@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 
 export interface ActivityEvent {
-  type: "activity" | "file" | "decision" | "agentSwitch" | "clear" | "planProgress" | "cliStream" | "cloudAgentStatus" | "syncStatus" | "proposalUpdate" | "queueStatus";
+  type: "activity" | "file" | "decision" | "agentSwitch" | "clear" | "planProgress" | "cliStream" | "cloudAgentStatus" | "cloudAgentArtifact" | "syncStatus" | "proposalUpdate" | "queueStatus";
   operatorName?: string;
   text?: string;
   filePath?: string;
@@ -17,6 +17,10 @@ export interface ActivityEvent {
   cloudAgentId?: string;
   cloudStatus?: string;
   prUrl?: string;
+  /** Cloud Agent artifact (for cloudAgentArtifact event). */
+  artifactType?: "video" | "screenshot" | "log";
+  artifactUrl?: string;
+  artifactLabel?: string;
   /** Sync status snapshot data (for syncStatus event). */
   syncSnapshot?: unknown;
   /** Proposal data (for proposalUpdate event). */
@@ -112,7 +116,7 @@ export class AgentScreenPanel {
         this.outputChannel.appendLine(`${prefix}Touched: ${event.filePath}`);
       } else if (event.type === "clear") {
         this.outputChannel.clear();
-      } else       if (event.type === "cliStream" && event.text) {
+      } else if (event.type === "cliStream" && event.text) {
         const label = event.cliToolName ?? event.cliStreamType ?? "CLI";
         const prefix = event.operatorName ? `[${event.operatorName}] ` : "";
         this.outputChannel.appendLine(`${prefix}[CLI] ${label}: ${event.text}`);
@@ -129,6 +133,17 @@ export class AgentScreenPanel {
       }
       if (event.type === "queueStatus" && event.text) {
         this.outputChannel.appendLine(`[Sync/Queue] ${event.text}`);
+      }
+      if (event.type === "cloudAgentStatus") {
+        const id = event.cloudAgentId ?? "?";
+        const status = event.cloudStatus ?? "?";
+        const pr = event.prUrl ? `: ${event.prUrl}` : "";
+        this.outputChannel.appendLine(`[CloudAgent ${id}] ${status}${pr}`);
+      }
+      if (event.type === "cloudAgentArtifact") {
+        const label = event.artifactLabel ?? "artifact";
+        const type = event.artifactType ?? "log";
+        this.outputChannel.appendLine(`[CloudAgent Artifact] ${type}: ${label} ${event.artifactUrl ?? ""}`);
       }
       return;
     }
@@ -272,17 +287,19 @@ export class AgentScreenPanel {
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'none';
              style-src ${csp} 'nonce-${nonce}';
-             script-src ${csp} 'nonce-${nonce}';">
+             script-src ${csp} 'nonce-${nonce}';
+             img-src ${csp} https://api.cursor.com https://*.githubusercontent.com https://*.amazonaws.com;
+             media-src ${csp} https://api.cursor.com https://*.githubusercontent.com https://*.amazonaws.com;">
   <title>Drive Agent Screen</title>
   <style nonce="${nonce}">
     *, *::before, *::after { box-sizing: border-box; }
 
     body {
-      font-family: var(--vscode-font-family);
-      font-size: var(--vscode-font-size);
+      font-family: var(--vscode-font-family), system-ui, -apple-system, sans-serif;
+      font-size: 13px;
       line-height: 1.5;
       color: var(--vscode-editor-foreground);
-      background: var(--vscode-editor-background);
+      background: var(--vscode-sideBar-background);
       margin: 0;
       padding: 0;
       display: flex;
@@ -292,20 +309,22 @@ export class AgentScreenPanel {
     }
 
     body.drive-active {
-      border-left: 3px solid var(--vscode-activityBarBadge-background, var(--vscode-focusBorder, #007acc));
+      border-left: 3px solid var(--vscode-testing-iconPassed, #4ec9b0);
     }
 
     header {
-      padding: 8px 12px 6px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--vscode-panel-border);
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 10px;
       flex-shrink: 0;
+      background: var(--vscode-editor-background);
     }
 
     header h1 {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       margin: 0;
       color: var(--vscode-titleBar-activeForeground, var(--vscode-editor-foreground));
@@ -313,8 +332,8 @@ export class AgentScreenPanel {
 
     .operator-badge {
       font-size: 11px;
-      padding: 1px 6px;
-      border-radius: 10px;
+      padding: 3px 8px;
+      border-radius: 6px;
       background: var(--vscode-badge-background);
       color: var(--vscode-badge-foreground);
       font-weight: 600;
@@ -332,22 +351,25 @@ export class AgentScreenPanel {
       gap: 0;
       border-bottom: 1px solid var(--vscode-panel-border);
       flex-shrink: 0;
+      background: var(--vscode-editor-background);
     }
 
     .tab {
-      padding: 5px 12px;
+      padding: 8px 14px;
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
       border: none;
       background: none;
       color: var(--vscode-tab-inactiveForeground);
       border-bottom: 2px solid transparent;
       margin-bottom: -1px;
+      transition: color 0.15s ease;
     }
 
     .tab.active {
       color: var(--vscode-tab-activeForeground);
-      border-bottom-color: var(--vscode-activityBarBadge-background, var(--vscode-textLink-foreground));
+      border-bottom-color: var(--vscode-testing-iconPassed, #4ec9b0);
     }
 
     .tab:hover {
@@ -359,18 +381,59 @@ export class AgentScreenPanel {
       display: none;
       flex: 1;
       overflow-y: auto;
-      padding: 6px 0;
+      padding: 12px;
+      flex-direction: column;
     }
 
-    .panel.active { display: block; }
+    .panel.active { display: flex; }
 
-    /* ── Activity feed ── */
-    .activity-item {
+    .live-files-strip {
       display: flex;
       gap: 6px;
-      padding: 3px 12px;
+      padding: 8px 0;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--vscode-widget-border);
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .live-files-strip:empty { display: none; }
+
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 6px;
+      background: var(--vscode-badge-background);
+      color: var(--vscode-badge-foreground);
+      cursor: pointer;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+
+    .file-chip:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .live-stream {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 8px;
+      padding: 6px 10px;
       font-size: 12px;
       align-items: flex-start;
+      border-radius: 6px;
+      margin-bottom: 2px;
     }
 
     .activity-item:hover { background: var(--vscode-list-hoverBackground); }
@@ -378,7 +441,7 @@ export class AgentScreenPanel {
     .activity-time {
       color: var(--vscode-descriptionForeground);
       flex-shrink: 0;
-      min-width: 52px;
+      min-width: 56px;
       font-size: 11px;
       padding-top: 1px;
     }
@@ -389,22 +452,23 @@ export class AgentScreenPanel {
 
     .activity-operator {
       font-size: 10px;
-      padding: 1px 5px;
-      border-radius: 8px;
+      padding: 2px 6px;
+      border-radius: 6px;
       background: var(--vscode-badge-background);
       color: var(--vscode-badge-foreground);
       flex-shrink: 0;
       margin-top: 2px;
     }
 
-    /* ── Files list ── */
     .file-item {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 12px;
+      gap: 8px;
+      padding: 6px 10px;
       font-size: 12px;
       cursor: pointer;
+      border-radius: 6px;
+      margin-bottom: 2px;
     }
 
     .file-item:hover {
@@ -412,47 +476,31 @@ export class AgentScreenPanel {
       color: var(--vscode-textLink-activeForeground);
     }
 
-    .file-icon {
-      opacity: 0.7;
-      flex-shrink: 0;
-      font-size: 13px;
-    }
+    .file-icon { opacity: 0.8; flex-shrink: 0; font-size: 14px; }
+    .file-path { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-operator { font-size: 10px; color: var(--vscode-descriptionForeground); flex-shrink: 0; }
 
-    .file-path {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .file-operator {
-      font-size: 10px;
-      color: var(--vscode-descriptionForeground);
-      flex-shrink: 0;
-    }
-
-    /* ── Decisions list ── */
     .decision-item {
-      padding: 4px 12px;
+      padding: 8px 12px;
       font-size: 12px;
-      border-left: 2px solid var(--vscode-textLink-foreground);
-      margin: 2px 12px;
-      padding-left: 8px;
-      border-radius: 0 2px 2px 0;
+      border-left: 3px solid var(--vscode-testing-iconPassed, #4ec9b0);
+      margin: 4px 0;
+      padding-left: 10px;
+      border-radius: 0 6px 6px 0;
       background: var(--vscode-textBlockQuote-background, var(--vscode-editor-background));
     }
 
     .decision-operator {
       font-size: 10px;
       color: var(--vscode-descriptionForeground);
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     .empty-state {
       color: var(--vscode-descriptionForeground);
-      font-size: 12px;
+      font-size: 13px;
       text-align: center;
-      padding: 32px 16px;
+      padding: 40px 20px;
       font-style: italic;
     }
 
@@ -474,19 +522,43 @@ export class AgentScreenPanel {
     .cli-tool-call {
       font-family: var(--vscode-editor-font-family);
       background: var(--vscode-textCodeBlock-background);
-      padding: 2px 6px;
-      border-radius: 3px;
+      padding: 4px 8px;
+      border-radius: 6px;
       font-size: 11px;
     }
     .cli-stream-block {
       font-family: var(--vscode-editor-font-family);
       white-space: pre-wrap;
-      font-size: 11px;
+      font-size: 12px;
+      line-height: 1.6;
       color: var(--vscode-editor-foreground);
-      padding: 2px 0;
+      padding: 8px 10px;
+      background: var(--vscode-textCodeBlock-background, transparent);
+      border-radius: 6px;
+      margin-bottom: 4px;
     }
-    .cli-user { font-style: italic; opacity: 0.8; }
+    .cli-user { font-style: italic; opacity: 0.85; }
     .cli-error { color: var(--vscode-editorWarning-foreground, #f0a500); }
+
+    .artifact-item {
+      margin-bottom: 16px;
+      padding: 8px;
+      border-radius: 6px;
+      background: var(--vscode-textCodeBlock-background);
+    }
+    .artifact-item video, .artifact-item img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+    .artifact-label {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+      margin-top: 4px;
+    }
+    .artifact-label a {
+      color: var(--vscode-textLink-foreground);
+      text-decoration: underline;
+    }
 
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 6px; }
@@ -513,13 +585,22 @@ export class AgentScreenPanel {
   ` : ""}
   <main>
     <div class="tabs" role="tablist" aria-label="Agent Screen tabs">
-      <button class="tab active" data-panel="activity" data-testid="tab-activity" role="tab" aria-selected="true" aria-controls="panel-activity" aria-label="Activity tab">Activity</button>
+      <button class="tab active" data-panel="live" data-testid="tab-live" role="tab" aria-selected="true" aria-controls="panel-live" aria-label="Live tab">Live</button>
+      <button class="tab" data-panel="activity" data-testid="tab-activity" role="tab" aria-selected="false" aria-controls="panel-activity" aria-label="Activity tab">Activity</button>
       <button class="tab" data-panel="files" data-testid="tab-files" role="tab" aria-selected="false" aria-controls="panel-files" aria-label="Files tab">Files</button>
       <button class="tab" data-panel="decisions" data-testid="tab-decisions" role="tab" aria-selected="false" aria-controls="panel-decisions" aria-label="Decisions tab">Decisions</button>
       <button class="tab" data-panel="sync" data-testid="tab-sync" role="tab" aria-selected="false" aria-controls="panel-sync" aria-label="Sync tab">Sync</button>
+      <button class="tab" data-panel="artifacts" data-testid="tab-artifacts" role="tab" aria-selected="false" aria-controls="panel-artifacts" aria-label="Artifacts tab">Artifacts</button>
     </div>
 
-    <div class="panel active" id="panel-activity" data-testid="panel-activity" role="tabpanel" aria-label="Activity panel">
+    <div class="panel active" id="panel-live" data-testid="panel-live" role="tabpanel" aria-label="Live panel">
+      <div class="live-files-strip" id="live-files-strip" aria-label="Files in focus"></div>
+      <div class="live-stream" id="live-stream">
+        <div class="empty-state" id="live-empty">Waiting for agent activity... Files and thinking will appear here.</div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-activity" data-testid="panel-activity" role="tabpanel" aria-label="Activity panel">
       <div class="empty-state" id="activity-empty">Waiting for operator activity...</div>
     </div>
 
@@ -537,6 +618,10 @@ export class AgentScreenPanel {
       <div id="sync-operators" style="padding: 0 12px;"></div>
       <div id="sync-proposals" style="padding: 0 12px;"></div>
       <div id="sync-queue" style="padding: 0 12px;"></div>
+    </div>
+
+    <div class="panel" id="panel-artifacts" data-testid="panel-artifacts" role="tabpanel" aria-label="Artifacts panel">
+      <div class="empty-state" id="artifacts-empty">No Cloud Agent artifacts yet.</div>
     </div>
   </main>
 
@@ -570,7 +655,7 @@ export class AgentScreenPanel {
       return s.replace(pathRe, (m) => '<span class="file-path-link" data-path="' + escapeHtml(m).replace(/"/g, '&quot;') + '" data-testid="file-link" title="Click to open" role="link">' + escapeHtml(m) + '</span>');
     }
 
-    document.getElementById('panel-activity').addEventListener('click', (e) => {
+    function handleActivityClick(e) {
       const pathLink = e.target.closest('.file-path-link');
       if (pathLink && !e.ctrlKey && !e.metaKey) {
         vscodeApi.postMessage({ type: 'openFile', path: pathLink.dataset.path });
@@ -581,7 +666,9 @@ export class AgentScreenPanel {
         e.preventDefault();
         showAskOverlay(item, item.querySelector('.activity-text')?.textContent || '');
       }
-    });
+    }
+    document.getElementById('panel-activity').addEventListener('click', handleActivityClick);
+    document.getElementById('live-stream').addEventListener('click', handleActivityClick);
 
     document.getElementById('panel-decisions').addEventListener('click', (e) => {
       const item = e.target.closest('.decision-item');
@@ -708,23 +795,24 @@ export class AgentScreenPanel {
           if (streamType === 'tool_call') {
             addActivity('CLI', '\uD83D\uDD27 ' + (toolName || 'tool') + (text ? ': ' + text : ''), msg.timestamp, 'cli-tool-call');
           } else if (streamType === 'text_delta') {
-            const container = document.getElementById('panel-activity');
-            let streamBlock = container ? container.querySelector('.cli-stream-block:last-child') : null;
-            if (!streamBlock) {
-              streamBlock = document.createElement('div');
-              streamBlock.className = 'activity-item cli-stream-block';
-              const timeEl = document.createElement('span');
-              timeEl.className = 'activity-time';
-              timeEl.textContent = formatTime(msg.timestamp || Date.now());
-              streamBlock.appendChild(timeEl);
-              const textEl = document.createElement('span');
-              textEl.className = 'activity-text';
-              streamBlock.appendChild(textEl);
-              if (container) { container.appendChild(streamBlock); }
-            }
-            const textEl = streamBlock.querySelector('.activity-text');
-            if (textEl) { textEl.textContent += text; }
-            if (container) { scrollToBottom(container); }
+            const containers = [document.getElementById('panel-activity'), document.getElementById('live-stream')];
+            containers.forEach(function(container) {
+              if (!container) return;
+              let streamBlock = container.querySelector('.cli-stream-block:last-child');
+              if (!streamBlock) {
+                const liveEmpty = document.getElementById('live-empty');
+                if (liveEmpty) liveEmpty.remove();
+                const empty = document.getElementById('activity-empty');
+                if (empty) empty.remove();
+                streamBlock = document.createElement('div');
+                streamBlock.className = 'activity-item cli-stream-block';
+                streamBlock.innerHTML = '<span class="activity-time">' + formatTime(msg.timestamp || Date.now()) + '</span><span class="activity-text"></span><span class="activity-operator">\uD83E\uDD16</span>';
+                container.appendChild(streamBlock);
+              }
+              const textEl = streamBlock.querySelector('.activity-text');
+              if (textEl) textEl.textContent += text;
+              scrollToBottom(container);
+            });
           } else if (streamType === 'user') {
             addActivity('CLI/user', text, msg.timestamp, 'cli-user');
           } else if (streamType === 'error') {
@@ -756,9 +844,21 @@ export class AgentScreenPanel {
           break;
         }
 
+        case 'cloudAgentStatus': {
+          addCloudAgentStatusItem(msg.cloudAgentId, msg.cloudStatus, msg.prUrl, msg.timestamp);
+          break;
+        }
+
+        case 'cloudAgentArtifact': {
+          addCloudAgentArtifactItem(msg.artifactType, msg.artifactUrl, msg.artifactLabel, msg.timestamp);
+          break;
+        }
+
         case 'clear': {
           const pp = document.getElementById('plan-progress');
           if (pp) pp.style.display = 'none';
+          document.getElementById('live-files-strip').innerHTML = '';
+          document.getElementById('live-stream').innerHTML = '<div class="empty-state" id="live-empty">Waiting for agent activity... Files and thinking will appear here.</div>';
           document.getElementById('panel-activity').innerHTML = '<div class="empty-state" id="activity-empty">Waiting for operator activity...</div>';
           document.getElementById('panel-files').innerHTML = '<div class="empty-state" id="files-empty">No files touched yet.</div>';
           document.getElementById('panel-decisions').innerHTML = '<div class="empty-state" id="decisions-empty">No decisions recorded yet.</div>';
@@ -768,6 +868,8 @@ export class AgentScreenPanel {
           document.getElementById('sync-operators').innerHTML = '';
           document.getElementById('sync-proposals').innerHTML = '';
           document.getElementById('sync-queue').innerHTML = '';
+          const artifactsPanel = document.getElementById('panel-artifacts');
+          if (artifactsPanel) { artifactsPanel.innerHTML = '<div class="empty-state" id="artifacts-empty">No Cloud Agent artifacts yet.</div>'; }
           touchedFiles.clear();
           break;
         }
@@ -801,21 +903,23 @@ export class AgentScreenPanel {
     }
 
     function addActivity(operatorName, text, timestamp, extraClass) {
-      const container = document.getElementById('panel-activity');
-      const empty = document.getElementById('activity-empty');
-      if (empty) { empty.remove(); }
-
-      const item = document.createElement('div');
-      item.className = 'activity-item' + (extraClass ? ' ' + extraClass : '');
-      item.setAttribute('data-testid', 'activity-item');
-      item.innerHTML =
-        \`<span class="activity-time">\${formatTime(timestamp || Date.now())}</span>\` +
-        \`<span class="activity-text">\${linkifyPaths(text)}</span>\` +
-        (operatorName && operatorName !== 'system'
-          ? \`<span class="activity-operator">\${escapeHtml(operatorName)}</span>\`
-          : '');
-      container.appendChild(item);
-      scrollToBottom(container);
+      const containers = [document.getElementById('panel-activity'), document.getElementById('live-stream')];
+      ['activity-empty', 'live-empty'].forEach(function(id) {
+        const empty = document.getElementById(id);
+        if (empty) empty.remove();
+      });
+      const itemHtml = '<span class="activity-time">' + formatTime(timestamp || Date.now()) + '</span>' +
+        '<span class="activity-text">' + linkifyPaths(text) + '</span>' +
+        (operatorName && operatorName !== 'system' ? '<span class="activity-operator">' + escapeHtml(operatorName) + '</span>' : '');
+      containers.forEach(function(container) {
+        if (!container) return;
+        const item = document.createElement('div');
+        item.className = 'activity-item' + (extraClass ? ' ' + extraClass : '');
+        item.setAttribute('data-testid', 'activity-item');
+        item.innerHTML = itemHtml;
+        container.appendChild(item);
+        scrollToBottom(container);
+      });
     }
 
     const touchedFiles = new Set();
@@ -836,11 +940,20 @@ export class AgentScreenPanel {
       item.setAttribute('data-testid', 'file-item');
       item.setAttribute('role', 'button');
       item.setAttribute('aria-label', 'Open ' + escapeHtml(filePath));
-      item.innerHTML =
-        \`<span class="file-icon">📄</span>\` +
-        \`<span class="file-path">\${escapeHtml(basename)}</span>\` +
-        (operatorName ? \`<span class="file-operator">\${escapeHtml(operatorName)}</span>\` : '');
+      item.innerHTML = '<span class="file-icon">📄</span><span class="file-path">' + escapeHtml(basename) + '</span>' +
+        (operatorName ? '<span class="file-operator">' + escapeHtml(operatorName) + '</span>' : '');
       container.appendChild(item);
+
+      var strip = document.getElementById('live-files-strip');
+      if (strip) {
+        var chip = document.createElement('span');
+        chip.className = 'file-chip';
+        chip.dataset.path = filePath;
+        chip.title = filePath;
+        chip.textContent = basename;
+        chip.onclick = function() { vscodeApi.postMessage({ type: 'openFile', path: filePath }); };
+        strip.appendChild(chip);
+      }
     }
 
     function addDecision(operatorName, text, timestamp) {
@@ -902,6 +1015,82 @@ export class AgentScreenPanel {
               '</div>';
           }).join(''));
       }
+    }
+
+    function addCloudAgentArtifactItem(artifactType, artifactUrl, artifactLabel, timestamp) {
+      const container = document.getElementById('panel-artifacts');
+      const empty = document.getElementById('artifacts-empty');
+      if (!container) return;
+      if (empty) empty.remove();
+
+      const label = artifactLabel || 'artifact';
+      const item = document.createElement('div');
+      item.className = 'artifact-item';
+      item.setAttribute('data-testid', 'artifact-item');
+
+      if (artifactType === 'video' && artifactUrl) {
+        const video = document.createElement('video');
+        video.src = artifactUrl;
+        video.controls = true;
+        video.setAttribute('data-testid', 'artifact-video');
+        item.appendChild(video);
+      } else if ((artifactType === 'screenshot' || artifactType === 'log') && artifactUrl) {
+        if (artifactType === 'screenshot') {
+          const img = document.createElement('img');
+          img.src = artifactUrl;
+          img.alt = label;
+          img.setAttribute('data-testid', 'artifact-img');
+          item.appendChild(img);
+        }
+      }
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'artifact-label';
+      const link = document.createElement('a');
+      link.href = artifactUrl || '#';
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = label;
+      link.setAttribute('data-testid', 'artifact-link');
+      labelEl.appendChild(link);
+      item.appendChild(labelEl);
+      container.appendChild(item);
+      scrollToBottom(container);
+    }
+
+    function addCloudAgentStatusItem(agentId, status, prUrl, timestamp) {
+      ['activity-empty', 'live-empty'].forEach(function(id) {
+        const empty = document.getElementById(id);
+        if (empty) empty.remove();
+      });
+      const statusColors = {
+        pending: 'var(--vscode-descriptionForeground)',
+        creating: 'var(--vscode-descriptionForeground)',
+        running: 'var(--vscode-textLink-foreground)',
+        finished: 'var(--vscode-testing-iconPassed, #4ec9b0)',
+        completed: 'var(--vscode-testing-iconPassed, #4ec9b0)',
+        error: 'var(--vscode-errorForeground)',
+        failed: 'var(--vscode-errorForeground)',
+        expired: 'var(--vscode-descriptionForeground)',
+      };
+      const color = statusColors[status] || 'inherit';
+      const badge = '<span style="font-size:10px;padding:2px 6px;border-radius:6px;background:var(--vscode-badge-background);color:' + color + ';">' + escapeHtml(status || '?') + '</span>';
+      const prHtml = prUrl
+        ? ' <a href="' + escapeHtml(prUrl) + '" target="_blank" rel="noopener" class="file-path-link" style="margin-left:6px">View PR</a>'
+        : '';
+      const html = '<span class="activity-time">' + formatTime(timestamp || Date.now()) + '</span>' +
+        '<span class="activity-text">' + badge + ' ' + escapeHtml(agentId || '?') + prHtml + '</span>' +
+        '<span class="activity-operator">CloudAgent</span>';
+      const containers = [document.getElementById('panel-activity'), document.getElementById('live-stream')];
+      containers.forEach(function(container) {
+        if (!container) return;
+        const item = document.createElement('div');
+        item.className = 'activity-item cloud-agent-status';
+        item.setAttribute('data-testid', 'cloud-agent-status');
+        item.innerHTML = html;
+        container.appendChild(item);
+        scrollToBottom(container);
+      });
     }
 
     function addSyncLog(label, text) {

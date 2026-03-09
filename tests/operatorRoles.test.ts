@@ -85,6 +85,24 @@ describe("Operator Role Templates", () => {
     expect(template.defaultPreset).toBe("readonly");
     expect(template.description).toContain("Reviews");
   });
+
+  it("spawn with duplicate name gets unique suffix", () => {
+    const registry = new OperatorRegistry();
+    const a = registry.spawn("Alpha", "task1");
+    const b = registry.spawn("Alpha", "task2");
+    expect(a.name).toBe("Alpha");
+    expect(b.name).toBe("Alpha2");
+    expect(registry.findByNameOrId("Alpha")?.id).toBe(a.id);
+    expect(registry.findByNameOrId("Alpha2")?.id).toBe(b.id);
+  });
+
+  it("spawn with invalid parentId spawns without parent", () => {
+    const registry = new OperatorRegistry();
+    const child = registry.spawn("Beta", "child task", { parentId: "nonexistent-id" });
+    expect(child.parentId).toBeUndefined();
+    expect(child.depth).toBe(0);
+    expect(child.permissionPreset).toBe("standard");
+  });
 });
 
 describe("Operator Escalation", () => {

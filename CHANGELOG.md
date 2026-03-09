@@ -7,8 +7,14 @@
 - **Installability docs and assets** — added `PLUGIN-README.md`, architecture ADR docs, and plugin logo asset.
 - **Debug sub-mode in Drive state** — debug is now a first-class Drive sub-mode in config, mode picker, and MCP mode setting.
 - **Expanded unit coverage** — new tests for `pluginInstaller`, `driveMode`, `statusBar`, and `agentRegistry`.
+- **Voice command error feedback** — When chat open or mic command fails, user sees a clear message and hint to run `cursorDrive.discoverAllCommands` for Cursor version compatibility.
+- **Drive panel settings cog** — Settings icon in top-right opens quick-settings panel (wake word, submit word, tangent keyword, agent names, auto-mic). Saves to workspace config on blur/change. "Open full settings" links to Cursor settings.
+- **Agent Screen modernization** — Live tab (default) shows files in focus + agent thinking stream. Modern card-based styling, clearer typography.
 
 ### Changed
+- **Drive toggle flow** — When turning Drive on: chat opens first, Agent Screen opens before chime (so Web Audio plays), then optional mic activation. Fixes "no sound" and "no chat visible" on first use.
+- **Drive sidebar redesign** — Card layout, toggle switch, clearer hierarchy, reactive state updates when panel becomes visible.
+- **Sandbox defaults** — Fixed mic command (`workbench.action.chat.startVoiceChat`), enabled `showListeningFeedback` for dev testing.
 - **Status bar UI** now shows `Drive > MODE | AGENT` with background-agent count suffix.
 - **Mode picker UX** now includes direct access to the agent manager.
 - **Agent manager UX** now supports switch, spawn, pause, resume, merge, and dismiss flows.

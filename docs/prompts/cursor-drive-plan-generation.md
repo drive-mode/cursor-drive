@@ -85,7 +85,7 @@ Cursor Drive is a voice-first, multi-agent, pair-programming meta-layer for Curs
 - `skills/tangent/SKILL.md` — `/tangent` command: spawn a parallel agent
 - `skills/switch/SKILL.md` — `/switch` command: bring a background agent to foreground
 - `skills/merge/SKILL.md` — `/merge` command: merge a tangent's context back to main
-- `mcp.json` — Registers the Drive MCP server (stdio transport, no hosting)
+- `mcp.json` — Registers the Drive MCP server (HTTP/Streamable HTTP on localhost:7891)
 
 **Layer 2 — VS Code Extension** (`src/` directory, installed as a VSIX):
 - `extension.ts` — Entry point
@@ -94,7 +94,7 @@ Cursor Drive is a voice-first, multi-agent, pair-programming meta-layer for Curs
 - `tts.ts` — Text-to-speech: OS native (say.js), Piper, or ElevenLabs backends
 - `agentRegistry.ts` — Multi-agent lifecycle: spawn, pause, merge, status
 - `shareScreen.ts` — WebviewPanel showing agent file activity in real time (clickable)
-- `mcpServer.ts` — Local MCP server (stdio, 11 tools) bridging plugin to extension
+- `mcpServer.ts` — Local MCP server (HTTP on :7891, 40+ tools) bridging plugin to extension
 - `router.ts` — Intent router: prompt + sub-mode → plan/agent/ask/direct
 - `fillerCleaner.ts` — Filler word stripper (pure function, zero cost)
 - `modelSelector.ts` — 3-tier cost-aware model selection via `vscode.lm` API

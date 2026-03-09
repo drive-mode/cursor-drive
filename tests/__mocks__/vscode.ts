@@ -58,6 +58,7 @@ export const window = {
     reveal: jest.fn(),
     dispose: jest.fn(),
   })),
+  registerWebviewViewProvider: jest.fn(() => ({ dispose: jest.fn() })),
 };
 
 export const workspace = {
@@ -107,6 +108,7 @@ export const EventEmitter = class {
 
 export enum StatusBarAlignment { Left = 1, Right = 2 }
 export enum ExtensionKind { UI = 1, Workspace = 2 }
+export enum ExtensionMode { Development = 1, Production = 2, Test = 3 }
 
 export class ThemeColor {
   constructor(public id: string) { }

@@ -3,7 +3,7 @@
 
 # Plan Master Diagram
 
-> Last verified: 2026-02-25 · 11 plans · 97/97 TODOs completed · 183 tests passing
+> Last verified: 2026-03-04 · 9 active plans
 > Theme: **dark** — change `"dark"` to `"default"` in `%%{init}%%` to switch
 
 ---
@@ -13,7 +13,7 @@
 | File | Scope |
 |------|-------|
 | `plan-master.diagram.md` (this file) | Plan-level dependency DAG with phase grouping |
-| `task-graph.yaml` | All 97 TODOs aggregated across plans with inter-plan ordering |
+| `task-graph.yaml` | All TODOs aggregated across plans with inter-plan ordering |
 | `agent-graph.md` | Orchestrator → plan-agent → TODO-subagent spawn hierarchy |
 
 ---
@@ -27,115 +27,58 @@ flowchart TD
   subgraph cursor_drive_root ["⚡ cursor-drive (project · root)"]
     direction TB
 
-    subgraph phase1 ["Phase 1 — Foundation (parallel)"]
-      direction LR
-
-      avf["architecture-vision-foundation<br/>ADRs 0008-0014 + vision-invariants rule<br/>✓ 9/9 · no deps"]
-      cdc["cursor-docs-cleanup<br/>rule/command pruning + docs alignment<br/>✓ 15/15 · depends: avf"]
-      bdw["browser-dev-workflow<br/>serve-web + Playwright + dev scripts<br/>✓ 8/8 · no deps"]
-      tso["terminology-sas-overhaul<br/>operator rename + Agent Screen + config<br/>✓ 12/12 · no deps"]
-    end
-
-    subgraph phase2 ["Phase 2 — Core Refactor (parallel)"]
-      direction LR
-
-      hpp["hook-prompt-pipeline<br/>beforeSubmitPrompt contract + pipeline.ts<br/>✓ 6/6 · depends: avf"]
-      nma["native-mode-alignment<br/>RouteMode plan/agent/ask/debug + SubMode<br/>✓ 6/6 · depends: avf"]
-      seu["senior-engineer-ux<br/>pair-programming philosophy + ADR-0015<br/>✓ 7/7 · depends: avf"]
-      aof["agent-orchestration-frameworks<br/>A2A + CommsAgent + AgentRegistry v2<br/>✓ 11/11 · depends: avf"]
-    end
-
-    subgraph phase3 ["Phase 3 — Wiring"]
-      pwm["pipeline-wiring-mvp<br/>9 modules wired + promptOptimizer + wake words<br/>✓ 8/8 · depends: hpp nma"]
-    end
-
-    subgraph phase4 ["Phase 4 — Quality"]
-      qp["quality-performance<br/>183 tests + modelUtils + config caching<br/>✓ 7/7 · depends: pwm"]
-    end
-
     subgraph active_plans ["Active Plans"]
-      oclaw["openclaw_capability_scrape<br/>tool policy + memory isolation + checkpoints<br/>✓ 8/8 · no deps"]
+      direction LR
+
+      cd["cursor-drive<br/>root plan · in_progress"]
+      orch["cursor-drive-orchestrator<br/>run all plans · pending"]
+      rhb["repo-health-and-baseline<br/>6 phases · in_progress"]
+      rdr["readme-redesign<br/>8 TODOs · no deps"]
+      sas["s_as_screen_capture_impl<br/>Phase 2–3 pending · no deps"]
+      sdk["sdk_and_protocol_research<br/>6 TODOs · no deps"]
+      cpm["cursor_plugin_marketplace_and_mcp_apps<br/>4 phases · no deps"]
     end
 
   end
 
-  %% ── Phase 1 internal dependency ──────────────────────────────────────────
-  avf -->|"cdc needs ADRs"| cdc
+  cd --> orch
+  cd --> rhb
+  cd --> rdr
+  cd --> sas
+  cd --> sdk
+  cd --> cpm
 
-  %% ── Phase 1 → Phase 2 ────────────────────────────────────────────────────
-  avf -->|"hook contract ref"| hpp
-  avf -->|"mode-wrapper def"| nma
-  avf -->|"ADR-0015 ref"| seu
-  avf -->|"ADR-0014 ref"| aof
-
-  %% ── Phase 2 → Phase 3 ────────────────────────────────────────────────────
-  hpp -->|"runPipeline API"| pwm
-  nma -->|"RouteMode enum"| pwm
-
-  %% ── Phase 3 → Phase 4 ────────────────────────────────────────────────────
-  pwm -->|"wired modules"| qp
-
-  classDef stCompleted   stroke:#50c878,stroke-width:2px
   classDef stInProgress  stroke:#5599ff,stroke-width:3px
-  classDef stActive      stroke:#f0a030,stroke-width:2px
+  classDef stPending     stroke:#888,stroke-width:2px,stroke-dasharray: 5 5
 
-  class avf,cdc,bdw,tso,hpp,nma,seu,aof,pwm,qp stCompleted
-  class oclaw stActive
-```
-
----
-
-## Phase gates (all passed)
-
-| Gate | Condition | Status |
-|------|-----------|--------|
-| Phase 1 → 2 | ADR-0008–0014 exist; vision-invariants.mdc; dead .cursor/ files removed | ✓ |
-| Phase 2 → 3 | hooks.md with hook contract; router uses plan/agent/ask/debug | ✓ |
-| Phase 3 → 4 | All 9 orphaned modules wired; end-to-end pipeline runs | ✓ |
-| Phase 4 done | 183 tests pass; npm run compile clean; docs reflect architecture | ✓ |
-
----
-
-## Cross-plan dependency detail
-
-```mermaid
-%%{init: {"theme":"dark"}}%%
-flowchart LR
-
-  avf_01["avf-01: ADR-0008<br/>mode-wrapper"]
-  avf_02["avf-02: ADR-0009<br/>hook ingress"]
-  avf_03["avf-03: ADR-0011<br/>native modes"]
-
-  hpp_01["hpp-01: hooks.md"]
-  hpp_03["hpp-03: pipeline.ts"]
-  nma_01["nma-01: RouteMode"]
-  nma_02["nma-02: SubMode"]
-
-  pwm_01["pwm-01: wire filler+sanitizer"]
-  pwm_05["pwm-05: promptOptimizer"]
-  pwm_06["pwm-06: wake/submit words"]
-
-  qp_02["qp-02: core tests"]
-  qp_05["qp-05: modelUtils"]
-
-  avf_01 --> hpp_01
-  avf_02 --> hpp_01
-  avf_03 --> nma_01
-  avf_03 --> nma_02
-
-  hpp_01 --> hpp_03
-  hpp_03 --> pwm_01
-  nma_01 --> pwm_01
-  nma_02 --> pwm_05
-
-  pwm_01 --> qp_02
-  pwm_05 --> qp_05
-  pwm_06 --> qp_02
+  class cd,rhb stInProgress
+  class orch,rdr,sas,sdk,cpm stPending
 ```
 
 ---
 
 ## Archived plans
+
+### cursor-drive (archive/cursor-drive/)
+
+| Plan | TODOs | Evidence |
+|------|-------|----------|
+| cursor_drive_state_sync_95317c89 | ✓ | Plan sync, session memory |
+| openclaw_capability_scrape_8fa228d1 | ✓ | Tool policy, memory isolation |
+| wire_and_fix_drive_886a9ffa | ✓ | Drive wiring |
+| drive_ux_polish_and_auto-mcp_deb68d21 | ✓ | UX polish, auto-MCP |
+| voice_user_journey_storyboard_59290404 | ✓ | Voice journey |
+| cursor_native_commands_wire_4b8e2c17 | ✓ | Native commands |
+| governance_entropy_control_1d0c8c2e | ✓ | Governance |
+| mcp_apps_implementation_cc604304 | ✓ | MCP apps |
+| composer_ui_constraints_and_extension_tab_strategy_5cd16ec2 | ✓ | Composer UI constraints |
+| mob-programming-cockpit-mvp | ✓ | S-AS Sync tab, worktrees, IntegrationQueue |
+| mcp_install_link_and_extension_api | ✓ | README install link, Extension API |
+| project_cleanup_and_reset_11e351b6 | superseded | → repo-health-and-baseline |
+| fork_upstream_sync_and_branch_cleanup_82fad582 | superseded | → repo-health-and-baseline |
+| repo_review_and_bugfix_plan_9f907bcf | superseded | → repo-health-and-baseline |
+
+### cursor-drive (archive/ root — legacy)
 
 | Plan | Phase | TODOs | ADRs / evidence |
 |------|-------|-------|-----------------|

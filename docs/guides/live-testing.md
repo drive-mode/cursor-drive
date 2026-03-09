@@ -66,6 +66,33 @@ npm run dev-loop              # compile, package, install
 npm run dev-loop:serve        # same + start cursor serve-web
 ```
 
+### Option C: Reinstall (uninstall → compile → package → install)
+
+For clean installs or when switching between `drive-mode.cursor-drive` and `hh.cursor-drive`:
+
+```bash
+npm run reinstall                # uninstall both IDs, compile, package, install
+npm run reinstall:serve-web      # same + start cursor serve-web + open browser
+npm run reinstall:dev-sandbox    # same + launch Dev: Drive in sandbox (Extension Dev Host)
+```
+
+**CLI flags** (pass to `node scripts/reinstall-extension.mjs`):
+
+| Flag | Description |
+|------|-------------|
+| `--skip-compile` | Use existing `out/`; package and install only |
+| `--no-uninstall` | Skip uninstall; install over existing |
+| `--serve-web` | Start cursor serve-web after install, open browser to URL |
+| `--dev-sandbox` | Launch Extension Development Host with sandbox (Dev: Drive in sandbox) |
+| `--extension-id <id>` | Uninstall only this ID (default: both drive-mode and hh) |
+
+**Manual test steps** (after `reinstall:dev-sandbox` or `reinstall:serve-web`):
+
+- **Dev sandbox:** A new Cursor window opens with `sandbox/` as workspace. Test: Ctrl+Shift+P → Toggle Drive Mode; Ctrl+Shift+S → Agent Screen; curl http://127.0.0.1:7891/health for MCP.
+- **Serve-web:** Browser opens at http://localhost:8000. Same tests in the browser Cursor UI.
+
+**Reload:** After reinstall, reload the Extension Development Host or serve-web window (Ctrl+Shift+P → Developer: Reload Window).
+
 **Port selection** (MCP / S-AS): Auto-selects next free port if 7891 is busy. Override with `DRIVE_MCP_PORT` (PowerShell: `$env:DRIVE_MCP_PORT=7892`). The script updates `sandbox/.vscode/settings.json` and `.cursor/mcp.json` so extension and MCP client stay in sync. See `sandbox/README.md` and `sandbox/dev-env.example`.
 
 ### Browser Dev (cursor serve-web)
@@ -266,6 +293,15 @@ pip install pyyaml
 
 - Ensure `npm run compile` (or `watch`) has produced `out/extension.js`.
 - Reload window in dev-host (`Ctrl+Shift+P` → **Developer: Reload Window**).
+
+### Duplicate extension or "property already registered"
+
+If both `drive-mode.cursor-drive` and `hh.cursor-drive` are installed, configuration can conflict. Use `npm run reinstall` to uninstall both and install a clean build, or uninstall manually:
+
+```powershell
+cursor --uninstall-extension drive-mode.cursor-drive
+cursor --uninstall-extension hh.cursor-drive
+```
 
 ### sandbox `.cursor/` not picking up skills/commands/hooks
 

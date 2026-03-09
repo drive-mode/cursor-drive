@@ -22,6 +22,13 @@ ADRs capture significant architectural choices, the context that motivated them,
 | [ADR-0014](ADR-0014-agent-orchestration-strategy.md) | Agent Orchestration Strategy | Accepted |
 | [ADR-0015](ADR-0015-senior-engineer-interaction-model.md) | Senior Engineer Interaction Model | Accepted |
 | [ADR-0016](ADR-0016-drive-terminology-and-hierarchy.md) | Drive Terminology and Hierarchy | Accepted |
+| [ADR-0017](ADR-0017-mcp-apps-adoption-strategy.md) | MCP Apps Adoption Strategy | Proposed |
+| [ADR-0018](ADR-0018-cursor-computer-use-posture.md) | Cursor Computer Use Integration Posture | Proposed |
+| [ADR-0019](ADR-0019-plugin-extension-strategy.md) | Plugin and Extension Strategy | Proposed |
+| [ADR-0020](ADR-0020-agent-steering-control-plane.md) | Agent Steering and Control Plane | Proposed |
+| [ADR-0021](ADR-0021-agent-orchestration-enhancement.md) | Agent Orchestration Enhancement | Proposed |
+| [ADR-0022](ADR-0022-mob-programming-cockpit.md) | Mob Programming Cockpit — Multi-Operator Workspace Isolation | Accepted |
+| [ADR-0023](ADR-0023-sdk-protocol-framework-adoption.md) | SDK, Protocol, and Framework Adoption Strategy | Accepted |
 | [ADR-0024](ADR-0024-fork-merge-drive-mode-canonical.md) | Fork Merge — Drive-Mode Canonical | Accepted |
 
 ## Summaries
@@ -48,7 +55,7 @@ ADRs capture significant architectural choices, the context that motivated them,
 
 **ADR-0011** — Drive sub-modes map 1:1 to Cursor modes (plan→Plan, agent→Agent, ask→Ask, debug→Debug); direct retired.
 
-**ADR-0012** — Mic is mute/unmute; wake word optional; TTS speaks responses; pipeline: filler-clean → sanitize → optimize.
+**ADR-0012** — Mic is mute/unmute; wake word optional; TTS speaks responses; pipeline: filler-clean → glossary → sanitize → optimize.
 
 **ADR-0013** — Drive state (active + subMode) persisted to workspaceState; status bar reflects actual Drive+native mode.
 
@@ -57,6 +64,20 @@ ADRs capture significant architectural choices, the context that motivated them,
 **ADR-0015** — Drive embodies senior engineer in live pair session: concise-first, steers without being asked, teaches when valuable, challenges once then defers; invariants for response structure and confirmation.
 
 **ADR-0016** — Drive workers renamed to "operators"; ShareScreen → Agent Screen (S-AS); MCP tools use operator_* and agent_screen_* with deprecated aliases.
+
+**ADR-0017** — MCP Apps: prototype activity feed as MCP App UI resource for portability across hosts.
+
+**ADR-0018** — Defer Cursor computer-use; monitor API; use community MCP tools if needed.
+
+**ADR-0019** — LM Tools registration, S-AS accessibility, dynamic MCP registration.
+
+**ADR-0020** — YAML-driven policies; runtime governance for operator behavior.
+
+**ADR-0021** — Role templates, escalation protocol, A2A SSE streaming.
+
+**ADR-0022** — Git worktree isolation per operator; sync engine; proposal lifecycle.
+
+**ADR-0023** — No Copilot SDK; port 6 patterns; ACP patterns; no orchestration frameworks.
 
 **ADR-0024** — Fork merge from `cursor-agentic-framework-review-288f` resolved with drive-mode as canonical for `src/extension.ts` and core stack; unrelated histories merged with `--allow-unrelated-histories`, conflicts resolved by keeping origin/main.
 
@@ -72,7 +93,7 @@ See [ADR-0016](ADR-0016-drive-terminology-and-hierarchy.md).
 
 To propose a new ADR:
 1. Copy any existing ADR as a template.
-2. Number it sequentially (next is `ADR-0017`).
+2. Number it sequentially (next is `ADR-0025`).
 3. Fill in Status as `Proposed`.
 4. Add it to the index table above.
 5. Update `docs/architecture/README.md` ADR table.

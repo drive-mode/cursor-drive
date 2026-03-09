@@ -1,7 +1,20 @@
-import * as say from "say";
 import * as vscode from "vscode";
 
 const SPOKEN_HISTORY_SIZE = 20;
+
+/** Lazy-loaded say module. undefined = not yet tried, null = unavailable, otherwise the module. */
+let sayModule: typeof import("say") | null | undefined = undefined;
+
+function getSay(): typeof import("say") | null {
+  if (sayModule !== undefined) return sayModule as typeof import("say") | null;
+  try {
+    sayModule = require("say");
+    return sayModule as typeof import("say");
+  } catch {
+    sayModule = null;
+    return null;
+  }
+}
 
 /** Circular buffer of recently spoken text. Agent can query what it has said via TTS. */
 const spokenHistory: string[] = [];
@@ -64,6 +77,9 @@ export function speak(text: string, overrideVoice?: string): void {
   const cfg = getTtsConfig();
   if (!cfg.enabled) { return; }
 
+  const say = getSay();
+  if (!say) { return; }
+
   say.stop();
   inProgressUtterance = undefined;
   const speech = truncateToSentences(text.trim(), cfg.maxSpokenSentences);
@@ -83,6 +99,9 @@ export function speak(text: string, overrideVoice?: string): void {
 export function speakFull(text: string, voice?: string, speed?: number): void {
   const cfg = getTtsConfig();
   if (!cfg.enabled) { return; }
+
+  const say = getSay();
+  if (!say) { return; }
 
   say.stop();
   inProgressUtterance = undefined;
@@ -108,7 +127,8 @@ export function stop(): void {
     }
     inProgressUtterance = undefined;
   }
-  say.stop();
+  const say = getSay();
+  if (say) { say.stop(); }
 }
 
 export function isEnabled(): boolean {

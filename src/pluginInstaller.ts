@@ -410,7 +410,7 @@ export async function installDrivePluginToWorkspace(
   await fs.mkdir(cursorDir, { recursive: true });
 
   for (const dirName of DRIVE_PLUGIN_DIRS) {
-    const sourceDir = path.join(context.extensionPath, dirName);
+    const sourceDir = path.join(context.extensionPath, ".cursor", dirName);
     const targetDir = path.join(cursorDir, dirName);
     await copyDirectory(sourceDir, targetDir);
     installedPaths.push(targetDir);

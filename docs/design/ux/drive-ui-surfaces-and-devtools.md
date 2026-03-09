@@ -1,16 +1,17 @@
 # Drive UI Surfaces and DevTools Workflow
 
-Drive interacts with **more than three** UI surfaces: it *owns* three and *interacts with* several Cursor/VS Code surfaces. This doc lists all of them and ties in the recommended DevTools workflow for targeting and testing (from Chromium DevTools, VS Code/Cursor developer commands, and extension logging).
+Drive interacts with **more than four** UI surfaces: it *owns* four and *interacts with* several Cursor/VS Code surfaces. This doc lists all of them and ties in the recommended DevTools workflow for targeting and testing (from Chromium DevTools, VS Code/Cursor developer commands, and extension logging).
 
 ---
 
-## Surfaces Drive Owns (3)
+## Surfaces Drive Owns (4)
 
 | # | Surface | Type | Location | Notes |
 |---|---------|------|----------|--------|
 | 1 | **Status bar item** | `StatusBarItem` | Left status bar | Click → `cursorDrive.setSubMode` QuickPick |
 | 2 | **Agent Screen (S-AS)** | `WebviewPanel` or `OutputChannel` | Tab beside editor, or bottom panel, or "Drive Agent Screen" output | `displayMode`: tab \| panel \| bottomLog |
-| 3 | **Audio feedback** | Hidden WebView | Not visible | Chimes via Web Audio API |
+| 3 | **Drive sidebar panel** | `WebviewView` | Activity Bar → Drive icon | Status, mode, operators, quick actions, settings cog. `cursorDrive.focusDrivePanel` to focus. See [drive-tab-vision-and-voice-flow.md](drive-tab-vision-and-voice-flow.md). |
+| 4 | **Audio feedback** | Hidden WebView | Not visible | Chimes via Web Audio API |
 
 ---
 
@@ -18,17 +19,17 @@ Drive interacts with **more than three** UI surfaces: it *owns* three and *inter
 
 | # | Surface | How Drive uses it |
 |---|---------|-------------------|
-| 4 | **Chat / Composer** | Pipeline intercepts submit via `beforeSubmitPrompt`. Voice: `workbench.action.chat.startVoiceChat`, `stopListeningAndSubmit`. Optional: `composer.addfilestocomposer`, `composer.startComposerPrompt2`. |
+| 4 | **Chat / Composer** | Pipeline intercepts submit via `beforeSubmitPrompt`. Voice: `workbench.action.chat.startVoiceChat`, `stopListeningAndSubmit`. Optional: `composer.addfilestocomposer`, `composer.startComposerPrompt2`. Future: [Composer input (Drive active)](composer-mode-dropdown-integration.md#composer-input-drive-active) — send-button border, mic always visible. |
 | 5 | **Command Palette** | All `cursorDrive.*` commands (toggle, setSubMode, showAgentScreen, diagnose, etc.). |
 | 6 | **QuickPicks** | `setSubMode` (plan/agent/ask/debug/off), `diagnose` (Show Logs, Extension Monitor), `operators` (list/switch/dismiss), `spawnOperator` (task/name), prompt optimizer (approve/edit). |
 | 7 | **Input boxes** | Diagnose custom prompt, spawn operator (task, name), prompt optimizer edit. |
 | 8 | **Toast messages** | `showInformationMessage` / `showWarningMessage` / `showErrorMessage` (MCP start, mode switch, errors, etc.). |
 | 9 | **Output panel** | Channels: "Cursor Drive", "Drive Agent Screen", "Drive API Discovery". Diagnose can open: MCP Logs, Cursor Agent Exec, Cursor Agent, Cursor Plugins. |
 | 10 | **Native Agents panel** | `cursorDrive.focusAgentView` → `workbench.action.openAgentsView` + `cursor.tryAgentLayout`. Drive’s operators appear in the *Agent Screen* webview, not in Cursor’s native Agents list. |
-| 11 | **Mode selector (Composer mode)** | `composerMode.plan | agent | chat | debug` when `syncNativeMode` is true. |
+| 11 | **Mode selector (Composer mode)** | `composerMode.plan | agent | chat | debug` when `syncNativeMode` is true. Future: [Drive in composer dropdown](composer-mode-dropdown-integration.md). |
 | 12 | **Webview DevTools** | `cursorDrive.openWebviewDevTools` → `workbench.action.webview.openDeveloperTools` for Agent Screen HTML/CSS debugging. |
 
-So in total there are **12 distinct interaction points** (3 owned + 9 we rely on or trigger).
+So in total there are **13 distinct interaction points** (4 owned + 9 we rely on or trigger).
 
 ---
 
@@ -73,7 +74,7 @@ Order of operations for building and testing Drive UI:
 
 ## Click Logger (For Surfaces We Control)
 
-For the **Agent Screen webview** we own the DOM. To build a list of targets (e.g. for automation or accessibility):
+For the **Agent Screen** and **Drive sidebar** webviews we own the DOM. To build a list of targets (e.g. for automation or accessibility):
 
 - **Option A — DevTools Recorder**
   Open DevTools for the webview (`cursorDrive.openWebviewDevTools`), use Recorder to record a flow, export for replay or documentation.
@@ -161,6 +162,6 @@ Breadcrumbs (e.g. editor path/symbol bar) are **secondary navigation**. Drive do
 
 ## References
 
-- [drive-layout-integration.md](./drive-layout-integration.md) — Layouts, keybindings, where Drive’s three owned surfaces live.
+- [drive-layout-integration.md](./drive-layout-integration.md) — Layouts, keybindings, where Drive’s four owned surfaces live.
 - [cursor-native-commands.md](../../reference/cursor-native-commands.md) — Native commands Drive uses or may use.
 - [extension-compatibility.md](./extension-compatibility.md) — Keybinding and coexistence with other extensions.

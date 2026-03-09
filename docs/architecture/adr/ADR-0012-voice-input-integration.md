@@ -40,13 +40,14 @@ TTS speaks AI responses when Drive is active and TTS is enabled. Integration poi
 - Extension `src/tts.ts` — OS-native speech (e.g., via say.js)
 - Voice interrupt: user typing while TTS is speaking → call `tts_stop`
 
-### Pipeline: Filler-Clean → Sanitize → Optimize
+### Pipeline: Filler-Clean → Glossary → Sanitize → Optimize
 
 The voice→prompt pipeline order:
 
 1. **Filler clean** — Remove "um", "uh", "like" etc. (client-side, free)
-2. **Sanitize** — Truncate, strip injection patterns
-3. **Optimize** — Routing-tier model rewrite for clarity (conditional, user approval)
+2. **Glossary expand** — Map voice shortcuts to intents (user-configurable phrase-to-intent)
+3. **Sanitize** — Truncate, strip injection patterns
+4. **Optimize** — Routing-tier model rewrite for clarity (conditional, user approval)
 
 Pipeline runs in `beforeSubmitPrompt` when Drive is active. See ADR-0009 for hook contract.
 
@@ -55,6 +56,7 @@ Pipeline runs in `beforeSubmitPrompt` when Drive is active. See ADR-0009 for hoo
 | Component | File | Responsibility |
 |-----------|------|----------------|
 | Filler cleaner | `src/fillerCleaner.ts` | Remove filler words |
+| Glossary expander | `src/glossaryExpander.ts` | Voice shortcut → intent mapping |
 | Sanitizer | `src/sanitizer.ts` | Truncation, injection stripping |
 | Prompt optimizer | `src/promptOptimizer.ts` | AI rewrite (Tier 1) |
 | TTS | `src/tts.ts` | OS-native speech |

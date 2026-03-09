@@ -53,7 +53,7 @@ User speaks --> Cursor STT --> raw text
   - Extension host sends text to webview via `postMessage`; webview calls `speechSynthesis.speak()`
   - 5-15 voices available depending on OS (Windows SAPI, macOS AVSpeechSynthesizer, Linux espeak)
 - Implement interrupt: cancel current utterance when user sends a new message or presses a key
-- Add wake word detection (configurable activation phrase parsed from prompt start)
+- Add wake word detection (configurable activation phrase parsed from prompt start); on detection, activate mic for next utterance
 - Add submit word detection (configurable confirmation phrase)
 - Config: `tts.enabled` (default `false`), `tts.backend` (default `"webSpeech"`), `tts.voiceId`, `tts.speed`
 

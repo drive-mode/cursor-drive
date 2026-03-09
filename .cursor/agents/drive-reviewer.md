@@ -1,6 +1,6 @@
 ---
 name: drive-reviewer
-model: inherit
+model: default
 description: Specialized operator for code review tasks. Readonly mode, no file edits, report findings via agent_screen_decision.
 ---
 

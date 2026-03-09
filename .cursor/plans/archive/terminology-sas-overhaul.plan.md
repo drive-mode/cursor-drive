@@ -1,4 +1,9 @@
 ---
+planId: terminology-sas-overhaul
+planType: task
+parentPlanId: cursor-drive
+childPlanIds: []
+dependsOn: []
 name: Terminology and S-AS Overhaul
 overview: Rename Drive's multi-agent workers from 'agent' to 'operator' (resolving collision with Cursor's native Agent mode). Rename ShareScreen to Agent Screen (S-AS) with interactive enhancements. Add granular operator and agentScreen config settings. Align all docs, plans, and MCP tools with backward-compatible aliases.
 todos:
@@ -90,7 +95,7 @@ The Agent Screen (S-AS) becomes an interactive view:
 MCP tool name aliases ensure existing skill files and plugin rules don't break:
 
 - `agent_spawn`, `agent_switch`, etc. remain as deprecated aliases that call `operator_`* implementations and log a one-time warning
-- `share_screen_`* remain as deprecated aliases calling `agent_screen_*`
+- `share_screen_`* remain as deprecated aliases calling `agent_screen_`*
 
 ## Execution strategy
 
@@ -121,10 +126,10 @@ All 12 TODOs completed. Summary of changes:
 | Area         | Changes                                                                                                                                                                                                                 |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ADR**      | ADR-0016 defines hierarchy: Drive → Operators → Agents (Cursor native). Documents semantic collision, MCP deprecation strategy, ShareScreen → Agent Screen rationale.                                                   |
-| **Config**   | `cursorDrive.operators.`* (maxConcurrent, maxSubAgentsPerOperator, defaultPermissionPreset, namePool); `cursorDrive.agentScreen.*` (enabled, autoOpen, displayMode, clickBehavior, showPlanProgress).                   |
+| **Config**   | `cursorDrive.operators.`* (maxConcurrent, maxSubAgentsPerOperator, defaultPermissionPreset, namePool); `cursorDrive.agentScreen.`* (enabled, autoOpen, displayMode, clickBehavior, showPlanProgress).                   |
 | **Commands** | `cursorDrive.operators`, `cursorDrive.spawnOperator`, `cursorDrive.showAgentScreen`, `cursorDrive.clearAgentScreen`. Keybinding Ctrl+Shift+S → showAgentScreen.                                                         |
 | **Source**   | `agentRegistry.ts` → `operatorRegistry.ts`; `shareScreen.ts` → `agentScreen.ts`. AgentStatus/AgentContext/AgentRegistry → OperatorStatus/OperatorContext/OperatorRegistry. SubMode `"agent"` unchanged (Cursor native). |
-| **MCP**      | New tools: `operator_`*, `agent_screen_*`, `agent_screen_plan_update`. Deprecated aliases: `agent_*`, `share_screen_*` (log warning, call new impl).                                                                    |
+| **MCP**      | New tools: `operator_`*, `agent_screen_`*, `agent_screen_plan_update`. Deprecated aliases: `agent_*`, `share_screen_*` (log warning, call new impl).                                                                    |
 | **S-AS**     | File path clickability in activity feed; Ctrl+click ask overlay; plan progress section; displayMode tab/panel/bottomLog (bottomLog = Output Channel).                                                                   |
 | **Docs**     | prd-multi-agent, config-schema, mcp-tools, commands-and-shortcuts updated. ADR-0004 note: superseded by ADR-0016 for terminology.                                                                                       |
 | **.cursor/** | drive-persona SKILL, tangent/switch/merge commands, cursor-drive-handoff use operator terminology.                                                                                                                      |

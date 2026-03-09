@@ -1,0 +1,16 @@
+{
+    "name": "drive-mode",
+    "owner": {
+        "name": "Drive Mode"
+    },
+    "metadata": {
+        "description": "Cursor Drive and complementary plugins"
+    },
+    "plugins": [
+        {
+            "name": "cursor-drive",
+            "source": ".cursor-plugin",
+            "description": "AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen."
+        }
+    ]
+}

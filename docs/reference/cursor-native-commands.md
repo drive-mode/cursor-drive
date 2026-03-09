@@ -1,7 +1,10 @@
 # Cursor Native Commands Reference
 
 This document lists Cursor/VS Code native commands relevant to Drive integration.
-Run `cursorDrive.discoverAllCommands` to generate a live enumeration from your Cursor instance.
+
+**Discovery commands:**
+- `Drive: Discover Voice Commands` — Probes chat/mic commands; writes `.cursor/voice-commands-probe.json`
+- `Drive: Discover All Cursor Commands` — Full list by prefix; writes `.cursor/cursor-commands-full.json`
 
 ## How to use from Drive extension code
 
@@ -43,6 +46,24 @@ vscode.commands.executeCommand("command.id", ...args).then(undefined, () => {
 | `composer.startComposerPrompt2` | Start composer with a prompt string | Candidate for voice→chat injection (F10) |
 | `composer.toggleVoiceDictation` | Toggle voice dictation | Candidate for voice mode |
 | `composer.cancelVoiceDictation` | Cancel voice dictation | Not used |
+
+## Voice commands — granular control
+
+Drive uses a **fallback chain** for voice commands. If the primary fails, fallbacks are tried in order.
+
+| Action | Primary | Fallbacks (built-in) | Config |
+|--------|---------|----------------------|--------|
+| Open chat | `workbench.action.chat.open` | `composer.openComposer`, `composer.openAsPane`, `composer.focusComposer` | `cursorDrive.voice.chatOpenCommand`, `chatOpenFallbacks` |
+| Start mic | `composer.toggleVoiceDictation` (first) | `workbench.action.chat.startVoiceChat`, `workbench.action.chat.voice.start` | `cursorDrive.voice.micCommand`, `micCommandFallbacks`, `activateMicDelayMs` |
+
+| Stop + submit | `workbench.action.chat.stopListeningAndSubmit` | `composer.cancelVoiceDictation` | `cursorDrive.voice.stopCommand`, `stopCommandFallbacks` |
+| Stop (cancel) | `workbench.action.chat.stopListening` | `composer.cancelVoiceDictation` | — |
+
+**Note:** `workbench.action.chat.startVoiceChat` is often context-gated — it may only work after the user has clicked the mic in chat. Drive opens chat, focuses the composer, waits `activateMicDelayMs` (default 400ms), then tries `composer.toggleVoiceDictation` first.
+
+**Wake word:** When the pipeline detects a wake word in submitted text, it calls `cursorDrive.activateVoiceInput` so the mic is on for the next utterance (hands-free follow-up).
+
+**If mic doesn't work:** Run `Drive: Discover Voice Commands`. It reports which commands exist in your Cursor build. Add a working command to `cursorDrive.voice.micCommand` or `micCommandFallbacks` in settings.
 
 ## workbench.action.* — IDE workbench actions
 

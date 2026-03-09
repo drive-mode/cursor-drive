@@ -1,4 +1,8 @@
 ---
+planId: cursor-drive
+planType: project
+childPlanIds: [cursor-drive-orchestrator, readme-redesign, repo-health-and-baseline, s_as_screen_capture_impl, sdk_and_protocol_research_6c42aa0c, cursor_plugin_marketplace_and_mcp_apps_implementation]
+dependsOn: []
 name: Cursor Drive Feature Plan
 overview: "Cursor Drive: behavioral toggle/wrapper around Cursor native modes (Agent/Plan/Ask/Debug). Voice-first, multi-agent, share-screen. Integration via beforeSubmitPrompt hook + MCP server. NOT an @drive chat participant."
 todos:

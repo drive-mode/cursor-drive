@@ -61,7 +61,7 @@ cursor serve-web --port 3000 --connection-token mysecret --accept-server-license
 # Then open: http://localhost:3000/?tkn=mysecret
 ```
 
-The browser UI is functionally equivalent to the desktop Cursor window. Extensions installed in the active Cursor profile are available. You can install a `.vsix` via `cursor --install-extension cursor-drive-*.vsix` before launching.
+The browser UI is functionally equivalent to the desktop Cursor window. Extensions installed in the active Cursor profile are available. You can install a `.vsix` via `cursor --install-extension cursor-drive-*.vsix` before launching. Use `cursor --uninstall-extension <publisher.name>` to remove an extension; `cursor --install-extension <path> --force` to update.
 
 ### Troubleshooting: stuck on “server is downloading…”
 

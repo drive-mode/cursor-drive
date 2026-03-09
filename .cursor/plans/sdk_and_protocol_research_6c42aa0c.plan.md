@@ -1,25 +1,30 @@
 ---
+planId: sdk_and_protocol_research_6c42aa0c
+planType: task
+parentPlanId: cursor-drive
+childPlanIds: []
+dependsOn: []
 name: SDK and Protocol Research
 overview: Research Copilot SDK, ACP protocol, and agentic frameworks to determine which ideas, patterns, or integrations Cursor Drive should adopt -- using parallel subagents for each research track.
 todos:
   - id: copilot-sdk-audit
     content: "Track 1: Audit Copilot SDK (Python + TS) features -- catalog /fleet, tool orchestration, BYOK, agent skills, parallel execution. Compare each to Drive's existing capabilities. Sources: github/copilot-sdk repo, docs/, python/ folders."
-    status: pending
+    status: completed
   - id: acp-protocol-eval
     content: "Track 2: Evaluate ACP protocol -- session model, prompt lifecycle, permission flows, streaming. Compare to Drive's MCP-over-HTTP bridge. Determine if ACP adds value or creates redundancy. Sources: ACP spec repo, Copilot ACP server docs, ACP registry."
-    status: pending
+    status: completed
   - id: acp-python-sdk-patterns
     content: "Track 3: Extract reusable patterns from ACP Python SDK -- transport abstractions, streaming helpers, permission brokers, session accumulators. Identify what's worth porting to TypeScript for a cursor-sdk layer. Source: agentclientprotocol/python-sdk."
-    status: pending
+    status: completed
   - id: agentic-framework-scan
     content: "Track 4: Survey agentic orchestration frameworks (LangGraph, CrewAI, AutoGen, Semantic Kernel, etc.). Assess fit with Drive's multi-operator model. Produce short pros/cons for top 3 and recommend adopt vs. stay self-contained."
-    status: pending
+    status: completed
   - id: cursor-cli-feasibility
     content: "Track 5: Investigate Cursor CLI programmatic integration -- can it be driven in server mode like Copilot CLI's --acp? Would wrapping it give Drive capabilities beyond the extension API? Produce feasibility assessment."
-    status: pending
+    status: completed
   - id: synthesize-recommendation
     content: "Track 6 (sequential, after 1-5): Synthesize findings into a single recommendation using the decision framework (fit, effort, lock-in, overlap). Produce concrete next steps for approved items."
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -78,3 +83,40 @@ A single recommendation document covering:
 - Whether to adopt ACP alongside or instead of current MCP bridge
 - Whether to adopt an external orchestration framework
 - Concrete next steps (with scope estimates) for approved items
+
+---
+
+## Deliverables
+
+All track deliverable files are in `.cursor/plans/sdk_and_protocol_research_6c42aa0c/`:
+
+- `track1-copilot-sdk-audit.md` — Feature catalog, comparison matrix
+- `track2-acp-protocol-eval.md` — Protocol comparison, rejection rationale
+- `track3-acp-python-sdk-patterns.md` — Port status, prioritised list
+- `track4-agentic-framework-scan.md` — Top 3 pros/cons, stay self-contained
+- `track5-cursor-cli-feasibility.md` — Feasibility assessment, integration path
+- `track6-synthesis-recommendation.md` — Decision framework, concrete next steps
+
+---
+
+## Reconciliation
+
+### What was verified
+
+- **Copilot SDK:** Audited via github/copilot-sdk repo, docs/, python/ folders. Feature comparison matrix produced against Drive's `mcpServer.ts`, `approvalGates`, `operatorRegistry`, `toolAllowlist`.
+- **ACP protocol:** Evaluated via agentclientprotocol.com, spec repo, GitHub Copilot ACP docs. Compared with Drive's MCP-over-HTTP bridge in `src/mcpServer.ts`.
+- **ACP Python SDK:** Patterns extracted from agentclientprotocol/python-sdk. Cross-checked with Drive's `src/cursor-sdk/` (SessionAccumulator, ToolCallTracker, PermissionBroker, AcpRequestError).
+- **Agentic frameworks:** Surveyed LangGraph, CrewAI, Semantic Kernel, VoltAgent, OpenAI Agents SDK. Fit assessed against Drive's architecture (voice-first, multi-operator, Cursor-native) per `docs/architecture/adr/ADR-0021-agent-orchestration-enhancement.md`.
+- **Cursor CLI:** Investigated via Cursor docs, `docs/research/cursor-cli/`, `agent acp` command. Third-party adapter `roshan-c/cursor-acp` confirms ACP compatibility.
+
+### Residual risks
+
+- **`agent acp`:** Hidden command; may change or be removed without notice. Prototype should document options and fallback if deprecated.
+- **MCP in ACP mode:** Copilot CLI has known gaps (MCP servers not loaded in ACP mode per issue #1040); Cursor may have similar limitations.
+- **Scope creep:** Optional `modifiedArgs` and StreamObserver are low-priority; avoid expanding scope unless validated need.
+
+### Evidence
+
+- Five track deliverable files with full citations and source links
+- Synthesis applies decision framework (fit, effort, lock-in, overlap) consistently
+- Recommendations align with Drive vision invariants: voice-first, `beforeSubmitPrompt` primary, Cursor-native wrapper

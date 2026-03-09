@@ -1,5 +1,10 @@
 ---
-name: Terminology and S-AS Overhaul
+planId: terminology-sas-overhaul-meta
+planType: task
+parentPlanId: null
+childPlanIds: []
+dependsOn: []
+name: Terminology and S-AS Overhaul (meta)
 overview: Rename Drive's multi-agent concept from "agent" to "operator" (or user's chosen term), rename ShareScreen to Share-AgentScreen (S-AS) with enhanced interactive features, add granular config settings, and align all docs/plans.
 todos:
   - id: write-term-plan

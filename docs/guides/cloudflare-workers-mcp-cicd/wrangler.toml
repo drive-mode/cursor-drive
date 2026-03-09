@@ -1,0 +1,7 @@
+# Example wrangler.toml for MCP Worker
+# See docs/guides/cloudflare-workers-mcp-cicd.md
+
+name = "my-mcp-server"
+main = "src/index.js"
+compatibility_date = "2025-03-04"
+# account_id = ""  # Optional; pass via GitHub Action accountId instead

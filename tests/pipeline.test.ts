@@ -132,9 +132,9 @@ describe("runPipeline", () => {
       };
       await runPipeline("hey drive refactor auth", ctx);
 
-      expect(speak).toHaveBeenCalledWith("How can I help?");
+      expect(speak).toHaveBeenCalledWith("Drive listening. How can I help?");
       expect(vscode.window.setStatusBarMessage).toHaveBeenCalledWith(
-        expect.stringContaining("How can I help?"),
+        expect.stringContaining("Drive listening"),
         expect.any(Number)
       );
     });

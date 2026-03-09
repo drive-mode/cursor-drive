@@ -2,6 +2,21 @@
   "mcpServers": {
     "drive": {
       "url": "http://127.0.0.1:7891/mcp"
+    },
+    "cloudflare-api": {
+      "url": "https://mcp.cloudflare.com/mcp",
+      "description": "Cloudflare API: 2500+ endpoints (DNS, Workers, R2). OAuth on first connect."
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "description": "GitHub MCP. Uses GITHUB_PERSONAL_ACCESS_TOKEN from env (same as user config)."
     }
   }
 }

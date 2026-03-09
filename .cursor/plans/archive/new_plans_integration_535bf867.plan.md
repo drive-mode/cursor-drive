@@ -1,4 +1,9 @@
 ---
+planId: new-plans-integration
+planType: task
+parentPlanId: null
+childPlanIds: []
+dependsOn: []
 name: New Plans Integration
 overview: Add three new plan files for agent orchestration frameworks, senior-engineer UX philosophy, and browser-based dev workflow, plus integrate required changes into two existing plans.
 todos:

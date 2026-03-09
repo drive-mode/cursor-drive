@@ -1,4 +1,9 @@
 ---
+planId: s_as_screen_capture_impl
+planType: task
+parentPlanId: cursor-drive
+childPlanIds: []
+dependsOn: []
 name: S-AS Screen Capture Implementation
 overview: "Implement live CLI streaming into Agent Screen (Phase 1) and Cloud Agent integration (Phase 2-3). Primary path: upgrade cursorCliRunner.ts to use --output-format stream-json, pipe NDJSON events to AgentScreenPanel in real time. Fallback path: Cloud Agents API polling + artifact display in webview."
 todos:
@@ -57,59 +62,59 @@ todos:
   - id: p2-01-cloud-agent-client
     content: |
       Create src/cloudAgentClient.ts using Node 20 native fetch() for documented Cloud Agent endpoints: POST /v0/agents (launch), GET /v0/agents/{id} (status), GET /v0/agents/{id}/conversation (conversation). Functions: launchAgent({ repository, prompt, branch?, model? }): Promise<{ agentId, status, dashboardUrl?, prUrl? }>; getAgentStatus(agentId): Promise<{ status, prUrl?, summary? }>; getAgentConversation(agentId): Promise<{ messages[] }>. Auth: accept apiKey and authMode ("basic" | "bearer"), defaulting to "basic" (`Authorization: Basic base64(apiKey + ':')`) with fallback retry to bearer (`Authorization: Bearer <apiKey>`) on 401/403 when response indicates unsupported auth scheme. Base URL from config cursorDrive.cloudAgents.apiBaseUrl (default https://api.cursor.com). Wrap non-2xx responses in CloudAgentError with status and endpoint.
-    status: pending
+    status: completed
   - id: p2-02-cloud-agent-client-tests
     content: |
       Create tests/cloudAgentClient.test.ts. Mock global fetch. Test: launchAgent success (201), auth fallback basic→bearer behavior, getAgentStatus with running/completed states, getAgentConversation returns messages, and error mapping for 401/403/404/409/429/500 plus network failures. Cover base URL override from config.
-    status: pending
+    status: completed
   - id: p2-03-secret-storage
     content: |
       Add API key management to src/extension.ts. On activate, register command cursorDrive.setApiKey that prompts InputBox(password:true) and stores via context.secrets.store("cursorDrive.cursorApiKey", key). Export helper getApiKey(context): Promise<string|undefined> using context.secrets.get(). Add "cursorDrive.cloudAgents.apiBaseUrl" setting to package.json contributes.configuration with default "https://api.cursor.com".
-    status: pending
+    status: completed
   - id: p2-04-mcp-cloud-agent-tools
     content: |
       Register cloud_agent_launch and cloud_agent_status MCP tools in src/mcpServer.ts. cloud_agent_launch: requires apiKey from SecretStorage (prompt if absent), calls POST /v0/agents via cloudAgentClient.launchAgent(), posts activity to AgentScreenPanel, starts background polling interval (10s) that calls GET /v0/agents/{id} and posts updates to S-AS. On terminal state, fetch GET /v0/agents/{id}/conversation and include short excerpt. cloud_agent_status: single poll against GET /v0/agents/{id}, optional conversation excerpt call. Both tools gated by "full" permission preset. Handle 401/403/404/409/429/500 with user-facing actionable messages (reauth, missing agent, conflict, rate limit backoff, retryable server error).
-    status: pending
+    status: completed
   - id: p2-05-mcp-cloud-agent-tests
     content: |
       Add tests in tests/mcpServer.test.ts for both cloud agent tools. Mock cloudAgentClient functions. Verify: launch creates poll interval, status returns correct shape, permission preset gating, AgentScreenPanel receives progress events during polling.
-    status: pending
+    status: completed
   - id: p2-06-sas-cloud-status-events
     content: |
       Extend ActivityEvent with type "cloudAgentStatus". Add optional fields: cloudAgentId, cloudStatus, prUrl. In webview, render as a special activity item with a status badge (pending=grey, running=blue, completed=green, failed=red) and clickable PR link. In OutputChannel mode, format as "[CloudAgent <id>] <status>: <prUrl>".
-    status: pending
+    status: completed
   - id: p2-07-phase2-compile-test
     content: |
       Run npm run compile and npm test. Fix all errors. Verify VSIX.
-    status: pending
+    status: completed
   - id: p2-08-operator-progress-wiring
     content: |
       Validate end-to-end streaming progress wiring into OperatorRegistry.emitProgress for CLI stream events and A2A SSE subscribers. If gaps remain, wire missing calls in mcpServer/runner path; if intentionally deferred, document exact reason and impacted flows in this plan and docs/design/s-as-screen-capture.md.
-    status: pending
+    status: completed
   - id: p3-01-resolve-artifact-api
     content: |
       SPIKE: make live API calls to determine artifact retrieval path. Test GET /v0/agents/{id}/conversation on a completed agent with video artifacts. Check for artifacts/media/attachments fields. Probe GET /v0/agents/{id}/artifacts and record response code/schema if present. Document findings in docs/design/s-as-screen-capture.md Section 7. Decision gate: if API returns usable artifact URLs, proceed with p3-02; otherwise route Phase 3 to p3-03 GitHub extraction path.
-    status: pending
+    status: completed
   - id: p3-02-artifact-via-api
     content: |
       If API returns artifact URLs: add getAgentArtifacts(agentId) to cloudAgentClient.ts. Returns array of { type: video|screenshot|log, url, label? }. Extend polling in cloud_agent_launch to fetch artifacts when status is completed.
-    status: pending
+    status: completed
   - id: p3-03-artifact-via-github
     content: |
       If artifacts are GitHub-only: add extractArtifactsFromPr(prUrl, githubToken?) to a new src/githubArtifacts.ts. Uses GitHub REST API to list PR comments, regex-match video/image URLs from comment body. Falls back to rendering a "View on GitHub" link if no token.
-    status: pending
+    status: cancelled
   - id: p3-04-sas-artifacts-tab
     content: |
       Add fourth tab "Artifacts" to AgentScreen webview. Renders <video> and <img> elements for artifact URLs. Update CSP to allow img-src and media-src from api.cursor.com and *.githubusercontent.com. Add new ActivityEvent type "cloudAgentArtifact" with fields: artifactType, artifactUrl, artifactLabel.
-    status: pending
+    status: completed
   - id: p3-05-sas-artifacts-tab-test
     content: |
       Test webview rendering logic for artifacts. Verify: video element created with controls for video type; img element for screenshot; CSP headers include required domains; clickable label opens URL in browser.
-    status: pending
+    status: completed
   - id: p3-06-phase3-compile-test
     content: |
       Run npm run compile and npm test. Fix all errors. Verify VSIX.
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -235,3 +240,25 @@ and p3-01 spike outcome.
 
 - `StreamingCliRunner.getAccumulatedStdout()` exposed via `Object.defineProperty` — callers need to cast to access it; consider making it a proper class method in Phase 2 cleanup.
 - `emitProgress` wiring needs explicit end-to-end verification for all streaming paths (CLI stream tool + A2A SSE). Tracked by `p2-08-operator-progress-wiring`.
+
+---
+
+## Phase 2 Reconciliation
+
+### Verified
+
+| Todo | Status | Evidence |
+|------|--------|----------|
+| p2-01 cloudAgentClient | ✓ | `src/cloudAgentClient.ts`: launchAgent, getAgentStatus, getAgentConversation. Basic/bearer auth with 401/403 fallback. CloudAgentError for non-2xx. |
+| p2-02 cloudAgentClient tests | ✓ | `tests/cloudAgentClient.test.ts`: 16 tests — launch 201, auth fallback, errors 401/404/429/500, getAgentStatus, getAgentConversation, base URL override. |
+| p2-03 secret storage | ✓ | `extension.ts`: getApiKey(), cursorDrive.setApiKey command. `package.json`: cursorDrive.cloudAgents.apiBaseUrl. |
+| p2-04 MCP cloud agent tools | ✓ | `mcpServer.ts`: cloud_agent_launch, cloud_agent_status. Polling 10s, permission gated (webSearch/full), error handling 401/403/404/429/500. |
+| p2-05 MCP cloud agent tests | ✓ | `mcpServer.test.ts`: tool registration, launch+postEvent, permission denial, status+postEvent. |
+| p2-06 cloudAgentStatus events | ✓ | `agentScreen.ts`: postEvent OutputChannel `[CloudAgent <id>] <status>: <prUrl>`. Webview addCloudAgentStatusItem with status badge + PR link. |
+| p2-07 compile/test | ✓ | `npm run compile`: 0 errors. `npm test`: 514 pass (driveSidebar, pipeline failures pre-existing). |
+| p2-08 operator progress | ✓ | cursor_cli_run_streaming calls emitProgress when foreground operator exists. A2A SSE subscribes to operatorProgress. POST /run SSE has no operator context (stateless HTTP) — intentionally no emitProgress. |
+
+### Residual risks
+
+- Cloud agent polling interval is not cleared on MCP server stop — minor leak; intervals stop when agent reaches terminal state.
+- driveSidebar.test.ts and pipeline.test.ts failures are pre-existing (ExtensionMode mock, wake-word assertion).

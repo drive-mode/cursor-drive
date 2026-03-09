@@ -1,5 +1,6 @@
 import * as http from "http";
 import { randomUUID } from "crypto";
+import * as vscode from "vscode";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
@@ -16,6 +17,15 @@ import { getEffectivePresetForOperator, checkPermissionForOperator } from "./too
 import { resolvePendingTangentConfirm } from "./tangentFlow.js";
 import type { StateSyncCoordinator } from "./stateSyncCoordinator.js";
 import type { IntegrationQueue } from "./integrationQueue.js";
+import { buildAgentScreenAppHtml, AGENT_SCREEN_APP_RESOURCE_URI } from "./agentScreenApp.js";
+import {
+  launchAgent,
+  getAgentStatus,
+  getAgentConversation,
+  getAgentArtifacts,
+  getArtifactDownloadUrl,
+  CloudAgentError,
+} from "./cloudAgentClient.js";
 
 const DEFAULT_PORT = 7891;
 
@@ -29,6 +39,16 @@ export interface DriveMcpServerOptions {
   /** Mob-programming sync control plane (optional — tools registered only when present). */
   stateSyncCoordinator?: StateSyncCoordinator;
   integrationQueue?: IntegrationQueue;
+  /** When true, register MCP App UI resource and augment agent_screen_* tool results with _meta.ui. */
+  getEnableApps?: () => boolean;
+  /** Extension path for reading bundled MCP App (CSP-compliant, no external script). */
+  getExtensionPath?: () => string;
+  /** Get Cursor API key for Cloud Agents. If absent, cloud agent tools are not registered. */
+  getApiKey?: () => Promise<string | undefined>;
+  /** Prompt user for API key and store it. Called when getApiKey returns undefined and a cloud agent tool is invoked. */
+  promptAndStoreApiKey?: () => Promise<string | undefined>;
+  /** Cloud Agents API base URL (default https://api.cursor.com). */
+  getCloudAgentsApiBaseUrl?: () => string;
 }
 
 type A2ATaskState = "submitted" | "working" | "completed" | "failed" | "canceled";
@@ -43,6 +63,27 @@ interface A2ATaskRecord {
 
 const CURSOR_CLI_CACHE_TTL_MS = 60_000;
 
+interface SessionEntry {
+  transport: StreamableHTTPServerTransport;
+  mcpServer: McpServer;
+}
+
+function isInitializeRequest(msg: unknown): boolean {
+  return typeof msg === "object" && msg !== null && "method" in msg && (msg as { method?: string }).method === "initialize";
+}
+
+function parseAndCheckInit(body: string): { parsed: unknown; isInit: boolean } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body || "{}");
+  } catch {
+    return { parsed: undefined, isInit: false };
+  }
+  const messages = Array.isArray(parsed) ? parsed : [parsed];
+  const isInit = messages.some(isInitializeRequest);
+  return { parsed, isInit };
+}
+
 export class DriveMcpServer {
   private httpServer: http.Server | undefined;
   private mcpServer: McpServer;
@@ -51,6 +92,8 @@ export class DriveMcpServer {
   private a2aTasks: Map<string, A2ATaskRecord> = new Map();
   private cursorCliAvailable: boolean | undefined;
   private cursorCliCacheExpiresAt = 0;
+  /** Per-session transport+McpServer for multiple MCP clients (avoids "Server already initialized"). */
+  private sessionMap = new Map<string, SessionEntry>();
 
   constructor(private opts: DriveMcpServerOptions) {
     this.port = opts.port ?? DEFAULT_PORT;
@@ -59,13 +102,12 @@ export class DriveMcpServer {
       { capabilities: { tools: {} } }
     );
     this.transport = new StreamableHTTPServerTransport({
-      // Stateful/reusable transport avoids stateless reuse failures across requests.
       sessionIdGenerator: () => randomUUID(),
     });
     this.transport.onerror = (error) => {
       console.error("[Drive MCP] Transport error:", error);
     };
-    this.registerTools();
+    this.registerToolsOn(this.mcpServer);
   }
 
   private isMcpPath(url: string | undefined): boolean {
@@ -74,9 +116,106 @@ export class DriveMcpServer {
     return pathOnly === "/mcp" || pathOnly === "/mcp/sse" || pathOnly === "/sse";
   }
 
+  private async readRequestBody(req: http.IncomingMessage): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on("data", (chunk) => chunks.push(chunk));
+      req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+      req.on("error", reject);
+    });
+  }
+
+  private async createSession(): Promise<SessionEntry> {
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+    });
+    transport.onerror = (err) => console.error("[Drive MCP] Session transport error:", err);
+    const mcpServer = new McpServer(
+      { name: "cursor-drive", version: "0.3.0" },
+      { capabilities: { tools: {} } }
+    );
+    this.registerToolsOn(mcpServer);
+    await this.registerMcpAppResourceIfEnabledOn(mcpServer);
+    return { transport, mcpServer };
+  }
+
   private async handleMcpHttpRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
+    const cleanSessionId = typeof sessionId === "string" ? sessionId.trim() || undefined : undefined;
+
     try {
-      await this.transport.handleRequest(req, res);
+      if (req.method === "POST") {
+        const body = await this.readRequestBody(req);
+        const { parsed, isInit } = parseAndCheckInit(body);
+
+        if (isInit) {
+          const entry = await this.createSession();
+          await entry.mcpServer.connect(entry.transport);
+          await entry.transport.handleRequest(req, res, parsed);
+          const sid = entry.transport.sessionId;
+          if (sid) {
+            this.sessionMap.set(sid, entry);
+            entry.transport.onclose = () => this.sessionMap.delete(sid);
+          }
+          return;
+        }
+
+        if (cleanSessionId && this.sessionMap.has(cleanSessionId)) {
+          const entry = this.sessionMap.get(cleanSessionId)!;
+          await entry.transport.handleRequest(req, res, parsed);
+          return;
+        }
+
+        if (cleanSessionId && !this.sessionMap.has(cleanSessionId)) {
+          if (!res.headersSent) {
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({
+              jsonrpc: "2.0",
+              error: { code: -32000, message: "Session not found" },
+              id: null,
+            }));
+          }
+          return;
+        }
+
+        if (!isInit && !cleanSessionId) {
+          if (!res.headersSent) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({
+              jsonrpc: "2.0",
+              error: { code: -32600, message: "Invalid Request: Session ID required for non-initialization requests" },
+              id: null,
+            }));
+          }
+          return;
+        }
+      }
+
+      if (req.method === "GET" || req.method === "DELETE") {
+        if (cleanSessionId && this.sessionMap.has(cleanSessionId)) {
+          const entry = this.sessionMap.get(cleanSessionId)!;
+          await entry.transport.handleRequest(req, res);
+          return;
+        }
+        if (!res.headersSent) {
+          res.writeHead(404, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            jsonrpc: "2.0",
+            error: { code: -32000, message: "Session not found" },
+            id: null,
+          }));
+        }
+        return;
+      }
+
+      if (!res.headersSent) {
+        res.writeHead(405, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          jsonrpc: "2.0",
+          error: { code: -32000, message: "Method not allowed" },
+          id: null,
+        }));
+      }
     } catch (error) {
       console.error(`[Drive MCP] MCP request failed (${req.method ?? "UNKNOWN"} ${req.url ?? ""}):`, error);
       if (!res.headersSent) {
@@ -95,11 +234,11 @@ export class DriveMcpServer {
     }
   }
 
-  private registerTools(): void {
+  private registerToolsOn(mcpServer: McpServer): void {
     const { driveMgr, operatorRegistry } = this.opts;
     const getMaxConcurrent = this.opts.getMaxConcurrent ?? (() => Number.MAX_SAFE_INTEGER);
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "tts_speak",
       "Speak text aloud through the Drive TTS engine. Silently no-ops if TTS is disabled. [Parallel-safe]",
       {
@@ -112,7 +251,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "tts_stop",
       "Immediately stop any ongoing TTS speech. [Parallel-safe]",
       {},
@@ -138,37 +277,66 @@ export class DriveMcpServer {
       return { content: [{ type: "text" as const, text: "ok" }] };
     };
 
-    this.mcpServer.tool(
+    const enableApps = () => this.opts.getEnableApps?.() ?? false;
+
+    mcpServer.tool(
       "agent_screen_activity",
       "Push an activity event to the Drive Agent Screen (S-AS). Use to show the user what the operator is doing. [Parallel-safe]",
       {
         operator_name: z.string().describe("Name of the operator reporting this activity."),
         text: z.string().describe("Short description of the current action (e.g. 'Reading src/auth.ts', 'Searching for login handler')."),
       },
-      async ({ operator_name, text }) => agentScreenActivity(operator_name, text)
+      async ({ operator_name, text }) => {
+        const base = await agentScreenActivity(operator_name, text);
+        if (enableApps()) {
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ kind: "activity" as const, op: operator_name, text }) }],
+            _meta: { ui: { resourceUri: AGENT_SCREEN_APP_RESOURCE_URI } },
+          };
+        }
+        return base;
+      }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_screen_file",
       "Record a file touch in the Drive Agent Screen. Clicking the file in the panel opens it in the user's editor. [Parallel-safe]",
       {
         operator_name: z.string().describe("Name of the operator touching this file."),
         file_path: z.string().describe("Workspace-relative or absolute path to the file."),
       },
-      async ({ operator_name, file_path }) => agentScreenFile(operator_name, file_path)
+      async ({ operator_name, file_path }) => {
+        const base = await agentScreenFile(operator_name, file_path);
+        if (enableApps()) {
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ kind: "file" as const, op: operator_name, file_path }) }],
+            _meta: { ui: { resourceUri: AGENT_SCREEN_APP_RESOURCE_URI } },
+          };
+        }
+        return base;
+      }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_screen_decision",
       "Record a key decision or reasoning step in the Drive Agent Screen Decisions tab. [Parallel-safe]",
       {
         operator_name: z.string().describe("Name of the operator making this decision."),
         text: z.string().describe("Decision or reasoning to record (e.g. 'Chose token bucket over leaky bucket for rate limiting')."),
       },
-      async ({ operator_name, text }) => agentScreenDecision(operator_name, text)
+      async ({ operator_name, text }) => {
+        const base = await agentScreenDecision(operator_name, text);
+        if (enableApps()) {
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ kind: "decision" as const, op: operator_name, text }) }],
+            _meta: { ui: { resourceUri: AGENT_SCREEN_APP_RESOURCE_URI } },
+          };
+        }
+        return base;
+      }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_screen_plan_update",
       "Push plan progress to the Drive Agent Screen. When showPlanProgress is enabled, displays active plan name, TODO counts, and current in-progress TODO. [Parallel-safe]",
       {
@@ -192,7 +360,7 @@ export class DriveMcpServer {
 
     const pm = this.opts.persistentMemory;
     if (pm) {
-      this.mcpServer.tool(
+      mcpServer.tool(
         "persistent_memory_append",
         "Append a note to today's daily log in .drive/memory/. [Sequential]",
         {
@@ -204,7 +372,7 @@ export class DriveMcpServer {
           return { content: [{ type: "text" as const, text: "ok" }] };
         }
       );
-      this.mcpServer.tool(
+      mcpServer.tool(
         "persistent_memory_search",
         "Search daily log files by keyword (BM25-lite). Returns top matches with snippets. [Parallel-safe]",
         {
@@ -216,7 +384,7 @@ export class DriveMcpServer {
           return { content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }] };
         }
       );
-      this.mcpServer.tool(
+      mcpServer.tool(
         "persistent_memory_write_curated",
         "Write (overwrite) the curated MEMORY.md file. Use for long-term facts the user wants to remember. [Sequential]",
         { content: z.string().describe("Full content for MEMORY.md.") },
@@ -225,7 +393,7 @@ export class DriveMcpServer {
           return { content: [{ type: "text" as const, text: "ok" }] };
         }
       );
-      this.mcpServer.tool(
+      mcpServer.tool(
         "persistent_memory_context",
         "Build prompt context from curated + today/yesterday logs. Returns concatenated markdown for injection. [Parallel-safe]",
         {},
@@ -237,7 +405,7 @@ export class DriveMcpServer {
     }
 
     // Deprecated aliases for agent_screen_*
-    this.mcpServer.tool(
+    mcpServer.tool(
       "share_screen_activity",
       "[Deprecated] Use agent_screen_activity instead. Push an activity event to the Drive Agent Screen.",
       { agent_name: z.string(), text: z.string() },
@@ -246,7 +414,7 @@ export class DriveMcpServer {
         return agentScreenActivity(agent_name, text);
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "share_screen_file",
       "[Deprecated] Use agent_screen_file instead. Record a file touch in the Drive Agent Screen.",
       { agent_name: z.string(), file_path: z.string() },
@@ -255,7 +423,7 @@ export class DriveMcpServer {
         return agentScreenFile(agent_name, file_path);
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "share_screen_decision",
       "[Deprecated] Use agent_screen_decision instead. Record a decision in the Drive Agent Screen.",
       { agent_name: z.string(), text: z.string() },
@@ -265,7 +433,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "drive_set_mode",
       "Change the active Drive meta-mode. Valid modes: off, plan, agent, ask, debug. [Parallel-safe]",
       {
@@ -273,6 +441,16 @@ export class DriveMcpServer {
       },
       async ({ mode }) => {
         if (mode === "off") {
+          const requireConfirm = vscode.workspace.getConfiguration("cursorDrive").get<boolean>("modeSwitching.requireConfirmation", true);
+          if (requireConfirm) {
+            const choice = await vscode.window.showQuickPick(
+              [{ label: "Yes", description: "Turn Drive off" }, { label: "No", description: "Keep Drive on" }],
+              { title: "Switch Drive to off?", placeHolder: "Confirm mode switch" }
+            );
+            if (choice?.label !== "Yes") {
+              return { content: [{ type: "text" as const, text: "mode switch cancelled by user" }] };
+            }
+          }
           driveMgr.setSubMode("off");
           driveMgr.setActive(false);
           return { content: [{ type: "text" as const, text: "mode set to off" }] };
@@ -284,13 +462,23 @@ export class DriveMcpServer {
           debug: "debug",
         };
         const subMode = subModeMap[mode] ?? "agent";
+        const requireConfirm = vscode.workspace.getConfiguration("cursorDrive").get<boolean>("modeSwitching.requireConfirmation", true);
+        if (requireConfirm) {
+          const choice = await vscode.window.showQuickPick(
+            [{ label: "Yes", description: `Switch to ${mode} mode` }, { label: "No", description: "Keep current mode" }],
+            { title: `Switch Drive to ${mode}?`, placeHolder: "Confirm mode switch" }
+          );
+          if (choice?.label !== "Yes") {
+            return { content: [{ type: "text" as const, text: "mode switch cancelled by user" }] };
+          }
+        }
         driveMgr.setSubMode(subMode as SubMode);
         driveMgr.setActive(true);
         return { content: [{ type: "text" as const, text: `mode set to ${mode}` }] };
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "cursor_cli_run",
       "Run a prompt through Cursor CLI (agent -p \"...\") using the user's Cursor subscription. Use for headless or scripted coding tasks; output is returned when the run finishes or times out. [Sequential]",
       {
@@ -334,7 +522,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "cursor_cli_create_chat",
       "Create a new empty Cursor CLI chat session and return its chatId. Pass the chatId as resume_chat_id to subsequent cursor_cli_run calls to maintain multi-turn conversation context. [Parallel-safe]",
       {},
@@ -350,7 +538,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "cursor_cli_run_streaming",
       "Run Cursor CLI with a prompt and stream NDJSON events to the Agent Screen in real time. Returns accumulated stdout when done.",
       {
@@ -411,6 +599,215 @@ export class DriveMcpServer {
         });
       }
     );
+
+    // ── Cloud Agent tools (require full preset, getApiKey + promptAndStoreApiKey) ──
+    if (this.opts.getApiKey && this.opts.promptAndStoreApiKey) {
+      const getCloudAgentConfig = (apiKey: string) => ({
+        apiBaseUrl: (this.opts.getCloudAgentsApiBaseUrl?.() ?? "https://api.cursor.com").replace(/\/$/, ""),
+        apiKey,
+      });
+
+      mcpServer.tool(
+        "cloud_agent_launch",
+        "Launch a Cursor Cloud Agent for a coding task. Returns agent ID for status polling. Requires cursorDrive.cursorApiKey (run cursorDrive.setApiKey if absent). [Sequential]",
+        {
+          repository: z.string().describe("GitHub repo slug (owner/repo)."),
+          prompt: z.string().describe("Task description for the cloud agent."),
+          branch: z.string().optional().describe("Target branch (default: auto-generated)."),
+          model: z.string().optional().describe("Model override (e.g. 'claude-sonnet-4')."),
+        },
+        async ({ repository, prompt, branch, model }) => {
+          const fg = operatorRegistry.getForeground();
+          if (fg && !checkPermissionForOperator(fg, "webSearch")) {
+            return {
+              content: [{ type: "text" as const, text: `Permission denied: operator "${fg.name}" (preset: ${fg.permissionPreset}) does not have webSearch permission. Cloud agents require "full" preset.` }],
+              isError: true,
+            };
+          }
+          let apiKey = await this.opts.getApiKey!();
+          if (!apiKey) {
+            apiKey = await this.opts.promptAndStoreApiKey!();
+          }
+          if (!apiKey) {
+            return {
+              content: [{ type: "text" as const, text: "API key required. Run cursorDrive.setApiKey or provide it when prompted." }],
+              isError: true,
+            };
+          }
+          const config = getCloudAgentConfig(apiKey);
+          try {
+            const result = await launchAgent({ repository, prompt, branch, model }, config);
+            const panel = AgentScreenPanel.getInstance();
+            if (panel) {
+              panel.postEvent({
+                type: "cloudAgentStatus",
+                cloudAgentId: result.agentId,
+                cloudStatus: result.status,
+                prUrl: result.prUrl,
+                timestamp: Date.now(),
+              });
+            }
+            const pollIntervalMs = 10_000;
+            const intervalId = setInterval(async () => {
+              try {
+                const status = await getAgentStatus(result.agentId, config);
+                if (panel) {
+                  panel.postEvent({
+                    type: "cloudAgentStatus",
+                    cloudAgentId: result.agentId,
+                    cloudStatus: status.status,
+                    prUrl: status.prUrl,
+                    timestamp: Date.now(),
+                  });
+                }
+                const terminal = ["finished", "error", "expired", "failed"].includes(status.status);
+                if (terminal) {
+                  clearInterval(intervalId);
+                  if (status.status === "finished") {
+                    try {
+                      const conv = await getAgentConversation(result.agentId, config);
+                      const excerpt = conv.messages
+                        .slice(-3)
+                        .map((m) => `${m.role}: ${m.text.slice(0, 100)}`)
+                        .join("\n");
+                      if (panel && excerpt) {
+                        panel.postEvent({
+                          type: "activity",
+                          operatorName: "CloudAgent",
+                          text: `Conversation excerpt:\n${excerpt}`,
+                          timestamp: Date.now(),
+                        });
+                      }
+                    } catch {
+                      // ignore
+                    }
+                    // Fetch artifacts and post cloudAgentArtifact events
+                    try {
+                      const { artifacts } = await getAgentArtifacts(result.agentId, config);
+                      for (const art of artifacts) {
+                        const ext = art.absolutePath.split(".").pop()?.toLowerCase() ?? "";
+                        const artifactType = /^(mp4|webm|mov)$/.test(ext) ? "video" : /^(png|jpg|jpeg|gif|webp)$/.test(ext) ? "screenshot" : "log";
+                        const { url } = await getArtifactDownloadUrl(result.agentId, art.absolutePath, config);
+                        const label = art.absolutePath.split("/").pop() ?? art.absolutePath;
+                        if (panel && url) {
+                          panel.postEvent({
+                            type: "cloudAgentArtifact",
+                            cloudAgentId: result.agentId,
+                            artifactType,
+                            artifactUrl: url,
+                            artifactLabel: label,
+                            timestamp: Date.now(),
+                          });
+                        }
+                      }
+                    } catch {
+                      // ignore artifact fetch failures
+                    }
+                  }
+                }
+              } catch {
+                clearInterval(intervalId);
+              }
+            }, pollIntervalMs);
+            return {
+              content: [{
+                type: "text" as const,
+                text: JSON.stringify({
+                  agent_id: result.agentId,
+                  status: result.status,
+                  dashboard_url: result.dashboardUrl,
+                  pr_url: result.prUrl,
+                }),
+              }],
+            };
+          } catch (err) {
+            const e = err instanceof CloudAgentError ? err : new CloudAgentError(String(err), 0, "launch");
+            let msg = e.message;
+            if (e.status === 401 || e.status === 403) {
+              msg = "Re-authenticate: run cursorDrive.setApiKey to set a valid API key.";
+            } else if (e.status === 404) {
+              msg = "Agent not found. Check the agent ID.";
+            } else if (e.status === 409) {
+              msg = "Conflict: agent may already exist or be in a conflicting state.";
+            } else if (e.status === 429) {
+              msg = "Rate limit exceeded. Wait before retrying.";
+            } else if (e.status >= 500) {
+              msg = "Server error. Retry later.";
+            }
+            return { content: [{ type: "text" as const, text: msg }], isError: true };
+          }
+        }
+      );
+
+      mcpServer.tool(
+        "cloud_agent_status",
+        "Poll a cloud agent's status and surface progress in the Agent Screen. Returns current status, conversation summary, and PR URL if available. [Parallel-safe]",
+        {
+          agent_id: z.string().describe("Agent ID from cloud_agent_launch."),
+          include_conversation: z.boolean().optional().describe("Include recent conversation messages (default false)."),
+        },
+        async ({ agent_id, include_conversation }) => {
+          const fg = operatorRegistry.getForeground();
+          if (fg && !checkPermissionForOperator(fg, "webSearch")) {
+            return {
+              content: [{ type: "text" as const, text: `Permission denied: operator "${fg.name}" does not have webSearch permission. Cloud agents require "full" preset.` }],
+              isError: true,
+            };
+          }
+          let apiKey = await this.opts.getApiKey!();
+          if (!apiKey) {
+            apiKey = await this.opts.promptAndStoreApiKey!();
+          }
+          if (!apiKey) {
+            return {
+              content: [{ type: "text" as const, text: "API key required. Run cursorDrive.setApiKey." }],
+              isError: true,
+            };
+          }
+          const config = getCloudAgentConfig(apiKey);
+          try {
+            const status = await getAgentStatus(agent_id, config);
+            const panel = AgentScreenPanel.getInstance();
+            if (panel) {
+              panel.postEvent({
+                type: "cloudAgentStatus",
+                cloudAgentId: agent_id,
+                cloudStatus: status.status,
+                prUrl: status.prUrl,
+                timestamp: Date.now(),
+              });
+            }
+            const payload: Record<string, unknown> = {
+              status: status.status,
+              pr_url: status.prUrl,
+              summary: status.summary,
+            };
+            if (include_conversation && (status.status === "finished" || status.status === "error")) {
+              try {
+                const conv = await getAgentConversation(agent_id, config);
+                payload.recent_messages = conv.messages.slice(-5);
+              } catch {
+                // ignore
+              }
+            }
+            return { content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }] };
+          } catch (err) {
+            const e = err instanceof CloudAgentError ? err : new CloudAgentError(String(err), 0, "status");
+            let msg = e.message;
+            if (e.status === 401 || e.status === 403) {
+              msg = "Re-authenticate: run cursorDrive.setApiKey.";
+            } else if (e.status === 404) {
+              msg = "Agent not found.";
+            } else if (e.status === 429) {
+              msg = "Rate limit exceeded.";
+            } else if (e.status >= 500) {
+              msg = "Server error. Retry later.";
+            }
+            return { content: [{ type: "text" as const, text: msg }], isError: true };
+          }
+        }
+      );
+    }
 
     const operatorSpawn = async (
       name: string | undefined,
@@ -487,7 +884,7 @@ export class DriveMcpServer {
       return { content: [{ type: "text" as const, text: ok ? "merged" : "one or both operators not found" }] };
     };
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_spawn",
       "Spawn a new named operator for a parallel task (tangent). Supports semantic roles that set default permissions and behavior hints. Returns operator metadata including role and systemHint. [Parallel-safe]",
       {
@@ -500,21 +897,21 @@ export class DriveMcpServer {
       async ({ name, task, parent_id, preset, role }) => operatorSpawn(name, task, parent_id, preset, role)
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_switch",
       "Switch the foreground operator by name or id. The Agent Screen will update to show the new operator's work. [Sequential]",
       { name_or_id: z.string().describe("Operator name (e.g. 'Beta') or operator id.") },
       async ({ name_or_id }) => operatorSwitch(name_or_id)
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_list",
       "List all active operators with their names, tasks, and status. [Parallel-safe]",
       {},
       operatorList
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_pause",
       "Pause an active/background operator by name or id. [Sequential]",
       { name_or_id: z.string().describe("Operator name or id to pause.") },
@@ -524,7 +921,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_resume",
       "Resume a paused operator by name or id. [Sequential]",
       { name_or_id: z.string().describe("Operator name or id to resume.") },
@@ -534,7 +931,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_dismiss",
       "Dismiss (deactivate) an operator by name or id. [Sequential]",
       { name_or_id: z.string().describe("Operator name or id to dismiss.") },
@@ -544,7 +941,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_confirm_tangent",
       "Confirm a pending tangent agent on behalf of the user. Use when delegateConfirmation is enabled and a tangent agent is awaiting confirmation. [Parallel-safe]",
       {},
@@ -554,7 +951,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_search_history",
       "Search transcript/memory history for previous user requests. Returns matching snippets from daily logs. Requires transcriptPersistence to be enabled for results. [Parallel-safe]",
       {
@@ -571,7 +968,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "drive_run_pipeline",
       "Run the Drive prompt pipeline (filler-clean, sanitize, route, etc.). Use when processing a user prompt with Drive active. Pass operator_id for operator-scoped session memory. [Sequential]",
       {
@@ -609,7 +1006,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "drive_pipeline_stats",
       "Get runtime statistics for the Drive prompt pipeline: total runs, success/block/tangent counts, average latency. Useful for monitoring operator behavior and pipeline health. [Parallel-safe]",
       {},
@@ -619,7 +1016,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "drive_steering_stats",
       "Get runtime statistics for the steering/approval-gate system: total checks, action counts by type (allow/log/warn/block), per-operator action counts, and recent blocks. Useful for tuning safety policies. [Parallel-safe]",
       {},
@@ -635,7 +1032,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_merge",
       "Merge a source operator's memory and context into a target operator, then deactivate the source. [Sequential]",
       {
@@ -645,7 +1042,7 @@ export class DriveMcpServer {
       async ({ source, target }) => operatorMerge(source, target)
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_update_memory",
       "Append a string to a named operator's memory array. Memory is used when merging operators. [Parallel-safe]",
       {
@@ -658,7 +1055,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_set_visibility",
       "Set operator visibility mode: isolated (no shared context), shared (default), or collaborative. [Sequential]",
       {
@@ -671,7 +1068,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_escalate",
       "Signal that an operator is blocked or needs help. Notifies the lead operator or user via the Agent Screen and comms agent. Use when an operator hits permission boundaries, encounters unexpected errors, or needs human input. [Parallel-safe]",
       {
@@ -691,7 +1088,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_delegate",
       "Delegate a task from one operator to another. Spawns target if it doesn't exist. Creates a directed edge in the task graph. [Sequential]",
       {
@@ -722,7 +1119,7 @@ export class DriveMcpServer {
     );
 
     // Deprecated aliases for operator_*
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_spawn",
       "[Deprecated] Use operator_spawn instead. Spawn a new named operator for a parallel task.",
       { name: z.string().optional(), task: z.string() },
@@ -731,7 +1128,7 @@ export class DriveMcpServer {
         return operatorSpawn(name, task);
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_switch",
       "[Deprecated] Use operator_switch instead. Switch the foreground operator.",
       { name_or_id: z.string() },
@@ -740,7 +1137,7 @@ export class DriveMcpServer {
         return operatorSwitch(name_or_id);
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_list",
       "[Deprecated] Use operator_list instead. List all active operators.",
       {},
@@ -749,7 +1146,7 @@ export class DriveMcpServer {
         return operatorList();
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_pause",
       "[Deprecated] Use operator_pause instead. Pause an operator.",
       { name_or_id: z.string() },
@@ -759,7 +1156,7 @@ export class DriveMcpServer {
         return { content: [{ type: "text" as const, text: ok ? "paused" : "not found" }] };
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_resume",
       "[Deprecated] Use operator_resume instead. Resume a paused operator.",
       { name_or_id: z.string() },
@@ -769,7 +1166,7 @@ export class DriveMcpServer {
         return { content: [{ type: "text" as const, text: ok ? "resumed" : "not found or not paused" }] };
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_dismiss",
       "[Deprecated] Use operator_dismiss instead. Dismiss an operator.",
       { name_or_id: z.string() },
@@ -779,7 +1176,7 @@ export class DriveMcpServer {
         return { content: [{ type: "text" as const, text: ok ? "dismissed" : "not found" }] };
       }
     );
-    this.mcpServer.tool(
+    mcpServer.tool(
       "agent_merge",
       "[Deprecated] Use operator_merge instead. Merge source operator into target.",
       { source: z.string(), target: z.string() },
@@ -790,16 +1187,16 @@ export class DriveMcpServer {
     );
 
     // ── Sync control plane tools (mob-programming cockpit) ────────────────
-    this.registerSyncTools();
+    this.registerSyncToolsOn(mcpServer);
   }
 
   /** Register sync/proposal MCP tools when the coordinator is available. */
-  private registerSyncTools(): void {
+  private registerSyncToolsOn(mcpServer: McpServer): void {
     const coordinator = this.opts.stateSyncCoordinator;
     const queue = this.opts.integrationQueue;
     if (!coordinator) { return; }
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_sync_status",
       "Get the current sync status snapshot: user branch/head, per-operator workspace state, and active proposals. [Parallel-safe]",
       {},
@@ -809,7 +1206,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_sync_proposals",
       "List sync proposals with optional filtering by operator or status. [Parallel-safe]",
       {
@@ -830,7 +1227,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_sync_approve",
       "Approve a sync proposal by ID. Only proposals in pending_review or conflict status can be approved. [Sequential]",
       {
@@ -849,7 +1246,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_sync_reject",
       "Reject a sync proposal by ID with an optional reason. [Sequential]",
       {
@@ -869,7 +1266,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_sync_apply",
       "Apply an approved sync proposal. The proposal must be in 'approved' status. Apply is serialized through the integration queue. [Sequential]",
       {
@@ -912,7 +1309,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "operator_events_latest",
       "Get recent operator activity events. Newest first. [Parallel-safe]",
       {
@@ -926,7 +1323,7 @@ export class DriveMcpServer {
     );
 
     if (queue) {
-      this.mcpServer.tool(
+      mcpServer.tool(
         "integration_queue_status",
         "Get the current state of the integration queue: processing, pending, and completed proposal IDs. [Parallel-safe]",
         {},
@@ -942,7 +1339,7 @@ export class DriveMcpServer {
     // connectors and gracefully no-op when connectors are unavailable.
     // Core flow is unaffected when connectors are absent.
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "connector_publish_proposal",
       "Publish a proposal summary to an external connector (e.g., Slack, GitHub). No-ops gracefully if no connector is configured. [Parallel-safe]",
       {
@@ -971,7 +1368,7 @@ export class DriveMcpServer {
       }
     );
 
-    this.mcpServer.tool(
+    mcpServer.tool(
       "connector_push_progress",
       "Push operator progress to an external system. No-ops gracefully if no connector is configured. [Parallel-safe]",
       {
@@ -992,6 +1389,42 @@ export class DriveMcpServer {
         };
       }
     );
+
+  }
+
+  private async registerMcpAppResourceIfEnabledOn(mcpServer: McpServer): Promise<void> {
+    if (!this.opts.getEnableApps?.()) return;
+    try {
+      let bundle: string | undefined;
+      const extPath = this.opts.getExtensionPath?.();
+      if (extPath) {
+        const { readFile } = await import("fs/promises");
+        const { join } = await import("path");
+        try {
+          bundle = await readFile(join(extPath, "out", "mcp-app-bundle.js"), "utf8");
+        } catch {
+          // Fallback to esm.sh if bundle missing (e.g. dev without prepublish)
+        }
+      }
+      const { registerAppResource, RESOURCE_MIME_TYPE } = await import("@modelcontextprotocol/ext-apps/server");
+      // Cast needed: SDK CJS vs ext-apps ESM type resolution mismatch on registerResource overloads
+      registerAppResource(
+        mcpServer as unknown as Parameters<typeof registerAppResource>[0],
+        "Agent Screen",
+        AGENT_SCREEN_APP_RESOURCE_URI,
+        { mimeType: RESOURCE_MIME_TYPE },
+        async () => ({
+          contents: [{
+            uri: AGENT_SCREEN_APP_RESOURCE_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: buildAgentScreenAppHtml(bundle),
+          }],
+        })
+      );
+    } catch (err) {
+      // ESM dynamic import can fail in CJS test runners (e.g. Jest without experimental-vm-modules)
+      console.warn("[Drive MCP] MCP App resource registration skipped:", err instanceof Error ? err.message : String(err));
+    }
   }
 
   private buildAgentCard(): object {
@@ -1025,6 +1458,7 @@ export class DriveMcpServer {
 
   async start(): Promise<void> {
     await this.mcpServer.connect(this.transport);
+    await this.registerMcpAppResourceIfEnabledOn(this.mcpServer);
 
     const agentCard = this.buildAgentCard();
     this.httpServer = http.createServer((req, res) => {
@@ -1302,6 +1736,10 @@ export class DriveMcpServer {
 
   async stop(): Promise<void> {
     await this.mcpServer.close();
+    for (const entry of this.sessionMap.values()) {
+      await entry.mcpServer.close();
+    }
+    this.sessionMap.clear();
     await new Promise<void>((resolve) => {
       if (this.httpServer) {
         this.httpServer.close(() => resolve());

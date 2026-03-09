@@ -5,6 +5,7 @@ jest.mock("../src/mcpServer", () => ({
   DriveMcpServer: jest.fn().mockImplementation(() => ({
     start: jest.fn().mockResolvedValue(undefined),
     stop: jest.fn().mockResolvedValue(undefined),
+    getPort: jest.fn().mockReturnValue(7891),
   })),
 }));
 

@@ -2,6 +2,7 @@ import * as http from "http";
 import { EventEmitter } from "events";
 import { DriveMcpServer } from "../src/mcpServer";
 import { OperatorRegistry } from "../src/operatorRegistry";
+import { AGENT_SCREEN_APP_RESOURCE_URI } from "../src/agentScreenApp";
 import * as vscode from "vscode";
 
 jest.mock("../src/tts", () => ({
@@ -11,11 +12,39 @@ jest.mock("../src/tts", () => ({
 }));
 
 const mockPostEvent = jest.fn();
+const mockLogActivity = jest.fn();
+const mockLogFile = jest.fn();
+const mockLogDecision = jest.fn();
 jest.mock("../src/agentScreen", () => ({
-  AgentScreenPanel: { getInstance: jest.fn(() => ({ postEvent: mockPostEvent, logActivity: jest.fn() })) },
+  AgentScreenPanel: {
+    getInstance: jest.fn(() => ({
+      postEvent: mockPostEvent,
+      logActivity: mockLogActivity,
+      logFile: mockLogFile,
+      logDecision: mockLogDecision,
+    })),
+  },
 }));
 
 const mockRunCursorCliStreaming = jest.fn();
+const mockLaunchAgent = jest.fn();
+const mockGetAgentStatus = jest.fn();
+const mockGetAgentConversation = jest.fn();
+const mockGetAgentArtifacts = jest.fn();
+const mockGetArtifactDownloadUrl = jest.fn();
+jest.mock("../src/cloudAgentClient", () => ({
+  launchAgent: (...args: unknown[]) => mockLaunchAgent(...args),
+  getAgentStatus: (...args: unknown[]) => mockGetAgentStatus(...args),
+  getAgentConversation: (...args: unknown[]) => mockGetAgentConversation(...args),
+  getAgentArtifacts: (...args: unknown[]) => mockGetAgentArtifacts(...args),
+  getArtifactDownloadUrl: (...args: unknown[]) => mockGetArtifactDownloadUrl(...args),
+  CloudAgentError: class CloudAgentError extends Error {
+    constructor(m: string, public status: number, public endpoint: string) {
+      super(m);
+      this.name = "CloudAgentError";
+    }
+  },
+}));
 jest.mock("../src/cursorCliRunner", () => ({
   ...jest.requireActual("../src/cursorCliRunner"),
   runCursorCliStreaming: (...args: unknown[]) => mockRunCursorCliStreaming(...args),
@@ -112,7 +141,7 @@ async function callMcpTool(
 }
 
 describe("DriveMcpServer", () => {
-  const BASE_PORT = 17991;
+  const BASE_PORT = 17991 + Math.floor(Math.random() * 10000);
   let portCounter = 0;
   function nextPort() { return BASE_PORT + portCounter++; }
   let server: DriveMcpServer;
@@ -599,6 +628,66 @@ describe("DriveMcpServer", () => {
     expect(allText).toContain("cursor_cli_run_streaming");
   }, 10_000);
 
+  it("agent_screen_activity returns _meta.ui.resourceUri and JSON payload when getEnableApps is true", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getEnableApps: () => true,
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const result = await callMcpTool(port, sessionId, "agent_screen_activity", {
+      operator_name: "Alpha",
+      text: "Reading src/auth.ts",
+    });
+
+    expect(result.isError).not.toBe(true);
+    const content = result.content as Array<{ type?: string; text: string }>;
+    expect(content).toHaveLength(1);
+    expect(content[0].text).toBeDefined();
+    const payload = JSON.parse(content[0].text);
+    expect(payload).toEqual({ kind: "activity", op: "Alpha", text: "Reading src/auth.ts" });
+
+    const resultWithMeta = result as { _meta?: { ui?: { resourceUri?: string } } };
+    expect(resultWithMeta._meta?.ui?.resourceUri).toBe(AGENT_SCREEN_APP_RESOURCE_URI);
+  });
+
+  it("agent_screen_activity returns plain ok when getEnableApps is false", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getEnableApps: () => false,
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const result = await callMcpTool(port, sessionId, "agent_screen_activity", {
+      operator_name: "Alpha",
+      text: "Reading src/auth.ts",
+    });
+
+    expect(result.isError).not.toBe(true);
+    const content = result.content as Array<{ type?: string; text: string }>;
+    expect(content[0].text).toBe("ok");
+    const resultWithMeta = result as { _meta?: unknown };
+    expect(resultWithMeta._meta).toBeUndefined();
+  });
+
   it("cursor_cli_run_streaming MCP tool calls postEvent for each cliStream data event", async () => {
     const port = nextPort();
     const driveMgr = makeDriveMgr();
@@ -771,6 +860,36 @@ describe("DriveMcpServer", () => {
     expect(secondBody).toContain("tools");
   });
 
+  it("multiple MCP clients can initialize without Server already initialized", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({ port, driveMgr, operatorRegistry, sessionMemory });
+    await server.start();
+
+    const [sessionId1, sessionId2, sessionId3] = await Promise.all([
+      initializeMcpSession(port),
+      initializeMcpSession(port),
+      initializeMcpSession(port),
+    ]);
+
+    expect(sessionId1).toBeTruthy();
+    expect(sessionId2).toBeTruthy();
+    expect(sessionId3).toBeTruthy();
+    expect(new Set([sessionId1, sessionId2, sessionId3]).size).toBe(3);
+
+    const [r1, r2, r3] = await Promise.all([
+      callMcpTool(port, sessionId1, "tts_speak", { text: "one" }),
+      callMcpTool(port, sessionId2, "tts_speak", { text: "two" }),
+      callMcpTool(port, sessionId3, "tts_speak", { text: "three" }),
+    ]);
+    expect(r1.isError).toBeFalsy();
+    expect(r2.isError).toBeFalsy();
+    expect(r3.isError).toBeFalsy();
+  });
+
   it("POST /run without SSE Accept header falls back to JSON response", async () => {
     const port = nextPort();
     const driveMgr = makeDriveMgr();
@@ -871,6 +990,230 @@ describe("DriveMcpServer", () => {
 
     // No operator → no permission check → proceeds normally (mocked to succeed)
     expect(response.content[0].text).not.toContain("Permission denied");
+  });
+
+  it("cloud_agent_launch is registered when getApiKey and promptAndStoreApiKey provided", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getApiKey: () => Promise.resolve("test-key"),
+      promptAndStoreApiKey: () => Promise.resolve(undefined),
+      getCloudAgentsApiBaseUrl: () => "https://api.cursor.com",
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const responseBody = await new Promise<string>((resolve, reject) => {
+      const req = http.request(
+        {
+          host: "127.0.0.1",
+          port,
+          path: "/mcp",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json, text/event-stream",
+            "Mcp-Session-Id": sessionId,
+            "Mcp-Protocol-Version": MCP_PROTOCOL_VERSION,
+          },
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => { data += chunk; });
+          res.on("end", () => resolve(data));
+        }
+      );
+      req.on("error", reject);
+      req.end(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }));
+    });
+
+    expect(responseBody).toContain("cloud_agent_launch");
+    expect(responseBody).toContain("cloud_agent_status");
+  });
+
+  it("cloud_agent_launch calls launchAgent and posts cloudAgentStatus to AgentScreen", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    operatorRegistry.spawn("FullOp", "cloud task", { preset: "full" });
+    const sessionMemory = makeSessionMemory();
+    mockLaunchAgent.mockResolvedValueOnce({
+      agentId: "bc_test123",
+      status: "creating",
+      dashboardUrl: "https://cursor.com/agents?id=bc_test123",
+      prUrl: undefined,
+    });
+    mockGetAgentStatus.mockResolvedValue({ status: "finished", prUrl: "https://github.com/org/repo/pull/1", summary: "Done" });
+    mockGetAgentConversation.mockResolvedValue({ messages: [{ role: "user", text: "Add README" }, { role: "assistant", text: "Added README" }] });
+    mockPostEvent.mockClear();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getApiKey: () => Promise.resolve("test-key"),
+      promptAndStoreApiKey: () => Promise.resolve(undefined),
+      getCloudAgentsApiBaseUrl: () => "https://api.cursor.com",
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const response = await callMcpTool(port, sessionId, "cloud_agent_launch", {
+      repository: "org/repo",
+      prompt: "Add README",
+    });
+
+    expect(response.isError).not.toBe(true);
+    const parsed = JSON.parse(response.content[0].text);
+    expect(parsed.agent_id).toBe("bc_test123");
+    expect(parsed.status).toBe("creating");
+    expect(mockLaunchAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ repository: "org/repo", prompt: "Add README" }),
+      expect.objectContaining({ apiKey: "test-key", apiBaseUrl: "https://api.cursor.com" })
+    );
+    expect(mockPostEvent).toHaveBeenCalledWith(expect.objectContaining({
+      type: "cloudAgentStatus",
+      cloudAgentId: "bc_test123",
+      cloudStatus: "creating",
+    }));
+  });
+
+  // Skipped: requires 11s real wait for poll interval; artifact logic covered by cloudAgentClient + agentScreen tests
+  it.skip("cloud_agent_launch fetches artifacts and posts cloudAgentArtifact when status is finished", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    operatorRegistry.spawn("FullOp", "cloud task", { preset: "full" });
+    const sessionMemory = makeSessionMemory();
+    mockLaunchAgent.mockResolvedValueOnce({
+      agentId: "bc_artifacts",
+      status: "creating",
+      dashboardUrl: undefined,
+      prUrl: undefined,
+    });
+    mockGetAgentStatus.mockResolvedValue({ status: "finished", prUrl: "https://github.com/org/repo/pull/2", summary: "Done" });
+    mockGetAgentConversation.mockResolvedValue({ messages: [] });
+    mockGetAgentArtifacts.mockResolvedValueOnce({
+      artifacts: [
+        { absolutePath: "/opt/cursor/artifacts/demo.mp4", sizeBytes: 67890, updatedAt: "2024-01-15T11:03:10.000Z" },
+      ],
+    });
+    mockGetArtifactDownloadUrl.mockResolvedValueOnce({
+      url: "https://cloud-agent-artifacts.s3.us-east-1.amazonaws.com/presigned-demo.mp4",
+    });
+    mockPostEvent.mockClear();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getApiKey: () => Promise.resolve("test-key"),
+      promptAndStoreApiKey: () => Promise.resolve(undefined),
+      getCloudAgentsApiBaseUrl: () => "https://api.cursor.com",
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const response = await callMcpTool(port, sessionId, "cloud_agent_launch", {
+      repository: "org/repo",
+      prompt: "Add README",
+    });
+
+    expect(response.isError).not.toBe(true);
+
+    await new Promise((r) => setTimeout(r, 11_000));
+
+    expect(mockGetAgentArtifacts).toHaveBeenCalledWith("bc_artifacts", expect.objectContaining({ apiKey: "test-key" }));
+    expect(mockGetArtifactDownloadUrl).toHaveBeenCalledWith(
+      "bc_artifacts",
+      "/opt/cursor/artifacts/demo.mp4",
+      expect.objectContaining({ apiKey: "test-key" })
+    );
+    expect(mockPostEvent).toHaveBeenCalledWith(expect.objectContaining({
+      type: "cloudAgentArtifact",
+      cloudAgentId: "bc_artifacts",
+      artifactType: "video",
+      artifactUrl: "https://cloud-agent-artifacts.s3.us-east-1.amazonaws.com/presigned-demo.mp4",
+      artifactLabel: "demo.mp4",
+    }));
+  }, 15_000);
+
+  it("cloud_agent_launch is denied when operator lacks webSearch (full preset)", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    operatorRegistry.spawn("StandardOp", "task", { preset: "standard" });
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getApiKey: () => Promise.resolve("test-key"),
+      promptAndStoreApiKey: () => Promise.resolve(undefined),
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const response = await callMcpTool(port, sessionId, "cloud_agent_launch", {
+      repository: "org/repo",
+      prompt: "Add README",
+    });
+
+    expect(response.isError).toBe(true);
+    expect(response.content[0].text).toContain("Permission denied");
+    expect(response.content[0].text).toContain("webSearch");
+    expect(mockLaunchAgent).not.toHaveBeenCalled();
+  });
+
+  it("cloud_agent_status returns status and posts to AgentScreen", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    operatorRegistry.spawn("FullOp", "task", { preset: "full" });
+    const sessionMemory = makeSessionMemory();
+    mockGetAgentStatus.mockResolvedValueOnce({
+      status: "running",
+      prUrl: undefined,
+      summary: "Working on it",
+    });
+    mockPostEvent.mockClear();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getApiKey: () => Promise.resolve("test-key"),
+      promptAndStoreApiKey: () => Promise.resolve(undefined),
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const response = await callMcpTool(port, sessionId, "cloud_agent_status", {
+      agent_id: "bc_xyz",
+    });
+
+    expect(response.isError).not.toBe(true);
+    const parsed = JSON.parse(response.content[0].text);
+    expect(parsed.status).toBe("running");
+    expect(parsed.summary).toBe("Working on it");
+    expect(mockGetAgentStatus).toHaveBeenCalledWith("bc_xyz", expect.objectContaining({ apiKey: "test-key" }));
+    expect(mockPostEvent).toHaveBeenCalledWith(expect.objectContaining({
+      type: "cloudAgentStatus",
+      cloudAgentId: "bc_xyz",
+      cloudStatus: "running",
+    }));
   });
 
   it("POST /pipeline returns pipeline result when Drive active", async () => {

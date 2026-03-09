@@ -43,8 +43,8 @@ Extensions declare static contributions in `package.json` under `contributes`. T
 | `keybindings` | Bind keyboard shortcuts to commands | `Ctrl+Shift+D` (toggle), `Ctrl+Shift+S` (agent screen) |
 | `configuration` | Declare settings with types, defaults, and descriptions | 22 settings under `cursorDrive.*` |
 | `menus` | Add items to context menus, editor title, etc. | Not currently used |
-| `viewsContainers` | Register sidebar/panel containers | Not currently used |
-| `views` | Register tree views or webview views | Not currently used |
+| `viewsContainers` | Register sidebar/panel containers | Drive sidebar (Activity Bar icon) |
+| `views` | Register tree views or webview views | Drive sidebar (`cursorDrive.panel` WebviewView) |
 | `chatParticipants` | Register chat participants (VS Code only) | Not available in Cursor |
 
 ---

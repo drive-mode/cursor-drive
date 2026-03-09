@@ -7,6 +7,7 @@ Lookup tables generated from source. When source changes, update these docs.
 | File | Source | What it covers |
 |---|---|---|
 | [config-schema.md](config-schema.md) | `src/config.ts`, `package.json` | All `cursorDrive.*` settings with types, defaults, constraints |
+| [mcp-overview.md](mcp-overview.md) | — | MCP concepts, transport, registration, Apps, security — maps our implementation to the MCP guide |
 | [mcp-tools.md](mcp-tools.md) | `src/mcpServer.ts` | Operator and Agent Screen (S-AS) tools, TTS, drive mode — parameters and return values |
 | [commands-and-shortcuts.md](commands-and-shortcuts.md) | `package.json` | All VS Code commands, keybindings, and their behavior |
 | [mcp-user-setup.md](mcp-user-setup.md) | — | User-level MCP (e.g. GitHub) without wrapper; .env at `C:\Users\harri\.env\` |

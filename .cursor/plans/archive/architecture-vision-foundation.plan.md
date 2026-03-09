@@ -1,4 +1,9 @@
 ---
+planId: architecture-vision-foundation
+planType: task
+parentPlanId: cursor-drive
+childPlanIds: []
+dependsOn: []
 name: Architecture & Vision Foundation
 overview: "Establish the architectural foundation for Drive as a mode-wrapper: ADRs for mode wrapper, hook-based ingress, native mode compatibility, voice integration, and mode state management. Codify vision invariants. Fix duplicate ADR numbering."
 todos:

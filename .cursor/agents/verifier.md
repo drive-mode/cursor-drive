@@ -1,6 +1,6 @@
 ---
 name: verifier
-model: composer-1.5
+model: default
 description: Validates completed work. Use after tasks are marked done to confirm implementations are functional. Catches "marked done but broken" cases.
 ---
 

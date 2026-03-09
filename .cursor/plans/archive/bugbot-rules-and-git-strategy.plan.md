@@ -5,6 +5,7 @@ planType: workstream
 planId: bugbot-git-cicd
 parentPlanId: cursor-drive
 childPlanIds: []
+dependsOn: []
 todos:
   - id: bugbot-01-create-rules
     content: "Create `.cursor/BUGBOT.md` with codebase-specific BugBot review rules. Organize into sections: Privacy & Security, Architecture, Type Safety, State Management, Testing, Webview/UI, Cost Awareness, Approval Gates. Each rule must name specific files/types and state the invariant. See rule details below."

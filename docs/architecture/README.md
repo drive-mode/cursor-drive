@@ -1,6 +1,6 @@
 # Cursor Drive — Architecture
 
-Cursor Drive is a **standalone** Cursor IDE extension. There is no external backend. All logic runs in the VS Code extension host or in the `.cursor/` Cursor plugin layer. See [standalone-note.md](standalone-note.md) for the explicit "no hh, no Discord, no shared core" positioning.
+Cursor Drive is a **standalone** Cursor IDE extension. There is no external backend. All logic runs in the VS Code extension host or in the `.cursor/` Cursor plugin layer. No hh backend, no Discord, no shared core.
 
 ## High-Level Architecture
 
@@ -158,6 +158,15 @@ The `.cursor/` directory is auto-discovered by Cursor and shapes AI behavior wit
 | [ADR-0013](adr/ADR-0013-mode-state-management.md) | Mode state management |
 | [ADR-0014](adr/ADR-0014-agent-orchestration-strategy.md) | Agent orchestration strategy |
 | [ADR-0015](adr/ADR-0015-senior-engineer-interaction-model.md) | Senior engineer interaction model |
+| [ADR-0016](adr/ADR-0016-drive-terminology-and-hierarchy.md) | Drive terminology: operators, Agent Screen (S-AS) |
+| [ADR-0017](adr/ADR-0017-mcp-apps-adoption-strategy.md) | MCP Apps adoption strategy (proposed) |
+| [ADR-0018](adr/ADR-0018-cursor-computer-use-posture.md) | Cursor computer use posture (proposed) |
+| [ADR-0019](adr/ADR-0019-plugin-extension-strategy.md) | Plugin and extension strategy (proposed) |
+| [ADR-0020](adr/ADR-0020-agent-steering-control-plane.md) | Agent steering control plane (proposed) |
+| [ADR-0021](adr/ADR-0021-agent-orchestration-enhancement.md) | Agent orchestration enhancement (proposed) |
+| [ADR-0022](adr/ADR-0022-mob-programming-cockpit.md) | Mob programming cockpit — worktree isolation |
+| [ADR-0023](adr/ADR-0023-sdk-protocol-framework-adoption.md) | SDK, protocol, framework adoption |
+| [ADR-0024](adr/ADR-0024-fork-merge-drive-mode-canonical.md) | Fork merge — drive-mode canonical |
 
 ## Security & Privacy
 

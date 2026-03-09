@@ -5,6 +5,7 @@ planType: task
 planId: docs-overhaul
 parentPlanId: cursor-drive
 childPlanIds: []
+dependsOn: []
 todos:
   - id: restructure-dirs
     content: "Create docs/guides/ and docs/reference/ dirs. Move docs/dev/live-testing.md → docs/guides/live-testing.md. Move docs/handoff-prompt-new-chat.md → docs/guides/handoff.md."

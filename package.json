@@ -87,6 +87,11 @@
         "category": "Drive"
       },
       {
+        "command": "cursorDrive.discoverVoiceCommands",
+        "title": "Discover Voice Commands (chat + mic)",
+        "category": "Drive"
+      },
+      {
         "command": "cursorDrive.activateVoiceInput",
         "title": "Activate Voice Input (open chat + mic)",
         "category": "Drive"
@@ -120,6 +125,16 @@
         "command": "cursorDrive.confirmTangent",
         "title": "Confirm Tangent Agent",
         "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.focusDrivePanel",
+        "title": "Focus Drive Panel",
+        "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.setApiKey",
+        "title": "Set Cursor API Key (Cloud Agents)",
+        "category": "Drive"
       }
     ],
     "keybindings": [
@@ -151,6 +166,24 @@
         "mac": "cmd+shift+y"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cursorDrive",
+          "title": "Drive",
+          "icon": "assets/logo.svg"
+        }
+      ]
+    },
+    "views": {
+      "cursorDrive": [
+        {
+          "id": "cursorDrive.panel",
+          "name": "Drive",
+          "type": "webview"
+        }
+      ]
+    },
     "configuration": {
       "title": "Cursor Drive",
       "properties": {
@@ -253,7 +286,7 @@
         },
         "cursorDrive.agentScreen.autoOpen": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Automatically open the Agent Screen panel when Drive activates."
         },
         "cursorDrive.agentScreen.displayMode": {
@@ -299,12 +332,22 @@
           "default": "",
           "description": "Optional hex color (e.g. #0e639c) for status bar when Drive is active. Empty uses theme (statusBarItem.warningBackground)."
         },
+        "cursorDrive.composer.driveActiveBorderColor": {
+          "type": "string",
+          "default": "#e51400",
+          "description": "Hex color for a thin border around the composer send button when Drive mode is active. Used when Cursor supports extension-driven composer styling. Empty = no border."
+        },
         "cursorDrive.mcp.port": {
           "type": "number",
           "default": 7891,
           "minimum": 1024,
           "maximum": 65535,
-          "description": "Port for the Drive MCP server. Register in .cursor/mcp.json as { url: 'http://127.0.0.1:<port>/mcp' }."
+          "description": "Preferred port for the Drive MCP server. If in use, Drive tries the next ports (e.g. 7892, 7893). Register in .cursor/mcp.json with the actual port shown in the Drive output channel."
+        },
+        "cursorDrive.mcp.enableApps": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable MCP Apps: agent_screen_* tools return ui:// resource for inline rendering in chat (Cursor 2.6+)."
         },
         "cursorDrive.cursorCli.command": {
           "type": "string",
@@ -325,7 +368,7 @@
         },
         "cursorDrive.voice.autoActivateMicOnToggle": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Automatically open the chat panel and start Cursor's voice input when Drive mode is toggled on."
         },
         "cursorDrive.voice.chatOpenCommand": {
@@ -333,20 +376,51 @@
           "default": "workbench.action.chat.open",
           "description": "VS Code command used to open the chat panel when activating voice input."
         },
+        "cursorDrive.voice.chatOpenFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Fallback commands if chatOpenCommand fails. Tried in order: composer.openComposer, composer.openAsPane, composer.focusComposer."
+        },
         "cursorDrive.voice.micCommand": {
           "type": "string",
-          "default": "workbench.action.chat.startVoiceChat",
-          "description": "VS Code/Cursor command used to activate the microphone/voice input in chat. Leave blank to skip mic trigger."
+          "default": "composer.toggleVoiceDictation",
+          "description": "Command to activate the microphone. Default composer.toggleVoiceDictation works when startVoiceChat is context-gated. Leave blank to use built-in fallback chain."
+        },
+        "cursorDrive.voice.micCommandFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Fallback commands if micCommand fails. Try composer.toggleVoiceDictation if startVoiceChat doesn't exist in your Cursor version."
         },
         "cursorDrive.voice.stopCommand": {
           "type": "string",
           "default": "workbench.action.chat.stopListeningAndSubmit",
           "description": "Command used by cursorDrive.stopVoice to submit the current voice dictation. Falls back to stopListening (cancel) if unavailable."
         },
+        "cursorDrive.voice.stopCommandFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Fallback commands if stopCommand fails."
+        },
         "cursorDrive.voice.showListeningFeedback": {
           "type": "boolean",
           "default": false,
           "description": "When true, show a brief 'Listening…' toast when voice input (mic) is activated."
+        },
+        "cursorDrive.voice.activateMicDelayMs": {
+          "type": "number",
+          "default": 400,
+          "minimum": 0,
+          "maximum": 2000,
+          "description": "Milliseconds to wait after opening chat before firing the mic command. The mic button may not be ready until the chat panel has rendered. Increase if mic activation fails."
         },
         "cursorDrive.syncNativeMode": {
           "type": "boolean",
@@ -411,13 +485,21 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "build:plugin": "node scripts/build-plugin.mjs",
+    "bundle:mcp-app": "node scripts/bundle-mcp-app.mjs",
+    "vscode:prepublish": "npm run bundle:mcp-app && npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "jest",
     "dev-loop": "node sandbox/dev-loop.mjs",
     "dev-loop:serve": "node sandbox/dev-loop.mjs --serve-web",
-    "test:browser": "playwright test"
+    "reinstall": "node scripts/reinstall-extension.mjs",
+    "reinstall:serve-web": "node scripts/reinstall-extension.mjs --serve-web",
+    "reinstall:dev-sandbox": "node scripts/reinstall-extension.mjs --dev-sandbox",
+    "test:browser": "playwright test",
+    "cloudflare:create-token": "node scripts/create-cloudflare-token.mjs",
+    "cloudflare:trigger": "node scripts/trigger-cloudflare-test.mjs",
+    "cloudflare:verify": "node scripts/verify-cloudflare-token.mjs"
   },
   "jest": {
     "preset": "ts-jest",
@@ -450,8 +532,11 @@
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "^0.14.1",
+    "@modelcontextprotocol/ext-apps": "^1.1.2",
     "@modelcontextprotocol/sdk": "^1.26.0",
-    "say": "^0.16.0",
     "zod": "^4.3.6"
+  },
+  "optionalDependencies": {
+    "say": "^0.16.0"
   }
 }

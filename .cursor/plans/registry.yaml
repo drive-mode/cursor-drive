@@ -1,6 +1,6 @@
 version: 1
 project_id: cursor-drive
-last_synced: '2026-03-03T23:54:20.105053+00:00'
+last_synced: '2026-03-04T11:10:22.555026+00:00'
 plans:
 - id: cd-001
   planId: cursor-drive
@@ -13,8 +13,8 @@ plans:
   planId: readme-redesign
   file: .cursor/plans/readme-redesign.plan.md
   plan_type: task
-  todo_count: 8
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-009
   planId: architecture-vision-foundation
@@ -184,16 +184,58 @@ plans:
   todo_count: 0
   todo_empty: true
   is_project: false
+- id: cd-031
+  planId: cursor_drive_state_sync_95317c89
+  file: .cursor/plans/archive/cursor-drive/cursor_drive_state_sync_95317c89.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-032
+  planId: openclaw_capability_scrape_8fa228d1
+  file: .cursor/plans/archive/cursor-drive/openclaw_capability_scrape_8fa228d1.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-033
+  planId: wire_and_fix_drive_886a9ffa
+  file: .cursor/plans/archive/cursor-drive/wire_and_fix_drive_886a9ffa.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-034
+  planId: drive_ux_polish_and_auto-mcp_deb68d21
+  file: .cursor/plans/archive/cursor-drive/drive_ux_polish_and_auto-mcp_deb68d21.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-035
+  planId: voice_user_journey_storyboard_59290404
+  file: .cursor/plans/archive/cursor-drive/voice_user_journey_storyboard_59290404.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
 - id: cd-036
   planId: s_as_screen_capture_impl
   file: .cursor/plans/s_as_screen_capture_impl.plan.md
   plan_type: task
-  todo_count: 14
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-037
+  planId: cursor_native_commands_wire_4b8e2c17
+  file: .cursor/plans/archive/cursor-drive/cursor_native_commands_wire_4b8e2c17.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-038
   planId: repo_review_and_bugfix_plan_9f907bcf
-  file: .cursor/plans/repo_review_and_bugfix_plan_9f907bcf.plan.md
+  file: .cursor/plans/archive/cursor-drive/repo_review_and_bugfix_plan_9f907bcf.plan.md
   plan_type: task
   todo_count: 6
   todo_empty: false
@@ -202,15 +244,8 @@ plans:
   planId: sdk_and_protocol_research_6c42aa0c
   file: .cursor/plans/sdk_and_protocol_research_6c42aa0c.plan.md
   plan_type: task
-  todo_count: 6
-  todo_empty: false
-  is_project: false
-- id: cd-041
-  planId: project_cleanup_and_reset_11e351b6
-  file: .cursor/plans/project_cleanup_and_reset_11e351b6.plan.md
-  plan_type: task
-  todo_count: 4
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-040
   planId: chat_memory_and_proceed_f300d563
@@ -219,7 +254,83 @@ plans:
   todo_count: 0
   todo_empty: true
   is_project: false
-  archived: true
+- id: cd-041
+  planId: project_cleanup_and_reset_11e351b6
+  file: .cursor/plans/archive/cursor-drive/project_cleanup_and_reset_11e351b6.plan.md
+  plan_type: task
+  todo_count: 4
+  todo_empty: false
+  is_project: false
+- id: cd-043
+  planId: fork_upstream_sync_and_branch_cleanup_82fad582
+  file: .cursor/plans/archive/cursor-drive/fork_upstream_sync_and_branch_cleanup_82fad582.plan.md
+  plan_type: task
+  todo_count: 12
+  todo_empty: false
+  is_project: false
+- id: cd-044
+  planId: governance_entropy_control_1d0c8c2e
+  file: .cursor/plans/archive/cursor-drive/governance_entropy_control_1d0c8c2e.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-045
+  planId: mcp_apps_implementation_cc604304
+  file: .cursor/plans/archive/cursor-drive/mcp_apps_implementation_cc604304.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-046
+  planId: composer_ui_constraints_and_extension_tab_strategy_5cd16ec2
+  file: .cursor/plans/archive/cursor-drive/composer_ui_constraints_and_extension_tab_strategy_5cd16ec2.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-050
+  planId: mob-programming-cockpit-mvp
+  file: .cursor/plans/archive/cursor-drive/mob-programming-cockpit-mvp.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-047
+  planId: mcp_install_link_and_extension_api
+  file: .cursor/plans/archive/cursor-drive/mcp_install_link_and_extension_api.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-048
+  planId: cursor_plugin_marketplace_and_mcp_apps_implementation
+  file: .cursor/plans/cursor_plugin_marketplace_and_mcp_apps_implementation.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-052
+  planId: cursor-drive-orchestrator
+  file: .cursor/plans/cursor-drive-orchestrator.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-053
+  planId: wake_word_triggers_mic_5ae725f9
+  file: .cursor/plans/wake_word_triggers_mic_5ae725f9.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+- id: cd-054
+  planId: wake_word_triggers_mic_6633bd76
+  file: .cursor/plans/wake_word_triggers_mic_6633bd76.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
 - id: cd-031
   planId: cursor_drive_state_sync_95317c89
   file: .cursor/plans/archive/cursor_drive_state_sync_95317c89.plan.md

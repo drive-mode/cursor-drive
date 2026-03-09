@@ -1,4 +1,9 @@
 ---
+planId: browser-dev-workflow
+planType: task
+parentPlanId: cursor-drive
+childPlanIds: []
+dependsOn: []
 name: Browser Dev Workflow
 overview: "Set up cursor serve-web for iterative UI development and browser-based testing: launch config, one-command dev scripts, Playwright automation, visual regression tests for ShareScreen webview, and complete live-testing documentation."
 todos:

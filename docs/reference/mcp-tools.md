@@ -22,6 +22,23 @@ Health check: `GET http://127.0.0.1:7891/health` → `{"status":"ok","name":"cur
 
 Pipeline (hook→extension): `POST http://127.0.0.1:7891/pipeline` with body `{ "prompt": "..." }` → pipeline result JSON.
 
+**Transport:** Streamable HTTP (MCP over HTTP POST to `/mcp`). The server binds to `127.0.0.1` only. Port may be 7892, 7893, etc. if 7891 is in use — check the Cursor Drive output channel for the actual port.
+
+---
+
+## MCP Apps (interactive UI in chat)
+
+When `cursorDrive.mcp.enableApps` is `true` (default), these tools return `_meta.ui.resourceUri: "ui://cursor-drive/agent-screen"` so Cursor can render the Agent Screen inline in chat:
+
+| Tool | Returns `_meta.ui` |
+|------|--------------------|
+| `agent_screen_activity` | Yes |
+| `agent_screen_file` | Yes |
+| `agent_screen_decision` | Yes |
+| `agent_screen_plan_update` | No (text only) |
+
+The UI resource is an activity feed showing operator activity, files, and decisions. Requires Cursor 2.6+ (or another host that supports MCP Apps). If the host cannot render Apps, tools still work with text output. See [demo-mcp-apps](../guides/demo-mcp-apps.md).
+
 ---
 
 ## TTS tools

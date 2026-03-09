@@ -1,4 +1,9 @@
 ---
+planId: plan-graph-diagram-automation
+planType: task
+parentPlanId: null
+childPlanIds: []
+dependsOn: []
 name: plan-graph-diagram-automation
 overview: "Automate plan lifecycle bookkeeping: keep `.cursor/plans/plan-graph.yaml` + `.cursor/plans/registry.yaml` accurate and generate a dark-mode Mermaid master diagram (`.cursor/plans/plan-master.diagram.md`) whenever `.plan.md` files change or complete."
 todos:

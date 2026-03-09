@@ -1,11 +1,12 @@
 ---
-name: Agent Orchestration Frameworks
-overview: "Implement agent-to-agent interoperability via A2A protocol, bridge Claude Code Agent Teams to Drive MCP, evolve AgentRegistry to a lead+worker model with mailbox communication, rescue CommsAgent from tests/, and evaluate Strands Agents as a worker runtime."
-planType: task
 planId: agent-orchestration-frameworks
+planType: task
 parentPlanId: cursor-drive
 childPlanIds: []
-dependsOn: [architecture-vision-foundation]
+dependsOn:
+  - architecture-vision-foundation
+name: Agent Orchestration Frameworks
+overview: Implement agent-to-agent interoperability via A2A protocol, bridge Claude Code Agent Teams to Drive MCP, evolve AgentRegistry to a lead+worker model with mailbox communication, rescue CommsAgent from tests/, and evaluate Strands Agents as a worker runtime.
 todos:
   - id: aof-01-adr-orchestration
     content: "Write docs/architecture/adr/ADR-0014-agent-orchestration-strategy.md. Decision: A2A protocol for agent-to-agent interop alongside MCP for agent-to-tool; Claude Code Agent Teams pattern as reference architecture for AgentRegistry v2 lead+worker model; Strands Agents as evaluation candidate for worker runtime; LangGraph deferred (too heavy); OpenClaw not applicable (messaging gateway). Acceptance: file exists, status=Accepted, covers A2A+MCP layering, registry v2 design rationale, and deferred frameworks."
@@ -83,14 +84,16 @@ AgentRegistry v2
 
 ## Framework decision summary
 
-| Framework | Decision | Rationale |
-|---|---|---|
-| A2A (incl. ACP) | Implement (v0.1.0) | Emerging interop standard; HTTP/JSON-RPC alongside MCP |
-| Claude Code Teams | Bridge + copy patterns | Experimental but architecturally sound lead+worker reference |
-| MCP | Already shipping | Foundation; extend tool surface only |
-| AWS Strands | Evaluate | Native MCP TS SDK; validate before committing |
-| LangGraph | Defer | Too heavy; only if registry proves insufficient |
-| OpenClaw | Research note | Different domain (messaging gateway); not a coding agent framework |
+
+| Framework         | Decision               | Rationale                                                          |
+| ----------------- | ---------------------- | ------------------------------------------------------------------ |
+| A2A (incl. ACP)   | Implement (v0.1.0)     | Emerging interop standard; HTTP/JSON-RPC alongside MCP             |
+| Claude Code Teams | Bridge + copy patterns | Experimental but architecturally sound lead+worker reference       |
+| MCP               | Already shipping       | Foundation; extend tool surface only                               |
+| AWS Strands       | Evaluate               | Native MCP TS SDK; validate before committing                      |
+| LangGraph         | Defer                  | Too heavy; only if registry proves insufficient                    |
+| OpenClaw          | Research note          | Different domain (messaging gateway); not a coding agent framework |
+
 
 ## Dependency notes
 
@@ -104,6 +107,7 @@ AgentRegistry v2
 **Executor role:** Orchestrator for design/research tasks; Implementer for code changes.
 
 **Subagent fan-out:**
+
 - Batch A (parallel): aof-01 (ADR), aof-02 (A2A research), aof-11 (OpenClaw update) — all docs
 - Batch B (parallel): aof-03 (CommsAgent rescue), aof-07 (Claude Code bridge research) — independent
 - Batch C (parallel): aof-04 (event bus) after aof-03; aof-05 + aof-06 (A2A endpoints) after aof-02

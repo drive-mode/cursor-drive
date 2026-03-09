@@ -39,11 +39,13 @@ export function createDriveStatusBar(
           ? (activeBackground as unknown as vscode.ThemeColor)
           : new vscode.ThemeColor(activeBackground)
         : new vscode.ThemeColor("statusBarItem.warningBackground");
-      item.tooltip = "Drive mode active — click to change sub-mode, operators, or turn off";
+      const toggleKey = process.platform === "darwin" ? "Cmd+Shift+D" : "Ctrl+Shift+D";
+      item.tooltip = `Drive mode active — click to change sub-mode, operators, or turn off (${toggleKey} to toggle)`;
     } else {
       item.text = "$(circle-slash) Drive (off)";
       item.backgroundColor = undefined;
-      item.tooltip = "Drive mode off — click to activate";
+      const toggleKeyOff = process.platform === "darwin" ? "Cmd+Shift+D" : "Ctrl+Shift+D";
+      item.tooltip = `Drive mode off — click to activate (${toggleKeyOff} to toggle)`;
     }
   }
 

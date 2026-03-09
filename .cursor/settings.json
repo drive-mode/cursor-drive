@@ -3,7 +3,7 @@
     "langfuse": {
       "enabled": true
     },
-    "runlayer": {
+    "tldraw": {
       "enabled": true
     }
   }

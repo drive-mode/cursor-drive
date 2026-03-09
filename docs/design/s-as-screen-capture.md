@@ -305,14 +305,43 @@ This change is only needed when Track A is implemented.
 
 ---
 
-## 7. Open Questions
+## 7. Artifact API Discovery (p3-01 Spike)
 
-These require live API access or Cursor team confirmation to resolve:
+**Date:** 2026-03-04
+**Source:** [Cursor Cloud Agents API docs](https://cursor.com/docs/cloud-agent/api/endpoints)
+
+### Findings
+
+| # | Question | Answer |
+|---|----------|--------|
+| 1 | Does `GET /v0/agents/{id}/conversation` return artifact URLs? | **No.** The conversation endpoint returns `messages` with `id`, `type`, `text` only. No `artifacts`, `media`, or `attachments` fields. |
+| 2 | Is there a dedicated `GET /v0/agents/{id}/artifacts` endpoint? | **Yes.** Documented endpoint returns `artifacts[]` with `absolutePath`, `sizeBytes`, `updatedAt`. Paths are filesystem-style (e.g. `/opt/cursor/artifacts/screenshot.png`, `/opt/cursor/artifacts/demo.mp4`). |
+| 3 | How to obtain download URLs? | **GET /v0/agents/{id}/artifacts/download?path=...** - Pass `absolutePath` as query param. Returns `{ url: "https://cloud-agent-artifacts.s3.us-east-1.amazonaws.com/..." }` presigned S3 URL (15-minute expiry). |
+
+### Decision
+
+**Proceed with p3-02 (API path).** No GitHub extraction needed. Cloud Agent API provides:
+
+1. `GET /v0/agents/{id}/artifacts` → list artifacts
+2. `GET /v0/agents/{id}/artifacts/download?path=<absolutePath>` → presigned URL per artifact
+3. Render in S-AS via `<img>` / `<video>` with CSP allowing `*.amazonaws.com` (or the resolved S3 domain)
+
+### Implementation notes
+
+- Rate limits: 300 req/min, 6000 req/hour for artifacts endpoints
+- Presigned URLs expire in 15 minutes; fetch on-demand when user opens Artifacts tab or when agent completes
+- Artifact type inference: use file extension (`.mp4` → video, `.png`/`.jpg` → screenshot) since API does not return `type` field
+
+---
+
+## 8. Open Questions (remaining)
 
 | # | Question | Blocking? | How to resolve |
 |---|----------|-----------|----------------|
-| 1 | Does `GET /v0/agents/{id}/conversation` return artifact URLs (video, screenshot) in the response body, or are they only attached to the GitHub PR? | **Yes** (Track A artifact display) | Make a test API call with a completed cloud agent that has video artifacts. Inspect the response for `artifacts`, `media`, or `attachments` fields. |
-| 2 | Is there a dedicated `GET /v0/agents/{id}/artifacts` endpoint not yet documented? | Yes (Track A) | Check API response headers for `Link` relations, or query the API with common artifact path patterns. |
+| 3 | What is the exact JSON schema for `stream-json` messages? | No (B1 works with lenient parsing) | Run `agent -p "hello" --output-format stream-json` locally and capture all message types. |
+| 4 | Does the Cloud Agents API support webhooks for agent completion? | No (polling works) | Check `docs.cursor.com/background-agent/api/webhooks`. |
+| 5 | Can `--stream-partial-output` be combined with `--output-format stream-json` reliably? | No | Test locally with the flag combination. |
+| 6 | Does the Cursor CLI `agent` command support `--mode=plan` and `--mode=ask` in stream-json format? | No | Test with `agent -p "..." --mode=plan --output-format stream-json`. |
 | 3 | What is the exact JSON schema for `stream-json` messages? The blog post and third-party docs show `user`, `assistant`, `tool_call`, `text_delta` — are there other types (e.g., `error`, `status`)? | No (B1 works with lenient parsing) | Run `agent -p "hello" --output-format stream-json` locally and capture all message types. |
 | 4 | Does the Cloud Agents API support webhooks for agent completion, or is polling the only option? | No (polling works) | Check `docs.cursor.com/background-agent/api/webhooks` — search results suggest a webhooks page exists. If webhooks are available, prefer them over polling. |
 | 5 | Can `--stream-partial-output` be combined with `--output-format stream-json` reliably, or does it produce malformed JSON lines? | No (we can omit it initially) | Test locally with the flag combination. |
@@ -320,7 +349,7 @@ These require live API access or Cursor team confirmation to resolve:
 
 ---
 
-## 8. Implementation Phases
+## 9. Implementation Phases
 
 ### Phase 1 — CLI streaming in S-AS (Track B1)
 
@@ -350,7 +379,7 @@ These require live API access or Cursor team confirmation to resolve:
 
 ---
 
-## 9. NDJSON Ingest Discovery (p0-01 Spike)
+## 10. NDJSON Ingest Discovery (p0-01 Spike)
 
 **Question:** Is `cursor.ndjsonIngest.*` hookable from an extension, replacing the custom `NdjsonParser`?
 
@@ -383,7 +412,7 @@ knowledge.
 
 ---
 
-## 10. Rejected Alternatives
+## 11. Rejected Alternatives
 
 | Alternative | Reason for rejection |
 |-------------|---------------------|

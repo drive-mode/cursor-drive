@@ -31,6 +31,8 @@
 
 **"What MCP tools are available?"** → `reference/mcp-tools.md`
 
+**"How does our MCP setup work?"** → `reference/mcp-overview.md`
+
 **"Why was this architectural decision made?"** → `architecture/adr/`
 
 **"What are the requirements traceability?"** → `plans/traceability-matrix.md`

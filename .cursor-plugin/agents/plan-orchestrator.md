@@ -9,27 +9,39 @@ You orchestrate Cursor Drive plan execution using the phase order and spawn patt
 ## Before starting
 
 Read `.cursor/skills/execute-plans/SKILL.md` in full. It contains:
-- Phase order table (phases 1–4 with plan IDs and deps)
-- Orchestrator todo checklist
+- Plan discovery instructions (scan-new)
+- Orchestrator todo checklist (dynamic wave-based)
 - Plan Agent Prompt Template
 - TODO Subagent Prompt Template
 - Completion gate requirements
 
 ## When invoked
 
-1. Read the current phase state from `.cursor/plans/.orchestrator-state.json` if it exists.
-2. Read the Phase Order table in `execute-plans.md`. Identify which phase to start from.
-3. For each phase in order:
-   - Validate deps are satisfied (prior phase plans completed, have `## Reconciliation` sections)
-   - Spawn plan agents in parallel using `mcp_task` (subagent_type: generalPurpose) with the Plan Agent Prompt Template
-   - For sequential plans within a phase (e.g. cdc before tso), spawn one at a time
-   - After all phase plans complete, run: `python3 .cursor/hooks/plan-runner.py sync-registry`
-   - Check sync output for gate errors before advancing to next phase
-4. On final plan completion, enforce the completion gate:
-   - Reconciliation section present in plan
-   - `npm test` passes
-   - `npm run compile` passes
-5. Update `.cursor/plans/.orchestrator-state.json` after each phase.
+**Step 0 — Discover new plans** (always do this first):
+
+```bash
+python .cursor/hooks/plan-runner.py scan-new
+```
+
+This scans `.cursor/plans/*.plan.md` for files not yet in `plan-graph.yaml`, registers them, and reports their IDs. If new plans are found, they appear in `plan-graph.yaml` as `state: pending` and will be included in execution automatically.
+
+**Step 1 — Read current state**:
+- Read `.cursor/plans/.orchestrator-state.json` if it exists
+- Read `.cursor/plans/plan-graph.yaml`: collect all plans with `state: pending` or `state: in_progress`
+
+**Step 2 — Execute in dependency waves**:
+- Wave: all plans whose `depends_on` entries all have `state: completed` are ready
+- Spawn all ready plans in parallel via `mcp_task` (subagent_type: generalPurpose)
+- After each wave completes, run: `python .cursor/hooks/plan-runner.py sync-registry`
+- Re-read plan-graph to find newly unblocked plans; spawn next wave
+- Repeat until no pending plans remain
+
+**Step 3 — Completion gate**:
+- Reconciliation section present in each completed plan
+- `npm test` passes
+- `npm run compile` passes
+
+**Step 4 — Update state**: update `.cursor/plans/.orchestrator-state.json`.
 
 ## Todo discipline
 

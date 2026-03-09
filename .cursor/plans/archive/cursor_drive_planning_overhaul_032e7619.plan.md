@@ -1,4 +1,9 @@
 ---
+planId: cursor-drive-planning-overhaul
+planType: task
+parentPlanId: null
+childPlanIds: []
+dependsOn: []
 name: Cursor Drive Planning Overhaul
 overview: "Complete planning system for Cursor Drive: 6 workstreams with dependency DAG, rooted in mode-wrapper vision, replacing stale @drive-participant architecture across docs/code/plans/.cursor."
 todos:

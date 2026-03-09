@@ -32,22 +32,11 @@ The following agents are already in `agents/` (copied from `.cursor/agents/`):
 
 To prepare a full distributable plugin, run from the repo root:
 
-```powershell
-# Copy skills
-Copy-Item -Recurse .cursor/skills/* .cursor-plugin/skills/ -Force
-
-# Copy rules
-Copy-Item .cursor/rules/* .cursor-plugin/rules/ -Force
-
-# Copy commands
-Copy-Item .cursor/commands/* .cursor-plugin/commands/ -Force
-
-# Copy hooks
-Copy-Item .cursor/hooks/* .cursor-plugin/hooks/ -Force
-Copy-Item .cursor/hooks.json .cursor-plugin/hooks/hooks.json -Force
+```bash
+npm run build:plugin
 ```
 
-Or add these as an npm script (`build:plugin`) in `package.json`.
+This copies agents, commands, rules, skills, and hooks from `.cursor/` to `.cursor-plugin/`, filters hooks to user-facing (drive-preprocessor only), adds `.mcp.json` and `assets/logo.svg`, and removes `__pycache__`. Run before marketplace submission and commit the result.
 
 ## Note on split components
 

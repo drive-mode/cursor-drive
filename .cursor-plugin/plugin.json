@@ -1,13 +1,14 @@
 {
   "name": "cursor-drive",
   "displayName": "Cursor Drive",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen. Senior engineer on call — faster.",
   "author": {
-    "name": "harrison halperin",
-    "email": "harrisonhalperin@gmail.com"
+    "name": "Drive Mode"
   },
-  "license": "MIT",
+  "homepage": "https://github.com/drive-mode/cursor-drive#readme",
+  "repository": "https://github.com/drive-mode/cursor-drive",
+  "license": "UNLICENSED",
   "keywords": [
     "drive",
     "pair-programming",

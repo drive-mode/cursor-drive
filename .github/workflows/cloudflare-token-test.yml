@@ -1,0 +1,55 @@
+# Verify Cloudflare API token and account ID
+# Run manually: Actions → Cloudflare Token Test → Run workflow
+#
+# Required Repository secrets (Settings → Secrets and variables → Actions → Repository secrets):
+#   CLOUDFLARE_API_TOKEN   - from Cloudflare dashboard → Account API Tokens
+#   CLOUDFLARE_ACCOUNT_ID  - from Workers & Pages → Account details
+#
+# Not needed for this workflow: GLOBAL_API_KEY, ORIGIN_CA_KEY (only for legacy auth / Origin CA)
+
+name: Cloudflare Token Test
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify API token
+        run: |
+          TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          if [ -z "$TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN secret is empty"
+            exit 1
+          fi
+          resp=$(curl -sS -w "\n%{http_code}" \
+            "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+            -H "Authorization: Bearer $TOKEN")
+          body=$(echo "$resp" | head -n -1)
+          code=$(echo "$resp" | tail -n 1)
+          echo "Response ($code): $body"
+          if [ "$code" != "200" ]; then
+            echo "::error::Token verification failed (HTTP $code)"
+            exit 1
+          fi
+          echo "status=$(echo "$body" | jq -r '.result.status')"
+          echo "::notice::Token is valid and active"
+
+      - name: Verify account access
+        run: |
+          ACCOUNT_ID=$(echo "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" | tr -d '[:space:]')
+          if [ -z "$ACCOUNT_ID" ]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID secret is empty"
+            exit 1
+          fi
+          resp=$(curl -sS -w "\n%{http_code}" \
+            "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}")
+          body=$(echo "$resp" | head -n -1)
+          code=$(echo "$resp" | tail -n 1)
+          echo "Response ($code): $body"
+          if [ "$code" != "200" ]; then
+            echo "::error::Account access failed (HTTP $code) - check CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          fi
+          echo "::notice::Account access OK: $(echo "$body" | jq -r '.result.name')"

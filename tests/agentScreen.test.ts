@@ -425,6 +425,8 @@ describe("AgentScreenPanel", () => {
     expect(html).toContain('data-testid="tab-files"');
     expect(html).toContain('data-testid="tab-decisions"');
     expect(html).toContain('data-testid="tab-sync"');
+    expect(html).toContain('data-testid="tab-artifacts"');
+    expect(html).toContain('data-testid="panel-artifacts"');
     expect(html).toContain('data-testid="panel-activity"');
     expect(html).toContain('data-testid="panel-files"');
     expect(html).toContain('data-testid="panel-decisions"');
@@ -472,5 +474,51 @@ describe("AgentScreenPanel", () => {
     expect(channel.appendLine).toHaveBeenCalledWith(
       expect.stringContaining("[Sync]")
     );
+  });
+
+  it("cloudAgentArtifact event writes to output channel in bottomLog mode", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "bottomLog" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const channel = (vscode.window.createOutputChannel as jest.Mock).mock.results[0].value;
+
+    panel.postEvent({
+      type: "cloudAgentArtifact",
+      artifactType: "screenshot",
+      artifactUrl: "https://example.com/screenshot.png",
+      artifactLabel: "screenshot.png",
+      timestamp: Date.now(),
+    });
+
+    expect(channel.appendLine).toHaveBeenCalledWith(
+      expect.stringContaining("[CloudAgent Artifact]")
+    );
+    expect(channel.appendLine).toHaveBeenCalledWith(
+      expect.stringContaining("screenshot")
+    );
+  });
+
+  it("webview HTML includes Artifacts tab and panel", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    const html = webviewPanel.webview.html as string;
+
+    expect(html).toContain('data-testid="tab-artifacts"');
+    expect(html).toContain('data-testid="panel-artifacts"');
+    expect(html).toContain("No Cloud Agent artifacts yet");
+    expect(html).toContain("img-src");
+    expect(html).toContain("media-src");
   });
 });

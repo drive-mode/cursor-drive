@@ -1,35 +1,35 @@
 ---
-name: Code Optimization
-overview: "SUPERSEDED by quality-performance.plan.md (merged with test coverage). All optimization work tracked in quality-performance."
-planType: task
 planId: code-optimization
+planType: task
 parentPlanId: cursor-drive
 childPlanIds: []
 dependsOn: []
+name: Code Optimization
+overview: SUPERSEDED by quality-performance.plan.md (merged with test coverage). All optimization work tracked in quality-performance.
 todos:
   - id: create-skill
-    content: "SUPERSEDED — optimization skill/command deferred; not in quality-performance scope."
+    content: SUPERSEDED — optimization skill/command deferred; not in quality-performance scope.
     status: cancelled
   - id: create-command
-    content: "SUPERSEDED — optimization skill/command deferred."
+    content: SUPERSEDED — optimization skill/command deferred.
     status: cancelled
   - id: opt-model-selection
-    content: "SUPERSEDED — see quality-performance TODO qp-05."
+    content: SUPERSEDED — see quality-performance TODO qp-05.
     status: cancelled
   - id: opt-config-caching
-    content: "SUPERSEDED — see quality-performance TODO qp-06."
+    content: SUPERSEDED — see quality-performance TODO qp-06.
     status: cancelled
   - id: opt-regex-caching
-    content: "SUPERSEDED — see quality-performance TODO qp-06."
+    content: SUPERSEDED — see quality-performance TODO qp-06.
     status: cancelled
   - id: opt-agent-registry
-    content: "SUPERSEDED — see quality-performance TODO qp-07."
+    content: SUPERSEDED — see quality-performance TODO qp-07.
     status: cancelled
   - id: opt-memory-arrays
-    content: "SUPERSEDED — see quality-performance TODO qp-07."
+    content: SUPERSEDED — see quality-performance TODO qp-07.
     status: cancelled
   - id: opt-html-template
-    content: "SUPERSEDED — HTML extraction deferred; not in quality-performance scope."
+    content: SUPERSEDED — HTML extraction deferred; not in quality-performance scope.
     status: cancelled
 isProject: false
 ---
@@ -43,6 +43,7 @@ Improve runtime efficiency of the extension. All changes must be verified by run
 ### Model selection deduplication (`opt-model-selection`)
 
 `vscode.lm.selectChatModels` and cheap-model fallback logic is duplicated across:
+
 - `responseFormatter.ts` — picks a routing-tier model for compression
 - `commsAgent.ts` — picks a routing-tier model for summarization
 - `modelSelector.ts` — the canonical tier selection
@@ -56,6 +57,7 @@ export async function selectTierModel(tier: ModelTier, token: vscode.Cancellatio
 ### Config hot-path caching (`opt-config-caching`)
 
 Files calling `vscode.workspace.getConfiguration('cursorDrive')` on every invocation:
+
 - `glossaryExpander.ts`
 - `approvalGates.ts`
 - `tts.ts`
@@ -65,6 +67,7 @@ Pattern: module-level cache object, invalidated by `onDidChangeConfiguration`. `
 ### Regex precompilation (`opt-regex-caching`)
 
 Files compiling regexes inside functions that run on every request:
+
 - `fillerCleaner.ts` — filler word patterns
 - `glossaryExpander.ts` — expansion patterns
 - `approvalGates.ts` — block/warn patterns

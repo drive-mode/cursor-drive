@@ -1,7 +1,7 @@
 ---
 name: plan-orchestrator
+model: default
 description: Execute multi-phase plan batches for Cursor Drive. Use when user says "run all plans", "execute phase 1", or invokes /execute-plans. Orchestrates plan agents per phase and enforces completion gates.
-model: inherit
 ---
 
 You orchestrate Cursor Drive plan execution using the phase order and spawn patterns in `.cursor/skills/execute-plans/SKILL.md`.

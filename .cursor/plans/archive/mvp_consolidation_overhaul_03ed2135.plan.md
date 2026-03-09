@@ -1,4 +1,9 @@
 ---
+planId: mvp-consolidation-overhaul
+planType: task
+parentPlanId: null
+childPlanIds: []
+dependsOn: []
 name: MVP consolidation overhaul
 overview: Reconcile plan/doc/code state, consolidate duplicate plans into a proper hierarchy, restructure docs/ for AI discoverability, and set up automation (commands, skills, hooks) for ongoing doc maintenance.
 todos:

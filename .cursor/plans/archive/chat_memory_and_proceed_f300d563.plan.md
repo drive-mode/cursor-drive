@@ -1,4 +1,9 @@
 ---
+planId: chat_memory_and_proceed_f300d563
+planType: task
+parentPlanId: cursor-drive
+childPlanIds: []
+dependsOn: []
 name: Chat memory and proceed
 overview: Summarize 11 agent transcripts into a memory aid and a consolidated list of open next steps, then recommend how to proceed using your plan system and existing ADRs.
 todos: []

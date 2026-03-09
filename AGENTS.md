@@ -6,6 +6,12 @@
 
 Cursor Drive is a VS Code/Cursor extension (TypeScript). Single package, no monorepo. No databases, no Docker, no external services required.
 
+### Cursor-specific constraints
+
+- **Composer UI is not extensible.** Extensions run in the extension host; they cannot modify the chat input, send button, or mic. Do not attempt DOM injection into Cursor/VS Code chrome.
+- **Extension vs Plugin:** VS Code extension (`src/`) for UI; Cursor Plugin (`.cursor-plugin/`) for AI behavior; MCP Apps for inline chat UI (Cursor 2.6+).
+- **Key docs:** [drive-ui-surfaces-and-devtools](docs/design/ux/drive-ui-surfaces-and-devtools.md), [composer-mode-dropdown-integration](docs/design/ux/composer-mode-dropdown-integration.md), [drive-tech research](docs/research/drive-tech/).
+
 ### Build, test, lint
 
 Standard commands are in `package.json` scripts and `CONTRIBUTING.md`:

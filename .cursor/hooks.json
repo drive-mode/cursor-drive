@@ -3,30 +3,25 @@
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "python .cursor/hooks/drive-preprocessor.py beforeSubmitPrompt",
-        "description": "Drive voice/tangent/role preprocessing — adds context hints for operators"
+        "command": "python .cursor/hooks/drive-preprocessor.py beforeSubmitPrompt"
       },
       {
-        "command": "python .cursor/hooks/plan-runner.py beforeSubmitPrompt",
-        "description": "Plan governance — reminds agent to map work to plan TODOs"
+        "command": "python .cursor/hooks/plan-runner.py beforeSubmitPrompt"
       }
     ],
     "sessionStart": [
       {
-        "command": "python .cursor/hooks/plan-runner.py sessionStart",
-        "description": "Auto-discovers new .plan.md files and validates plan graph"
+        "command": "python .cursor/hooks/plan-runner.py sessionStart"
       }
     ],
     "stop": [
       {
-        "command": "python .cursor/hooks/plan-runner.py stop",
-        "description": "Syncs plan registry, runs on_todo_complete gates"
+        "command": "python .cursor/hooks/plan-runner.py stop"
       }
     ],
     "subagentStop": [
       {
-        "command": "python .cursor/hooks/plan-runner.py subagentStop",
-        "description": "Syncs plan registry after subagent work completes"
+        "command": "python .cursor/hooks/plan-runner.py subagentStop"
       }
     ]
   }

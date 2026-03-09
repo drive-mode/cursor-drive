@@ -25,9 +25,9 @@ describe("installDrivePluginToWorkspace", () => {
     extensionPath = path.join(tempRoot, "extension");
     workspacePath = path.join(tempRoot, "workspace");
 
-    await writeFile(path.join(extensionPath, "agents", "drive.md"), "# drive");
-    await writeFile(path.join(extensionPath, "commands", "tangent.md"), "# tangent");
-    await writeFile(path.join(extensionPath, "rules", "drive-modes.mdc"), "# rule");
+    await writeFile(path.join(extensionPath, ".cursor", "agents", "drive.md"), "# drive");
+    await writeFile(path.join(extensionPath, ".cursor", "commands", "tangent.md"), "# tangent");
+    await writeFile(path.join(extensionPath, ".cursor", "rules", "drive-modes.mdc"), "# rule");
     await writeFile(
       path.join(extensionPath, "mcp.json"),
       JSON.stringify({ mcpServers: { drive: { url: "http://127.0.0.1:7891/mcp" } } }, null, 2)

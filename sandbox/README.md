@@ -68,9 +68,9 @@ To test hooks and the drive-persona skill without the script, use the
 
 ## Troubleshooting
 
-### "Cannot find module '...cursor-socket\out\main'"
+### "Cannot find module '...cursor-socket\out\main'" or "...cursor-resolver-helper\out\main'"
 
-Cursor's built-in extension `anysphere.cursor-socket` is broken or missing on your install. The launch configs **disable** this extension so the dev host can start. To fix Cursor itself: reinstall or repair Cursor from [cursor.com](https://cursor.com). After that you can remove `--disable-extension=anysphere.cursor-socket` from `.vscode/launch.json` if you want.
+Cursor's built-in extensions `anysphere.cursor-socket` and `anysphere.cursor-resolver-helper` can be broken or missing on some installs. The launch configs **disable** these extensions so the dev host can start. See [docs/guides/dev-host-disabled-extensions.md](../docs/guides/dev-host-disabled-extensions.md) for details. To fix Cursor itself: reinstall or repair Cursor from [cursor.com](https://cursor.com). After that you can remove the `--disable-extension=...` flags from `.vscode/launch.json` and `scripts/reinstall-extension.mjs` if you want.
 
 ### "EADDRINUSE: address already in use 127.0.0.1:7891"
 

@@ -4,8 +4,16 @@ src/**
 tests/**
 docs/**
 .cursor/**
+!.cursor/agents/
+!.cursor/agents/**
+!.cursor/commands/
+!.cursor/commands/**
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/skills/
+!.cursor/skills/**
 !.cursor/hooks/
-!.cursor/hooks/drive-preprocessor.py
+!.cursor/hooks/**
 .cursor-plugin/**
 .github/**
 .gitignore

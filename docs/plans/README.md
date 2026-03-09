@@ -2,6 +2,8 @@
 
 Non-executable planning artifacts. Executable plans (`*.plan.md`) live in [`.cursor/plans/`](../../.cursor/plans/).
 
+**Note:** Mob Programming Cockpit MVP (implemented) was moved to `.cursor/plans/archive/cursor-drive/mob-programming-cockpit-mvp.plan.md`.
+
 ## Contents
 
 | Document | Purpose |

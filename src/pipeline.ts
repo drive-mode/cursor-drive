@@ -147,17 +147,26 @@ export async function runPipeline(
   }
   let skipOptimizer = false;
 
-  // pwm-06: Wake word — if inactive and starts with wake word, activate and strip
+  // pwm-06: Wake word — if inactive and starts with any wake word, activate and strip
   let activatedByWakeWord = false;
-  const wakeWord = cfg.get<string>("wakeWord", "hey drive");
-  if (!ctx.driveActive && ctx.setActive && wakeWord && text.toLowerCase().startsWith(wakeWord.toLowerCase())) {
+  const wakeWordRaw = cfg.get<string>("wakeWord", "hey drive");
+  const wakeWords = wakeWordRaw
+    ? wakeWordRaw.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean)
+    : [];
+  const wakeWordMatch = wakeWords
+    .filter((w) => text.toLowerCase().startsWith(w))
+    .sort((a, b) => b.length - a.length)[0]; // longest match first
+  if (!ctx.driveActive && ctx.setActive && wakeWordMatch) {
     ctx.setActive(true);
-    text = text.slice(wakeWord.length).trim();
+    text = text.slice(wakeWordMatch.length).trim();
     activatedByWakeWord = true;
 
     // Acknowledge wake word — TTS (no-op if disabled) + temporary status bar message
-    speak("How can I help?");
-    void vscode.window.setStatusBarMessage("$(mic) Drive: How can I help?", 5000);
+    speak("Drive listening. How can I help?");
+    void vscode.window.setStatusBarMessage("$(mic) Drive listening", 5000);
+
+    // Turn mic on for next utterance — hands-free follow-up without clicking mic again
+    void vscode.commands.executeCommand("cursorDrive.activateVoiceInput");
 
     // Wake word only (no prompt after it) — acknowledge and return early
     if (!text) {
@@ -191,11 +200,17 @@ export async function runPipeline(
     void ctx.persistentMemory.appendToDaily(text, "user");
   }
 
-  // pwm-06: Submit word — if ends with submit word, strip and set skipOptimizer
-  const submitWord = cfg.get<string>("submitWord", "send it");
-  if (submitWord && text.toLowerCase().endsWith(submitWord.toLowerCase())) {
+  // pwm-06: Submit word — if ends with any submit word, strip and set skipOptimizer
+  const submitWordRaw = cfg.get<string>("submitWord", "send it");
+  const submitWords = submitWordRaw
+    ? submitWordRaw.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean)
+    : [];
+  const submitWordMatch = submitWords
+    .filter((w) => text.toLowerCase().endsWith(w))
+    .sort((a, b) => b.length - a.length)[0]; // longest match first
+  if (submitWordMatch) {
     skipOptimizer = true;
-    text = text.slice(0, -submitWord.length).trim();
+    text = text.slice(0, -submitWordMatch.length).trim();
   }
 
   // pwm-07: Tangent — "tangent [name] [task]" spawns operator, acknowledge, return early

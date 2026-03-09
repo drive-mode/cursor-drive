@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars and fill in (gitignore terraform.tfvars)
+# Or pass -var="account_id=..." at apply time
+
+account_id = "your-cloudflare-account-id"
