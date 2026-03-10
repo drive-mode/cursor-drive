@@ -1,5 +1,10 @@
 {
   "mcpServers": {
+    "system-logs-mcp": {
+      "command": "node",
+      "args": ["mcp-servers/system-logs-mcp/dist/index.js"],
+      "description": "System logs observability (tail_logs tool)"
+    },
     "drive": {
       "url": "http://127.0.0.1:7891/mcp"
     },

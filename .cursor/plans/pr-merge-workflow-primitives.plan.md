@@ -9,19 +9,19 @@ overview: Set up rules, commands, skills, and subagents to strategically merge o
 todos:
   - id: rule
     content: Create .cursor/rules/pr-merge-workflow.mdc
-    status: pending
+    status: in_progress
   - id: command
     content: Create .cursor/commands/merge-prs-to-develop.md
-    status: pending
+    status: completed
   - id: skill
     content: Create pr-merge-strategy skill (SKILL.md, reference/merge-plan-format, conflict-patterns)
-    status: pending
+    status: completed
   - id: agents
     content: Create PR Merge Coordinator, Discovery, Conflict Analyst, Merge Planner, Merge Executor, Primitives Manager agents
-    status: pending
+    status: completed
   - id: skill-usage
     content: Add pr-merge-strategy to skill-usage.mdc Context Signal Matching table
-    status: pending
+    status: completed
 ---
 
 # PR Merge Workflow Primitives Plan
@@ -203,3 +203,27 @@ Add to **Context Signal Matching** table:
 3. **Repo detection:** Derive owner/repo from `git remote get-url origin` or allow override in command.
 4. **GitHub MCP deprecation:** Package is deprecated; consider migrating to `github/github-mcp-server` when stable.
 5. **Coordinator in subagents reference:** Add PR Merge Coordinator and workflow agents to [docs/guides/subagents-reference.md](docs/guides/subagents-reference.md) and [docs/diagrams/cursor-primitives-architecture.diagram.md](docs/diagrams/cursor-primitives-architecture.diagram.md).
+
+---
+
+## Reconciliation
+
+### Verified
+
+- Rule `.cursor/rules/pr-merge-workflow.mdc` created with target branch, merge order, conflict resolution standards
+- Command `.cursor/commands/merge-prs-to-develop.md` created with plan/execute modes
+- Skill `.cursor/skills/pr-merge-strategy/` created: SKILL.md, reference/merge-plan-format.md, reference/conflict-patterns.md
+- Six agents created: pr-merge-coordinator, pr-discovery-agent, conflict-analyst-agent, merge-planner-agent, merge-executor-agent, primitives-manager-agent
+- `.cursor/rules/skill-usage.mdc` created with pr-merge-strategy in Context Signal Matching table
+
+### Residual risks
+
+- `docs/guides/GIT_WORKFLOW_SETUP.md` referenced in rule but does not exist; rule still valid without it
+- GitHub MCP package deprecated; plan notes migration to `github/github-mcp-server` when stable
+- Subagents reference docs (subagents-reference.md, cursor-primitives-architecture.diagram.md) not updated per suggestion #5 — optional follow-up
+
+### Evidence
+
+- All files created per plan File Summary
+- `npm run compile` passes
+- `npm test` has pre-existing failures (modeSwitcher vscode mock); plan changes are config-only, no code touched

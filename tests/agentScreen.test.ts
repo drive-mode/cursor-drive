@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
 import { AgentScreenPanel } from "../src/agentScreen";
 
 function resetAgentScreenSingleton(): void {
@@ -501,6 +503,154 @@ describe("AgentScreenPanel", () => {
     expect(channel.appendLine).toHaveBeenCalledWith(
       expect.stringContaining("screenshot")
     );
+  });
+
+  it("queues events when panel is hidden (does not call postMessage)", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    webviewPanel.visible = false;
+
+    panel.postEvent({ type: "activity", operatorName: "Alpha", text: "Queued" });
+
+    expect(webviewPanel.webview.postMessage).not.toHaveBeenCalled();
+  });
+
+  it("flushes queued events when panel becomes visible (replayStart, events, replayEnd)", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    webviewPanel.visible = false;
+
+    panel.postEvent({ type: "activity", operatorName: "Alpha", text: "Queued" });
+    expect(webviewPanel.webview.postMessage).not.toHaveBeenCalled();
+
+    const viewStateListener = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value.onDidChangeViewState as jest.Mock;
+    const listener = viewStateListener.mock.calls[0]?.[0];
+    expect(listener).toBeDefined();
+
+    webviewPanel.visible = true;
+    listener({ webviewPanel });
+
+    expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "replayStart", count: 1 }));
+    expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "activity", text: "Queued" }));
+    expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "replayEnd" }));
+  });
+
+  it("caps queue at MAX_QUEUE when panel hidden", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    webviewPanel.visible = false;
+
+    const MAX_QUEUE = 200;
+    for (let i = 0; i < MAX_QUEUE + 50; i++) {
+      panel.postEvent({ type: "activity", operatorName: "Alpha", text: `Event ${i}` });
+    }
+
+    const viewStateListener = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value.onDidChangeViewState as jest.Mock;
+    const listener = viewStateListener.mock.calls[0]?.[0];
+    webviewPanel.visible = true;
+    listener({ webviewPanel });
+
+    const replayStartCall = (webviewPanel.webview.postMessage as jest.Mock).mock.calls.find(
+      (c: unknown[]) => c[0]?.type === "replayStart"
+    );
+    expect(replayStartCall).toBeDefined();
+    expect(replayStartCall[0].count).toBe(MAX_QUEUE);
+  });
+
+  it("syncStatus message updates sync-user and sync-operators in HTML", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+
+    panel.postSyncStatus({
+      userBranch: "main",
+      userHeadCommit: "abc1234",
+      operators: [{ operatorName: "Alpha", syncState: "idle", headCommit: "def" }],
+      proposals: [],
+      timestamp: Date.now(),
+    });
+
+    expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "syncStatus",
+        syncSnapshot: expect.objectContaining({ userBranch: "main", operators: expect.any(Array) }),
+      })
+    );
+  });
+
+  it("queueStatus message triggers postMessage with queue text", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+
+    panel.postQueueStatus("p-1", 2);
+
+    expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "queueStatus",
+        text: expect.stringContaining("Processing"),
+      })
+    );
+  });
+
+  it("cursorDrive.debug.sendTestEvent command is registered in package.json", () => {
+    const pkgPath = path.join(__dirname, "..", "package.json");
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+    const commands = (pkg.contributes?.commands ?? []) as Array<{ command: string }>;
+    const found = commands.some((c) => c.command === "cursorDrive.debug.sendTestEvent");
+    expect(found).toBe(true);
+  });
+
+  it("webview HTML includes replay-banner data-testid", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    const html = webviewPanel.webview.html as string;
+
+    expect(html).toContain('data-testid="replay-banner"');
+    expect(html).toContain('id="sync-user"');
+    expect(html).toContain('id="sync-operators"');
+    expect(html).toContain('id="sync-proposals"');
+    expect(html).toContain('id="sync-queue"');
   });
 
   it("webview HTML includes Artifacts tab and panel", () => {

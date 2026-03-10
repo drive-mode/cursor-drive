@@ -21,7 +21,12 @@
 - Recursion depth: ≤2.
 - Does not change single-active-plan semantics; meta-plan remains active.
 
+## Alignment with plan-governance
+
+Orchestration (meta-plan + parallel subagents) is **opt-in** and does not change the single-active-plan model in `.cursor/rules/plan-governance.mdc`. The meta-plan remains the active plan; target plans are coordinated via subagents.
+
 ## References
 
+- `.cursor/rules/plan-governance.mdc` — Placement, TODO lifecycle, completion gate
 - `.cursor/skills/orchestrate-parallel-work/SKILL.md`
 - `.cursor/plans/parallel_plan_orchestration_e66f95cb.plan.md`

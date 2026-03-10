@@ -27,33 +27,66 @@ function isSubMode(v: unknown): v is SubMode {
   return typeof v === "string" && VALID_MODES.includes(v as SubMode);
 }
 
+type ModeSwitchingConfig = {
+  voiceEnabled: boolean;
+  semanticEnabled: boolean;
+  requireConfirmation: boolean;
+  allowedModes: SubMode[];
+};
+
+let cachedModeSwitching: ModeSwitchingConfig | undefined;
+
+function ensureConfigInvalidation(): void {
+  if (cachedModeSwitching !== undefined) return;
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("cursorDrive.modeSwitching")) {
+      cachedModeSwitching = undefined;
+    }
+  });
+}
+
+/** Cached mode-switching config (single getConfiguration read, invalidated on change). */
+function getModeSwitchingConfig(): ModeSwitchingConfig {
+  ensureConfigInvalidation();
+  if (cachedModeSwitching) return cachedModeSwitching;
+  const cfg = vscode.workspace.getConfiguration("cursorDrive");
+  const raw = cfg.get<unknown[]>("modeSwitching.allowedModes", VALID_MODES);
+  const allowed = raw.filter(isSubMode).length > 0 ? (raw.filter(isSubMode) as SubMode[]) : [...VALID_MODES];
+  cachedModeSwitching = {
+    voiceEnabled: cfg.get<boolean>("modeSwitching.voiceEnabled", true),
+    semanticEnabled: cfg.get<boolean>("modeSwitching.semanticEnabled", false),
+    requireConfirmation: cfg.get<boolean>("modeSwitching.requireConfirmation", true),
+    allowedModes: allowed,
+  };
+  return cachedModeSwitching;
+}
+
 /**
  * Whether voice-triggered mode switches are allowed.
  */
 export function canSwitchByVoice(): boolean {
-  return vscode.workspace.getConfiguration("cursorDrive").get<boolean>("modeSwitching.voiceEnabled", true);
+  return getModeSwitchingConfig().voiceEnabled;
 }
 
 /**
  * Whether AI-suggested (semantic) mode switches are allowed.
  */
 export function canSwitchBySemantic(): boolean {
-  return vscode.workspace.getConfiguration("cursorDrive").get<boolean>("modeSwitching.semanticEnabled", false);
+  return getModeSwitchingConfig().semanticEnabled;
 }
 
 /**
  * Whether confirmation is required before switching.
  */
 export function requireConfirmation(): boolean {
-  return vscode.workspace.getConfiguration("cursorDrive").get<boolean>("modeSwitching.requireConfirmation", true);
+  return getModeSwitchingConfig().requireConfirmation;
 }
 
 /**
  * Modes the user is allowed to switch to.
  */
 export function getAllowedModes(): SubMode[] {
-  const raw = vscode.workspace.getConfiguration("cursorDrive").get<unknown[]>("modeSwitching.allowedModes", VALID_MODES);
-  return raw.filter(isSubMode).length > 0 ? raw.filter(isSubMode) : [...VALID_MODES];
+  return getModeSwitchingConfig().allowedModes;
 }
 
 /**

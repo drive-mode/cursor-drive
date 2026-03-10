@@ -1,24 +1,20 @@
 ---
-planId: s-as-execution-command-discovery
-planType: task
-parentPlanId: cursor-drive-v1
-childPlanIds: []
-dependsOn: []
 name: S-AS Execution and Command Discovery
 overview: Execute the remaining S-AS Screen Capture plan (Phase 1) via sub-agent; run a parallel sub-agent to build a comprehensive Cursor native commands reference; and document how parallel sub-agents can explore/test UI integration and how Drive fits as a layer on top of Cursor, including popular extension compatibility.
 todos:
   - id: sas-01-subagent-a
     content: Spawn sub-agent to execute S-AS Phase 1 (p1-01..p1-11)
-    status: pending
+    status: completed
   - id: sas-02-subagent-b
     content: Extend apiDiscovery; create cursor-native-commands.md with full command list
-    status: pending
+    status: completed
   - id: sas-03-subagent-c
     content: Playwright UI tests; drive-layout-integration.md
-    status: pending
+    status: completed
   - id: sas-04-subagent-d
     content: Extension compatibility research; extension-compatibility.md
-    status: pending
+    status: completed
+isProject: false
 ---
 
 # S-AS Execution, Command Discovery, and UI Integration Strategy
@@ -65,6 +61,8 @@ flowchart LR
     p110 --> p111[compile+test]
 ```
 
+
+
 ---
 
 ## Part 2: Comprehensive Cursor Native Commands Discovery (Parallel Sub-Agent)
@@ -73,26 +71,24 @@ flowchart LR
 
 - [apiDiscovery.ts](src/apiDiscovery.ts) uses `vscode.commands.getCommands(false)` and filters for `cursor.*` and `cursorDrive.*` only
 - Output is written to `.cursor/drive-api-discovery.json` and an OutputChannel
-- **Gap:** No descriptions, no `workbench.*`, `composer.*`, `glass.*`, `developer.*`, etc. The VS Code API does not expose command titles/descriptions at runtime
+- **Gap:** No descriptions, no `workbench.`*, `composer.`*, `glass.*`, `developer.*`, etc. The VS Code API does not expose command titles/descriptions at runtime
 
 ### Approach for comprehensive list
 
 1. **Extend apiDiscovery** (or add `cursorDrive.discoverAllCommands`) to:
-   - Enumerate ALL commands (remove the `cursor.*` filter)
-   - Group by prefix: `cursor.`, `composer.`, `workbench.`, `glass.`, `developer.`, `cursorai.`, `cursorAuth.`, `mcp.`, etc.
-   - Write full list to `docs/reference/cursor-native-commands.json` (or `.cursor/cursor-commands-full.json`)
-
+  - Enumerate ALL commands (remove the `cursor.`* filter)
+  - Group by prefix: `cursor.`, `composer.`, `workbench.`, `glass.`, `developer.`, `cursorai.`, `cursorAuth.`, `mcp.`, etc.
+  - Write full list to `docs/reference/cursor-native-commands.json` (or `.cursor/cursor-commands-full.json`)
 2. **Sub-agent task** — Run discovery in a live Cursor instance:
-   - Launch Cursor with Drive extension loaded
-   - Run `cursorDrive.discoverAPIs` (or new command)
-   - Capture the JSON output
-   - For commands we care about, try `executeCommand(id)` with no args — document which succeed/fail
-   - Optionally: run `agent --help` (CLI) and document CLI flags; cross-reference with extension commands
-
+  - Launch Cursor with Drive extension loaded
+  - Run `cursorDrive.discoverAPIs` (or new command)
+  - Capture the JSON output
+  - For commands we care about, try `executeCommand(id)` with no args — document which succeed/fail
+  - Optionally: run `agent --help` (CLI) and document CLI flags; cross-reference with extension commands
 3. **Manual enrichment** — Create [docs/reference/cursor-native-commands.md](docs/reference/cursor-native-commands.md):
-   - Table: Command ID | Prefix | Purpose (inferred or documented) | Used by Drive?
-   - Source: discovery JSON + prior analysis (from the long command list in the earlier conversation)
-   - Include "how to use": e.g. `vscode.commands.executeCommand("composerMode.plan")` from extension code
+  - Table: Command ID | Prefix | Purpose (inferred or documented) | Used by Drive?
+  - Source: discovery JSON + prior analysis (from the long command list in the earlier conversation)
+  - Include "how to use": e.g. `vscode.commands.executeCommand("composerMode.plan")` from extension code
 
 ### Sub-agent prompt for command discovery
 
@@ -151,6 +147,8 @@ flowchart TB
     AgentC --> merge
     AgentD --> merge
 ```
+
+
 
 ### Sub-agent C: UI layout exploration
 
@@ -229,27 +227,32 @@ flowchart TB
     AgentScreen -->|"shows"| MCP
 ```
 
+
+
 ### How Drive fits into existing layouts
 
-| Cursor element | Drive integration |
-|----------------|-------------------|
-| **Status bar** | Drive uses one slot: "Drive > Agent \| Alpha". Click opens mode picker. |
-| **Chat/Composer** | Drive's pipeline runs on submit. No separate UI; uses native chat. |
-| **Mode selector** | Drive syncs via `composerMode.*` when `syncNativeMode` is true. User can pick Plan/Agent/Ask/Debug natively; Drive's status bar reflects it. |
-| **Agents panel** | `cursorDrive.focusAgentView` opens it and runs `cursor.tryAgentLayout`. Drive's operators appear in Agent Screen (custom webview), not in Cursor's native Agents panel. |
-| **Sidebar** | Drive does not add a sidebar view. Agent Screen is a webview tab/panel. |
-| **Keybindings** | Ctrl+Shift+D (toggle), Ctrl+Shift+S (Agent Screen), Ctrl+Shift+A (focus Agents), Ctrl+Shift+M (voice). User can override in keybindings.json. |
+
+| Cursor element    | Drive integration                                                                                                                                                       |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Status bar**    | Drive uses one slot: "Drive > Agent                                                                                                                                     |
+| **Chat/Composer** | Drive's pipeline runs on submit. No separate UI; uses native chat.                                                                                                      |
+| **Mode selector** | Drive syncs via `composerMode.`* when `syncNativeMode` is true. User can pick Plan/Agent/Ask/Debug natively; Drive's status bar reflects it.                            |
+| **Agents panel**  | `cursorDrive.focusAgentView` opens it and runs `cursor.tryAgentLayout`. Drive's operators appear in Agent Screen (custom webview), not in Cursor's native Agents panel. |
+| **Sidebar**       | Drive does not add a sidebar view. Agent Screen is a webview tab/panel.                                                                                                 |
+| **Keybindings**   | Ctrl+Shift+D (toggle), Ctrl+Shift+S (Agent Screen), Ctrl+Shift+A (focus Agents), Ctrl+Shift+M (voice). User can override in keybindings.json.                           |
+
 
 ### Configurations users can set
 
 - `cursorDrive.agentScreen.displayMode`: tab | panel | bottomLog — where Agent Screen appears
-- `cursorDrive.syncNativeMode`: whether Drive calls `composerMode.*` when changing sub-mode
+- `cursorDrive.syncNativeMode`: whether Drive calls `composerMode.`* when changing sub-mode
 - `cursorDrive.voice.autoActivateMicOnToggle`: whether mic starts on Drive ON
 - Standard VS Code: `workbench.sideBar.location`, `workbench.panel.defaultLocation` — Drive respects these
 
 ### Documentation output
 
 Create or update [docs/design/ux/drive-layout-integration.md](docs/design/ux/drive-layout-integration.md) with:
+
 - Diagram of Drive's UI surfaces
 - "Recommended layout" section
 - Keybinding conflict matrix (vs common extensions)
@@ -259,13 +262,15 @@ Create or update [docs/design/ux/drive-layout-integration.md](docs/design/ux/dri
 
 ## Part 5: Popular Extensions to Factor In
 
-| Extension | Impact on Drive | Recommendation |
-|-----------|-----------------|----------------|
-| **Claude Code** | Registers its own commands; may use chat/agent surfaces. Users report it as a "complement" to Cursor. | No direct conflict expected. Document that both can run. If Claude Code uses similar keybindings, user should customize. |
-| **Codex** | Less prominent in 2024-2025 Cursor discussions. If installed, check for command/keybinding overlap. | Audit if user has Codex; document in extension-compatibility.md. |
-| **MCP servers** | Drive runs its own MCP at :7891. Other MCPs (e.g. filesystem, fetch) can coexist. | Document in mcp-user-setup: Drive MCP is one of many; register in .cursor/mcp.json. |
-| **Git extensions** | Standard. Drive does not override git commands. | No factor-in. |
-| **Theme/layout extensions** | May change sidebar/panel positions. Drive's webview and status bar follow VS Code layout. | No factor-in. |
+
+| Extension                   | Impact on Drive                                                                                       | Recommendation                                                                                                           |
+| --------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Claude Code**             | Registers its own commands; may use chat/agent surfaces. Users report it as a "complement" to Cursor. | No direct conflict expected. Document that both can run. If Claude Code uses similar keybindings, user should customize. |
+| **Codex**                   | Less prominent in 2024-2025 Cursor discussions. If installed, check for command/keybinding overlap.   | Audit if user has Codex; document in extension-compatibility.md.                                                         |
+| **MCP servers**             | Drive runs its own MCP at :7891. Other MCPs (e.g. filesystem, fetch) can coexist.                     | Document in mcp-user-setup: Drive MCP is one of many; register in .cursor/mcp.json.                                      |
+| **Git extensions**          | Standard. Drive does not override git commands.                                                       | No factor-in.                                                                                                            |
+| **Theme/layout extensions** | May change sidebar/panel positions. Drive's webview and status bar follow VS Code layout.             | No factor-in.                                                                                                            |
+
 
 **Action:** Sub-agent D produces `docs/design/ux/extension-compatibility.md` with this table and any additional findings.
 
@@ -273,11 +278,34 @@ Create or update [docs/design/ux/drive-layout-integration.md](docs/design/ux/dri
 
 ## Summary: Sub-Agent Execution Plan
 
-| Sub-agent | Task | Output |
-|-----------|------|--------|
-| **A** | Execute S-AS Phase 1 (p1-01..p1-11) | Working CLI streaming, MCP tool, SSE endpoint; plan todos completed |
-| **B** | Extend apiDiscovery, create cursor-native-commands.md | Comprehensive command list with usage |
-| **C** | Playwright UI tests, drive-layout-integration.md | Browser tests, layout documentation |
-| **D** | Extension compatibility research | extension-compatibility.md |
+
+| Sub-agent | Task                                                  | Output                                                              |
+| --------- | ----------------------------------------------------- | ------------------------------------------------------------------- |
+| **A**     | Execute S-AS Phase 1 (p1-01..p1-11)                   | Working CLI streaming, MCP tool, SSE endpoint; plan todos completed |
+| **B**     | Extend apiDiscovery, create cursor-native-commands.md | Comprehensive command list with usage                               |
+| **C**     | Playwright UI tests, drive-layout-integration.md      | Browser tests, layout documentation                                 |
+| **D**     | Extension compatibility research                      | extension-compatibility.md                                          |
+
 
 **Parallelization:** A, B, C, D can run concurrently. A and B are code-heavy; C and D are research/doc-heavy. Merge results into the codebase and update plans.
+
+---
+
+## Reconciliation
+
+**Verified:**
+
+- **sas-01 (S-AS Phase 1):** The referenced plan `s_as_screen_capture_impl.plan.md` does not exist; implementation was completed under `agent-screen-implementation.plan.md` and prior work. Codebase contains: `NdjsonParser` (src/ndjsonParser.ts), `runCursorCliStreaming` (src/cursorCliRunner.ts), `cursor_cli_run` MCP tool with streaming, `cliStream` ActivityEvent case in agentScreen, POST /run SSE endpoint. `npm run compile` and `npm test` pass.
+- **sas-02 (Command discovery):** `discoverAllCommands()` in apiDiscovery.ts; `cursorDrive.discoverAllCommands` registered; writes to `.cursor/cursor-commands-full.json` and opens file; `docs/reference/cursor-native-commands.md` exists with full table (composerMode.*, workbench.*, cursor.*, glass.*, mcp.*, etc.) and usage examples.
+- **sas-03 (Playwright + layout):** `tests/browser/drive-ui-integration.spec.ts` exists (status bar, toggle, Agent Screen, MCP health); `docs/design/ux/drive-layout-integration.md` exists with surfaces, recommended layouts, keybindings, testing strategy.
+- **sas-04 (Extension compatibility):** `docs/design/ux/extension-compatibility.md` exists with Claude Code, Codex, Continue, Copilot, GitLens, conflict matrix, and coexistence rules.
+
+**Residual risks:**
+
+- Playwright tests require `cursor serve-web` and installed extension; MCP health check is optional (passes if MCP not running).
+- `s_as_screen_capture_impl.plan.md` was never created; S-AS Phase 1 scope was implemented via agent-screen-implementation and design docs.
+
+**Evidence:**
+
+- `npm run compile` succeeds
+- `npm test` — all unit tests pass (ndjsonParser, cursorCliRunner, agentScreen, mcpServer, apiDiscovery, extension)

@@ -66,6 +66,13 @@ function toRepositoryUrl(slug: string): string {
   return `https://github.com/${slug}`;
 }
 
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000;
+
+function isRetryableStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
 async function fetchWithAuth(
   url: string,
   options: RequestInit,
@@ -79,7 +86,17 @@ async function fetchWithAuth(
   } else {
     headers.set("Authorization", `Bearer ${apiKey}`);
   }
-  return fetch(url, { ...options, headers });
+  let lastRes: Response | undefined;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    lastRes = await fetch(url, { ...options, headers });
+    if (!lastRes.ok && isRetryableStatus(lastRes.status) && attempt < MAX_RETRIES) {
+      const delay = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+    return lastRes;
+  }
+  return lastRes!;
 }
 
 export async function launchAgent(

@@ -9,16 +9,16 @@ overview: Implement tangent agent naming, confirmation flow, intelligent clarifi
 todos:
   - id: tangent-name-extraction
     content: "Feature 1: Add Tier-1 model call + regex fallback in pipeline.ts to extract agent name from tangent command; wire namePool config in operatorRegistry.ts"
-    status: pending
+    status: completed
   - id: confirmation-flow
     content: "Feature 2: Build tangent agent introduction + confirmation flow with TTS greeting, timeout re-prompt, confirmation button/hotkey, auto-confirm and delegation settings"
-    status: pending
+    status: completed
   - id: clarification-handling
     content: "Feature 3: Add SpokenContentTracker to tts.ts, clarification validation via Tier-1 model, session memory updateTurn() for context refactoring"
-    status: pending
+    status: completed
   - id: transcript-history
     content: "Feature 4: Wire persistentMemory.ts, gate behind transcriptPersistence setting, add retention pruning, expose search via MCP tool"
-    status: pending
+    status: completed
 ---
 
 # Tangent Agent UX Features
@@ -161,3 +161,25 @@ sequenceDiagram
     Pipeline->>Memory: Log transcript (if enabled)
     Pipeline->>Pipeline: Execute tangent task
 ```
+
+---
+
+## Reconciliation
+
+**What was verified**
+
+- **Feature 1 (tangent-name-extraction)**: `src/tangentNameExtractor.ts` — regex fallback (`call it X — task`, `X — task`) + Tier-1 model for ambiguous input. `src/operatorRegistry.ts` uses `getNamePool()` reading `cursorDrive.operators.namePool` config. Pipeline passes extracted name to `spawn()` with main-agent guard.
+- **Feature 2 (confirmation-flow)**: `src/tangentFlow.ts` — intro TTS (`"{name} here. So you'd like me to {task}?"`), modal (Confirm / Edit Tasks / Cancel), timeout re-prompt (5s default), `cursorDrive.confirmTangent` command + Ctrl+Shift+Y keybinding. Settings: `tangentConfirmationTimeout`, `autoConfirmTangent`.
+- **Feature 3 (clarification-handling)**: `src/tts.ts` — `spokenHistory` circular buffer (last 20), `getSpokenHistory()`, `wasLastInterrupted()`. `src/clarificationHandler.ts` — Tier-1 validation (continue/modify/abandon), `maybeStopTtsOnInput()`. `src/sessionMemory.ts` — `updateTurn(index, newContent)`, `getLastTurnIndex()`. Pipeline merges clarification into session memory when action is `modify`.
+- **Feature 4 (transcript-history)**: `src/extension.ts` — `PersistentMemory` initialized, `pruneOlderThan(retentionDays)` on activation. `src/pipeline.ts` — transcript append gated by `cursorDrive.privacy.transcriptPersistence`. Settings: `transcriptRetentionDays` (default 30). MCP tool `operator_search_history` in `src/mcpServer.ts` calls `persistentMemory.search(query)`.
+
+**Evidence**
+
+- `npm run compile` — succeeds
+- `npm test` — 47/48 suites pass, 551/553 tests pass. Single failure: `pluginInstaller.test.ts` (timeout/ENOTEMPTY on Windows), unrelated to tangent UX
+- Tangent-related tests: `tangentFlow.test.ts`, `tangentNameExtractor.test.ts`, `clarificationHandler.test.ts`, `pipeline.test.ts` — all pass
+
+**Residual risks**
+
+- Clarification merge: session memory updates; Cursor chat UI cannot be edited directly — refactoring is at context-injection layer only
+- `delegateConfirmation` setting mentioned in plan spec but not implemented — low impact; confirmation flow works without it

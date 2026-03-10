@@ -19,6 +19,7 @@
  */
 
 import * as vscode from "vscode";
+import { getAvailableModelsWithError } from "./modelUtils.js";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -201,27 +202,20 @@ export async function discoverAPIs(): Promise<DiscoveryReport> {
     ...probeNamespace(lmObj, "vscode.lm"),
   };
 
-  // Try calling selectChatModels if it exists
+  // Try calling selectChatModels if it exists (via modelUtils)
   if (vscodeLm.exists && typeof (lmObj as Record<string, unknown>)?.["selectChatModels"] === "function") {
-    try {
-      const models = await vscode.lm.selectChatModels({});
-      vscodeLm.selectChatModelsResult = {
-        success: true,
-        modelCount: models.length,
-        models: models.map((m) => ({
-          id: m.id ?? "unknown",
-          name: (m as unknown as Record<string, unknown>).name as string | undefined,
-          family: m.family ?? undefined,
-        })),
-      };
-    } catch (err) {
-      vscodeLm.selectChatModelsResult = {
-        success: false,
-        modelCount: 0,
-        models: [],
-        error: String(err),
-      };
-    }
+    const { models, error } = await getAvailableModelsWithError();
+    vscodeLm.selectChatModelsResult = error
+      ? { success: false, modelCount: 0, models: [], error }
+      : {
+          success: true,
+          modelCount: models.length,
+          models: models.map((m) => ({
+            id: m.id ?? "unknown",
+            name: (m as unknown as Record<string, unknown>).name as string | undefined,
+            family: m.family ?? undefined,
+          })),
+        };
   }
 
   // 4. Probe vscode.chat

@@ -116,6 +116,8 @@ export function buildAgentScreenAppHtml(bundle?: string): string {
         const feed = document.getElementById('files-feed');
         const div = document.createElement('div');
         div.className = 'file-item';
+        div.dataset.path = filePath || '';
+        div.style.cursor = 'pointer';
         div.innerHTML = '<span class="file-operator">' + escapeHtml(op || '') + '</span><span>' + escapeHtml(filePath || '') + '</span>';
         feed.appendChild(div);
       }
@@ -155,6 +157,19 @@ export function buildAgentScreenAppHtml(bundle?: string): string {
             appendActivity('', text);
           }
         };
+        document.getElementById('panel-files').addEventListener('click', async function(e) {
+          const item = e.target.closest('.file-item');
+          if (!item || !item.dataset.path) return;
+          const filePath = item.dataset.path;
+          try {
+            const result = await app.callServerTool({ name: 'cursor_drive_open_file', arguments: { path: filePath } });
+            if (result && !result.isError) {
+              await app.updateModelContext({ content: [{ type: 'text', text: '[Agent Screen] User opened file: ' + filePath }] });
+            }
+          } catch (err) {
+            console.warn('[Agent Screen] Failed to open file:', filePath, err);
+          }
+        });
       } catch (e) {
         document.getElementById('activity-feed').innerHTML = '<div class="empty-state">MCP App failed to load. Enable script sources or check host CSP.</div>';
       }

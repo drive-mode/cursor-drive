@@ -1,0 +1,30 @@
+---
+description: Standards when running PR merge workflow into develop
+globs: []
+---
+
+# PR Merge Workflow
+
+Load when running PR merge workflow, strategic merge, or `/merge-prs-to-develop`.
+
+## Target and order
+
+- **Target branch:** `develop` only
+- **Merge order:** One PR at a time; no batch merges
+- **Pre-merge:** CI must pass; branch must be up to date with develop
+
+## Merge method
+
+- Prefer squash for feature branches
+- Use merge commit only when preserving full history is required
+
+## Conflict resolution
+
+- Document strategy per file before attempting merge
+- Use merge plan doc (see `.cursor/skills/pr-merge-strategy/reference/merge-plan-format.md`)
+- Reference conflict patterns: `.cursor/skills/pr-merge-strategy/reference/conflict-patterns.md`
+
+## Reference
+
+- Branch structure: `docs/guides/GIT_WORKFLOW_SETUP.md` (if present)
+- Skill: `.cursor/skills/pr-merge-strategy/SKILL.md`

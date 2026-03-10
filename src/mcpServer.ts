@@ -1,4 +1,5 @@
 import * as http from "http";
+import * as path from "path";
 import { randomUUID } from "crypto";
 import * as vscode from "vscode";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -355,6 +356,46 @@ export class DriveMcpServer {
           current_todo
         );
         return { content: [{ type: "text" as const, text: "ok" }] };
+      }
+    );
+
+    mcpServer.tool(
+      "agent_screen_clear",
+      "Clear the Drive Agent Screen (activity, files, decisions, sync, artifacts). [Parallel-safe]",
+      {},
+      async () => {
+        AgentScreenPanel.getInstance()?.postEvent({ type: "clear" });
+        return { content: [{ type: "text" as const, text: "Agent Screen cleared" }] };
+      }
+    );
+
+    mcpServer.tool(
+      "agent_screen_chime",
+      "Play a chime tone on the Agent Screen (1 = Drive ON, 2 = Drive OFF). [Parallel-safe]",
+      { count: z.union([z.literal(1), z.literal(2)]).default(1).describe("Number of tones (1 or 2).") },
+      async ({ count }) => {
+        AgentScreenPanel.getInstance()?.playChime(count);
+        return { content: [{ type: "text" as const, text: "Chime played" }] };
+      }
+    );
+
+    mcpServer.tool(
+      "cursor_drive_open_file",
+      "Open a file in the user's editor. Path can be workspace-relative or absolute. [Parallel-safe]",
+      { path: z.string().describe("Workspace-relative or absolute file path.") },
+      async ({ path: filePath }) => {
+        try {
+          const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+          const uri = path.isAbsolute(filePath)
+            ? vscode.Uri.file(filePath)
+            : vscode.Uri.joinPath(workspaceRoot ?? vscode.Uri.file(""), filePath);
+          const doc = await vscode.workspace.openTextDocument(uri);
+          await vscode.window.showTextDocument(doc, { preview: false });
+          return { content: [{ type: "text" as const, text: `Opened ${filePath}` }] };
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return { content: [{ type: "text" as const, text: `Failed to open ${filePath}: ${msg}` }], isError: true };
+        }
       }
     );
 
@@ -1202,6 +1243,7 @@ export class DriveMcpServer {
       {},
       async () => {
         const snapshot = await coordinator.computeSnapshot();
+        AgentScreenPanel.getInstance()?.postSyncStatus(snapshot);
         return { content: [{ type: "text" as const, text: JSON.stringify(snapshot, null, 2) }] };
       }
     );
@@ -1241,6 +1283,8 @@ export class DriveMcpServer {
             isError: true,
           };
         }
+        const snapshot = await coordinator.computeSnapshot();
+        AgentScreenPanel.getInstance()?.postSyncStatus(snapshot);
         AgentScreenPanel.getInstance()?.logDecision("Drive/Sync", `Approved proposal ${proposal_id}`);
         return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
       }
@@ -1261,6 +1305,8 @@ export class DriveMcpServer {
             isError: true,
           };
         }
+        const snapshot = await coordinator.computeSnapshot();
+        AgentScreenPanel.getInstance()?.postSyncStatus(snapshot);
         AgentScreenPanel.getInstance()?.logDecision("Drive/Sync", `Rejected proposal ${proposal_id}${reason ? `: ${reason}` : ""}`);
         return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
       }
@@ -1296,6 +1342,13 @@ export class DriveMcpServer {
         }
 
         const applyResult = await queue.enqueue(proposal_id);
+        const snapshot = await coordinator.computeSnapshot();
+        AgentScreenPanel.getInstance()?.postSyncStatus(snapshot);
+        const queueState = queue.getQueueState();
+        AgentScreenPanel.getInstance()?.postQueueStatus(
+          queueState.processing ?? null,
+          queueState.pending?.length ?? 0
+        );
         AgentScreenPanel.getInstance()?.logActivity(
           "Drive/Sync",
           applyResult.success

@@ -7,6 +7,29 @@ import * as vscode from "vscode";
 
 export type ModelTier = "routing" | "planning" | "execution" | "reasoning";
 
+/**
+ * Get available chat models from vscode.lm. Returns empty array on error.
+ */
+export async function getAvailableModels(): Promise<readonly vscode.LanguageModelChat[]> {
+  const result = await getAvailableModelsWithError();
+  return result.models;
+}
+
+/**
+ * Get available models with error info. Use when probing/API discovery.
+ */
+export async function getAvailableModelsWithError(): Promise<{
+  models: readonly vscode.LanguageModelChat[];
+  error?: string;
+}> {
+  try {
+    const models = await vscode.lm.selectChatModels({});
+    return { models };
+  } catch (e) {
+    return { models: [], error: String(e) };
+  }
+}
+
 const TIER_PREFERENCES: Record<ModelTier, string[]> = {
   routing: [
     "claude-haiku",
@@ -50,12 +73,7 @@ export async function selectTierModel(
 ): Promise<vscode.LanguageModelChat | undefined> {
   if (token.isCancellationRequested) { return undefined; }
 
-  let models: readonly vscode.LanguageModelChat[] = [];
-  try {
-    models = await vscode.lm.selectChatModels({});
-  } catch {
-    return undefined;
-  }
+  const models = await getAvailableModels();
 
   if (!models.length) { return undefined; }
 

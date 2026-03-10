@@ -26,6 +26,21 @@
       {
         "command": "python .cursor/hooks/plan-runner.py subagentStop"
       }
+    ],
+    "preToolUse": [
+      {
+        "command": "node .cursor/hooks/pre-tool-use.js"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "node .cursor/hooks/post-tool-use.js"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "node .cursor/hooks/after-file-edit.js"
+      }
     ]
   }
 }

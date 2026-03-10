@@ -1,6 +1,6 @@
 version: 1
 project_id: cursor-drive
-last_synced: '2026-03-10T03:48:39.011383+00:00'
+last_synced: '2026-03-10T05:14:33.538362+00:00'
 plans:
 - id: cd-042
   planId: readme-redesign
@@ -1014,22 +1014,22 @@ plans:
   planId: orchestration
   file: .cursor/plans/orchestration.plan.md
   plan_type: project
-  todo_count: 2
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: true
 - id: cd-268
   planId: voice-wake-word
   file: .cursor/plans/voice-wake-word.plan.md
   plan_type: project
-  todo_count: 2
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: true
 - id: cd-306
   planId: agent-screen-implementation
   file: .cursor/plans/agent-screen-implementation.plan.md
   plan_type: task
-  todo_count: 36
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-307
   planId: agent-skills-review
@@ -1049,8 +1049,8 @@ plans:
   planId: chat-memory-proceed
   file: .cursor/plans/chat-memory-proceed.plan.md
   plan_type: task
-  todo_count: 3
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-311
   planId: cloudflare-setup-phases
@@ -1063,8 +1063,8 @@ plans:
   planId: cursor-drive-automation-optimizer
   file: .cursor/plans/cursor-drive-automation-optimizer.plan.md
   plan_type: task
-  todo_count: 11
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-249
   planId: cursor-drive-implementation
@@ -1091,8 +1091,8 @@ plans:
   planId: orchestration-and-hooks
   file: .cursor/plans/orchestration-and-hooks.plan.md
   plan_type: task
-  todo_count: 13
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-322
   planId: plans-audit-and-cleanup
@@ -1105,8 +1105,8 @@ plans:
   planId: push-repo-and-develop-branch
   file: .cursor/plans/push-repo-and-develop-branch.plan.md
   plan_type: task
-  todo_count: 4
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-325
   planId: remove-github-push-code
@@ -1126,8 +1126,8 @@ plans:
   planId: s-as-execution-command-discovery
   file: .cursor/plans/s-as-execution-command-discovery.plan.md
   plan_type: task
-  todo_count: 4
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-329
   planId: security-review-structure
@@ -1140,8 +1140,8 @@ plans:
   planId: voice-features
   file: .cursor/plans/voice-features.plan.md
   plan_type: task
-  todo_count: 8
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-335
   planId: adr-prd-audit-and-graph
@@ -1161,7 +1161,7 @@ plans:
   planId: pr-merge-workflow-primitives
   file: .cursor/plans/pr-merge-workflow-primitives.plan.md
   plan_type: task
-  todo_count: 5
+  todo_count: 1
   todo_empty: false
   is_project: false
 - id: cd-340
@@ -1175,15 +1175,15 @@ plans:
   planId: tangent-agent-ux-features
   file: .cursor/plans/tangent-agent-ux-features.plan.md
   plan_type: task
-  todo_count: 4
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-343
   planId: using-cursor-drive
   file: .cursor/plans/using-cursor-drive.plan.md
   plan_type: task
-  todo_count: 5
-  todo_empty: false
+  todo_count: 0
+  todo_empty: true
   is_project: false
 - id: cd-408
   planId: final_worktree_and_harrison_pm_cd5d7fd8
@@ -1269,9 +1269,25 @@ plans:
   todo_count: 5
   todo_empty: false
   is_project: true
+- id: cd-335
+  planId: adr-prd-audit-and-graph
+  file: .cursor/plans/archive/adr-prd-audit-and-graph.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
 - id: cd-060
   planId: agent-directory-build_7d0891d5
   file: .cursor/plans/archive/agent-directory-build_7d0891d5.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-307
+  planId: agent-skills-review
+  file: .cursor/plans/archive/agent-skills-review.plan.md
   plan_type: task
   todo_count: 0
   todo_empty: true
@@ -1365,6 +1381,14 @@ plans:
   todo_empty: true
   is_project: false
   archived: true
+- id: cd-310
+  planId: chat-memory-proceed
+  file: .cursor/plans/archive/chat-memory-proceed.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
 - id: cd-087
   planId: clawdbot_research_integration_2b0e8898
   file: .cursor/plans/archive/clawdbot_research_integration_2b0e8898.plan.md
@@ -1376,6 +1400,14 @@ plans:
 - id: cd-089
   planId: cli_mapping_corrections_f5f8bba5
   file: .cursor/plans/archive/cli_mapping_corrections_f5f8bba5.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-311
+  planId: cloudflare-setup-phases
+  file: .cursor/plans/archive/cloudflare-setup-phases.plan.md
   plan_type: task
   todo_count: 0
   todo_empty: true
@@ -1613,6 +1645,14 @@ plans:
   todo_empty: true
   is_project: false
   archived: true
+- id: cd-320
+  planId: mcp-apps-implementation
+  file: .cursor/plans/archive/mcp-apps-implementation.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
 - id: cd-032
   planId: openclaw_capability_scrape_8fa228d1
   file: .cursor/plans/archive/openclaw_capability_scrape_8fa228d1.plan.md
@@ -1789,6 +1829,38 @@ plans:
   todo_empty: true
   is_project: false
   archived: true
+- id: cd-415
+  planId: security-review-docs-cleanup
+  file: .cursor/plans/archive/security-review-docs-cleanup.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-417
+  planId: security-review-ignore-files
+  file: .cursor/plans/archive/security-review-ignore-files.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-329
+  planId: security-review-structure
+  file: .cursor/plans/archive/security-review-structure.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-418
+  planId: security-review-token-fix
+  file: .cursor/plans/archive/security-review-token-fix.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
 - id: cd-197
   planId: source_documentation_sprint_4103048a
   file: .cursor/plans/archive/source_documentation_sprint_4103048a.plan.md
@@ -1817,6 +1889,22 @@ plans:
   planId: tangent_agent_ux_features_25c3c2d5
   file: .cursor/plans/archive/tangent_agent_ux_features_25c3c2d5.plan.md
   plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-334
+  planId: voice-features
+  file: .cursor/plans/archive/voice-features.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-268
+  planId: voice-wake-word
+  file: .cursor/plans/archive/voice-wake-word.plan.md
+  plan_type: project
   todo_count: 0
   todo_empty: true
   is_project: false
@@ -3331,5 +3419,77 @@ plans:
   plan_type: task
   todo_count: 0
   todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-103
+  planId: cursor-drive-automation-optimizer_bdd69fa9
+  file: .cursor/plans/archive/superseded/cursor-drive-automation-optimizer_bdd69fa9.plan.md
+  plan_type: task
+  todo_count: 11
+  todo_empty: false
+  is_project: false
+  archived: true
+- id: cd-358
+  planId: cursor-drive-automation-optimizer_f1fc3c6a
+  file: .cursor/plans/archive/superseded/cursor-drive-automation-optimizer_f1fc3c6a.plan.md
+  plan_type: task
+  todo_count: 10
+  todo_empty: false
+  is_project: false
+  archived: true
+- id: cd-359
+  planId: cursor-drive-implementation_1dfb22b9
+  file: .cursor/plans/archive/superseded/cursor-drive-implementation_1dfb22b9.plan.md
+  plan_type: task
+  todo_count: 7
+  todo_empty: false
+  is_project: false
+  archived: true
+- id: cd-360
+  planId: cursor-drive-implementation_5c18465a
+  file: .cursor/plans/archive/superseded/cursor-drive-implementation_5c18465a.plan.md
+  plan_type: task
+  todo_count: 0
+  todo_empty: true
+  is_project: false
+  archived: true
+- id: cd-361
+  planId: cursor-drive-implementation_881c1cf4
+  file: .cursor/plans/archive/superseded/cursor-drive-implementation_881c1cf4.plan.md
+  plan_type: task
+  todo_count: 7
+  todo_empty: false
+  is_project: false
+  archived: true
+- id: cd-362
+  planId: cursor-drive-implementation_c4ce6df1
+  file: .cursor/plans/archive/superseded/cursor-drive-implementation_c4ce6df1.plan.md
+  plan_type: task
+  todo_count: 7
+  todo_empty: false
+  is_project: false
+  archived: true
+- id: cd-366
+  planId: cursor-primitives-complete-bootstrap_a4b1b599
+  file: .cursor/plans/archive/superseded/cursor-primitives-complete-bootstrap_a4b1b599.plan.md
+  plan_type: task
+  todo_count: 3
+  todo_empty: false
+  is_project: false
+  archived: true
+- id: cd-179
+  planId: repo-refactor-cleanup_0b23a4a1
+  file: .cursor/plans/archive/superseded/repo-refactor-cleanup_0b23a4a1.plan.md
+  plan_type: task
+  todo_count: 3
+  todo_empty: false
+  is_project: false
+  archived: true
+- id: cd-392
+  planId: repo-refactor-cleanup_63b3c416
+  file: .cursor/plans/archive/superseded/repo-refactor-cleanup_63b3c416.plan.md
+  plan_type: task
+  todo_count: 2
+  todo_empty: false
   is_project: false
   archived: true

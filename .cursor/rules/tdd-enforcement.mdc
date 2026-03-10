@@ -1,0 +1,24 @@
+---
+description: TDD enforcement - failing tests before refactors
+alwaysApply: true
+---
+# TDD Enforcement
+
+## Refactor discipline
+
+- Before refactoring, ensure a failing test exists that captures current behavior or the bug.
+- If no test exists, write one first; run it; confirm it fails (or passes for the buggy case).
+- Refactor; run tests; verify they pass.
+- Do not refactor without test coverage for the affected code path.
+
+## Exceptions
+
+- Pure formatting/style changes (no behavior change) may skip new tests.
+- Documentation-only changes do not require tests.
+- When adding tests is infeasible (e.g. third-party integration), document the risk and get explicit approval.
+
+## Verification
+
+- Run `npm test` before committing any refactor.
+- Run `npm run compile` to catch type errors.
+- If tests fail after a refactor, revert or fix before pushing.

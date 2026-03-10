@@ -18,43 +18,43 @@ todos:
     status: completed
   - id: oh-04
     content: "Run a smoke verification: ensure new command/skill are discoverable and run `python .cursor/hooks/plan-runner.py sessionStart` to confirm no governance regressions."
-    status: in_progress
+    status: completed
   - id: oh-05
     content: Create orchestrator command/skill (.cursor/commands/execute-plans.md or extend execute-plan.md)
-    status: pending
+    status: completed
   - id: oh-06
     content: Define plan-agent prompt template (planId, planPath, todos, phase)
-    status: pending
+    status: completed
   - id: oh-07
     content: Define TODO subagent prompt template
-    status: pending
+    status: completed
   - id: oh-08
     content: Add optional .cursor/plans/.orchestrator-state.json
-    status: pending
+    status: completed
   - id: oh-09
     content: Wire completion gate (plan-runner sync-all, Reconciliation + npm test + compile)
-    status: pending
+    status: completed
   - id: oh-10
     content: Review current hook setup (.cursor/hooks.json, validate-git-command, log-shell-execution, final-validation)
-    status: pending
+    status: completed
   - id: oh-11
     content: Add prompt-optimization.json and optimize-prompt.js beforeSubmitPrompt hook
-    status: pending
+    status: completed
   - id: oh-12
     content: Add pre-tool-use.js and post-tool-use.js for beforeMCPExecution/afterMCPExecution and shell hooks
-    status: pending
+    status: completed
   - id: oh-13
     content: Enhance final-validation.js stop hook with summary output and warning list
-    status: pending
+    status: completed
   - id: oh-14
     content: Register new hooks in .cursor/hooks.json; preserve existing validations
-    status: pending
+    status: completed
   - id: oh-15
     content: Update AGENTS.md Hooks section with new events and scripts
-    status: pending
+    status: completed
   - id: oh-16
     content: Run local Node executions with sample payloads; confirm hooks load
-    status: pending
+    status: completed
 ---
 
 # Orchestration and hooks
@@ -64,3 +64,28 @@ todos:
 - **Hook expansion**: prompt optimization, pre/post tool hooks, enhanced stop hook; register and document.
 
 See todos oh-01..oh-16.
+
+## Reconciliation
+
+### Verified
+
+- **orchestrate-parallel-work skill**: Phases, batching, recursion guardrails, prompt/return templates, meta-plan pattern.
+- **Commands**: orchestrate.md, execute-plans.md; README updated.
+- **coordinator.md, plan-orchestration-spec.md**: Meta-plan pattern documented.
+- **Smoke**: plan-runner sessionStart runs.
+- **execute-plans**: Command + skill with plan-agent and TODO subagent templates.
+- **.orchestrator-state.json**: Schema added.
+- **Completion gate**: plan-runner sync-all alias; on_todo_complete wired.
+- **Hooks**: prompt-optimization, optimize-prompt, pre-tool-use, post-tool-use, final-validation, tool-policy; registered in hooks.json.
+- **AGENTS.md**: Hooks section updated.
+- **Local Node tests**: All hook scripts return valid JSON.
+
+### Residual risks
+
+- Cursor may not support beforeMCPExecution/afterMCPExecution/beforeShellExecution/afterShellExecution.
+- final-validation invokes plan-runner; plan-runner also runs on stop — potential double execution.
+
+### Evidence
+
+- `echo '{"toolName":"read_file"}' | node .cursor/hooks/pre-tool-use.js` → `{ decision, message, details }`
+- `node .cursor/hooks/final-validation.js` → `{ decision, message, details: { summary, warnings } }`

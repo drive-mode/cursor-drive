@@ -44,6 +44,7 @@ import { SyncLedger } from "./syncLedger.js";
 import { StateSyncCoordinator } from "./stateSyncCoordinator.js";
 import { IntegrationQueue } from "./integrationQueue.js";
 import { resolvePendingTangentConfirm } from "./tangentFlow.js";
+import { getAvailableModels } from "./modelUtils.js";
 
 /** Set when we register the Drive MCP server via vscode.cursor.mcp.registerServer; cleared in deactivate. */
 let mcpRegisteredByExtensionApi = false;
@@ -483,6 +484,73 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     })
   );
 
+  context.subscriptions.push(
+    vscode.commands.registerCommand("cursorDrive.debug.sendTestEvent", async () => {
+      const panel = AgentScreenPanel.createOrShow(context.extensionUri);
+      panel.setDriveActive(driveMgr.active);
+
+      const scenarios: Record<string, Array<{ type: string; operatorName?: string; text?: string; filePath?: string; timestamp?: number; planId?: string; planName?: string; completedCount?: number; totalCount?: number; currentTodo?: string; cliStreamType?: string; cliToolName?: string; cloudAgentId?: string; cloudStatus?: string; prUrl?: string; artifactType?: string; artifactUrl?: string; artifactLabel?: string; syncSnapshot?: unknown; count?: number }>> = {
+        "Basic Activity": [
+          { type: "activity", operatorName: "Alpha", text: "Reading src/auth.ts", timestamp: Date.now() },
+          { type: "file", operatorName: "Alpha", filePath: "src/auth.ts", timestamp: Date.now() },
+          { type: "decision", operatorName: "Alpha", text: "Chose JWT over session cookies", timestamp: Date.now() },
+        ],
+        "CLI Streaming": [
+          { type: "cliStream", operatorName: "CLI", cliStreamType: "tool_call", cliToolName: "bash", text: "npm test", timestamp: Date.now() },
+          { type: "cliStream", operatorName: "CLI", cliStreamType: "text_delta", text: "Running tests...\n", timestamp: Date.now() },
+          { type: "cliStream", operatorName: "CLI", cliStreamType: "text_delta", text: "PASS src/auth.test.ts", timestamp: Date.now() },
+        ],
+        "Plan Progress": [
+          { type: "planProgress", planId: "test-plan", planName: "Test Plan", completedCount: 2, totalCount: 5, currentTodo: "Wire API", timestamp: Date.now() },
+        ],
+        "Sync State": [
+          {
+            type: "syncStatus",
+            syncSnapshot: {
+              userBranch: "main",
+              userHeadCommit: "abc1234567890",
+              operators: [
+                { operatorName: "Alpha", syncState: "idle", headCommit: "def456" },
+                { operatorName: "Beta", syncState: "conflict", headCommit: "ghi789" },
+              ],
+              proposals: [],
+              timestamp: Date.now(),
+            },
+            timestamp: Date.now(),
+          },
+        ],
+        "Cloud Agent + Artifact": [
+          { type: "cloudAgentStatus", cloudAgentId: "ca-1", cloudStatus: "running", prUrl: "https://github.com/example/pr/1", timestamp: Date.now() },
+          { type: "cloudAgentArtifact", artifactType: "screenshot", artifactUrl: "https://example.com/shot.png", artifactLabel: "screenshot.png", timestamp: Date.now() },
+        ],
+        "Multi-Operator": [
+          { type: "agentSwitch", operatorName: "Alpha", timestamp: Date.now() },
+          { type: "activity", operatorName: "Alpha", text: "Working on auth", timestamp: Date.now() },
+          { type: "agentSwitch", operatorName: "Beta", timestamp: Date.now() },
+          { type: "activity", operatorName: "Beta", text: "Working on UI", timestamp: Date.now() },
+        ],
+        "Chime": [{ type: "chime", count: 1 }],
+        "Clear": [{ type: "clear" }],
+      };
+
+      const items = Object.keys(scenarios).map((label) => ({ label, scenario: scenarios[label] }));
+      const picked = await vscode.window.showQuickPick(items, {
+        title: "Drive: Send Test Event to Agent Screen",
+        placeHolder: "Select scenario",
+      });
+      if (!picked) return;
+
+      for (const ev of picked.scenario) {
+        if (ev.type === "chime") {
+          panel.playChime((ev.count as 1 | 2) ?? 1);
+        } else {
+          panel.postEvent(ev as Parameters<typeof panel.postEvent>[0]);
+        }
+        await new Promise((r) => setTimeout(r, 80));
+      }
+    })
+  );
+
   // ── TTS commands ────────────────────────────────────────────────────────
 
   context.subscriptions.push(
@@ -614,16 +682,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("cursorDrive.diagnose", async () => {
       const results: string[] = [];
 
-      // Test vscode.lm
-      try {
-        const models = await vscode.lm.selectChatModels({});
+      // Test vscode.lm (via modelUtils)
+      const models = await getAvailableModels();
+      if (models.length > 0) {
         results.push(`✅ vscode.lm.selectChatModels: ${models.length} model(s) available`);
-        if (models.length > 0) {
-          const names = models.slice(0, 3).map((m) => m.name ?? m.id ?? "unnamed").join(", ");
-          results.push(`   Models: ${names}${models.length > 3 ? ` (+${models.length - 3} more)` : ""}`);
-        }
-      } catch (e) {
-        results.push(`❌ vscode.lm.selectChatModels: ${String(e)}`);
+        const names = models.slice(0, 3).map((m) => m.name ?? m.id ?? "unnamed").join(", ");
+        results.push(`   Models: ${names}${models.length > 3 ? ` (+${models.length - 3} more)` : ""}`);
+      } else {
+        results.push(`❌ vscode.lm.selectChatModels: no models or API unavailable`);
       }
 
       // Test TTS

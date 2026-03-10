@@ -135,6 +135,11 @@
         "command": "cursorDrive.setApiKey",
         "title": "Set Cursor API Key (Cloud Agents)",
         "category": "Drive"
+      },
+      {
+        "command": "cursorDrive.debug.sendTestEvent",
+        "title": "Drive: Send Test Event to Agent Screen",
+        "category": "Cursor Drive (Debug)"
       }
     ],
     "keybindings": [

@@ -3,6 +3,8 @@ import * as vscode from "vscode";
 export interface GlossaryEntry {
   trigger: string;
   expansion: string;
+  /** Precompiled regex for matching trigger (set when loading). */
+  regex?: RegExp;
 }
 
 export interface GlossaryExpandResult {
@@ -30,11 +32,20 @@ vscode.workspace.onDidChangeConfiguration((e) => {
   }
 });
 
+function compileTriggerRegex(trigger: string): RegExp {
+  const escaped = trigger.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:^|\\b)${escaped}(?:\\b|$)`, "gi");
+}
+
 export function loadGlossary(): GlossaryEntry[] {
   if (glossaryCache) { return glossaryCache; }
   const cfg = vscode.workspace.getConfiguration("cursorDrive");
   const userEntries = cfg.get<GlossaryEntry[]>("glossary", []);
-  glossaryCache = [...userEntries, ...BUILTIN_GLOSSARY];
+  const all = [...userEntries, ...BUILTIN_GLOSSARY];
+  glossaryCache = all.map((e) => ({
+    ...e,
+    regex: e.trigger.trim() ? compileTriggerRegex(e.trigger) : undefined,
+  }));
   return glossaryCache;
 }
 
@@ -51,11 +62,12 @@ export function expandGlossary(
 
   let result = text;
   for (const entry of sorted) {
-    if (!entry.trigger.trim()) { continue; }
-    const escaped = entry.trigger.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const re = new RegExp(`(?:^|\\b)${escaped}(?:\\b|$)`, "gi");
+    const re = entry.regex;
+    if (!re) { continue; }
+    re.lastIndex = 0;
     if (re.test(result)) {
       matched.push(entry.trigger);
+      re.lastIndex = 0;
       result = result.replace(re, entry.expansion);
     }
   }

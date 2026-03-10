@@ -141,34 +141,42 @@ describe("cloudAgentClient", () => {
     });
 
     it("throws CloudAgentError on 429", async () => {
+      jest.useFakeTimers();
       (globalThis as { fetch?: typeof fetch }).fetch = jest.fn().mockResolvedValue({
         ok: false,
         status: 429,
         text: () => Promise.resolve(JSON.stringify({ error: { message: "Rate limit exceeded" } })),
       });
 
-      const err = await launchAgent(
+      const errPromise = launchAgent(
         { repository: "org/repo", prompt: "Test" },
         config
       ).catch((e) => e);
+      await jest.runAllTimersAsync();
+      const err = await errPromise;
+      jest.useRealTimers();
       expect(err).toBeInstanceOf(CloudAgentError);
-      expect(err.status).toBe(429);
-    });
+      expect((err as CloudAgentError).status).toBe(429);
+    }, 10000);
 
     it("throws CloudAgentError on 500", async () => {
+      jest.useFakeTimers();
       (globalThis as { fetch?: typeof fetch }).fetch = jest.fn().mockResolvedValue({
         ok: false,
         status: 500,
         text: () => Promise.resolve("Internal Server Error"),
       });
 
-      const err = await launchAgent(
+      const errPromise = launchAgent(
         { repository: "org/repo", prompt: "Test" },
         config
       ).catch((e) => e);
+      await jest.runAllTimersAsync();
+      const err = await errPromise;
+      jest.useRealTimers();
       expect(err).toBeInstanceOf(CloudAgentError);
-      expect(err.status).toBe(500);
-    });
+      expect((err as CloudAgentError).status).toBe(500);
+    }, 10000);
 
     it("uses custom base URL from config", async () => {
       const mockFetch = jest.fn().mockResolvedValue({
@@ -290,16 +298,20 @@ describe("cloudAgentClient", () => {
     });
 
     it("throws CloudAgentError on 500", async () => {
+      jest.useFakeTimers();
       (globalThis as { fetch?: typeof fetch }).fetch = jest.fn().mockResolvedValue({
         ok: false,
         status: 500,
         text: () => Promise.resolve("Server error"),
       });
 
-      const err = await getAgentConversation("bc_conv", config).catch((e) => e);
+      const errPromise = getAgentConversation("bc_conv", config).catch((e) => e);
+      await jest.runAllTimersAsync();
+      const err = await errPromise;
+      jest.useRealTimers();
       expect(err).toBeInstanceOf(CloudAgentError);
-      expect(err.status).toBe(500);
-    });
+      expect((err as CloudAgentError).status).toBe(500);
+    }, 10000);
   });
 
   describe("getAgentArtifacts", () => {

@@ -1,0 +1,14 @@
+---
+description: Context signal matching for skill loading
+globs: []
+---
+
+# Skill Usage
+
+When user intent matches a signal below, load the corresponding skill.
+
+## Context Signal Matching
+
+| Signal | Skill to Load |
+|--------|---------------|
+| "merge PRs", "PRs into develop", "strategic merge", "merge conflicts" | `pr-merge-strategy` |
