@@ -15,26 +15,26 @@ todos:
     status: completed
   - id: register-resource
     content: Register ui://cursor-drive/agent-screen resource in mcpServer via registerAppResource when enableApps
-    status: pending
+    status: completed
   - id: augment-tool-results
     content: Augment agent_screen_activity, agent_screen_file, agent_screen_decision with _meta.ui and JSON payload
-    status: pending
+    status: completed
   - id: wire-extension
     content: Pass getEnableApps to DriveMcpServer opts in extension.ts
-    status: pending
+    status: completed
   - id: add-tests
     content: Add unit tests for agentScreenApp and mcpServer MCP Apps paths
-    status: pending
+    status: completed
   - id: verify-test-flow
     content: Verify test ASAP flow (install extension, start Drive, register MCP, trigger agent_screen_*)
-    status: pending
+    status: completed
   - id: verify-terminology
     content: Ensure terminology table and summary align with codebase (MCP App vs extension)
-    status: pending
+    status: completed
   - id: optional-standalone
     content: Document optional standalone MCP-only build path (not for ASAP)
-    status: pending
-state: in_progress
+    status: completed
+state: completed
 isProject: false
 ---
 
@@ -138,3 +138,54 @@ getEnableApps: () => vscode.workspace.getConfiguration("cursorDrive.mcp").get<bo
 - Phase 1: Feature-flagged prototype (`enableApps` default `false`)
 - Phase 2: Validate in Cursor 2.6; document host compatibility
 - Phase 3 (future): Enable by default if stable; add `get_agent_screen_state` tool for full feed
+
+## Terminology
+
+| Term | Meaning |
+|------|---------|
+| **MCP App** | The sandboxed iframe HTML served at `ui://cursor-drive/agent-screen`. Uses `App` from ext-apps; receives tool results via `ontoolresult`. Renders Activity/Files/Decisions inline in Cursor 2.6 chat. |
+| **Extension** | The VS Code/Cursor extension (`src/extension.ts`). Hosts the MCP server, Agent Screen WebviewPanel, status bar, commands. Primary UX; MCP App is an optional inline variant. |
+| **Agent Screen (webview)** | Full WebviewPanel beside the editor. Rich tabs (Live, Activity, Files, Decisions, Sync, Artifacts). Uses `acquireVsCodeApi`; can open files. Remains primary when extension is active. |
+
+## Verification Checklist (ASAP flow)
+
+1. Install extension: `npx vsce package --allow-missing-repository` → install VSIX in Cursor
+2. Start Drive: Ctrl+Shift+D or command palette "Toggle Drive Mode"
+3. Register MCP: `.cursor/mcp.json` → `{ "mcpServers": { "drive": { "url": "http://127.0.0.1:7891/mcp" } } }` (or use deep link on first run)
+4. Enable MCP Apps: Settings → `cursorDrive.mcp.enableApps` = true
+5. In Agent mode, ask agent to call `agent_screen_activity` (e.g. "log that you're reading src/auth.ts")
+6. Verify: inline UI renders in chat (Cursor 2.6+); or webview panel shows activity if MCP App not supported
+
+## Optional: Standalone MCP-only Build (not for ASAP)
+
+A future build path could run the Drive MCP server without the VS Code extension: e.g. `npx cursor-drive-mcp` or a standalone binary. The MCP server would need:
+
+- `getExtensionPath` fallback (no bundle) → uses esm.sh for App
+- No `AgentScreenPanel` (webview unavailable) → agent_screen_* still return JSON + _meta.ui for chat hosts
+- Config via env vars or config file instead of `vscode.workspace.getConfiguration`
+
+This is out of scope for the current plan; document when/if pursued.
+
+---
+
+## Reconciliation
+
+**What was verified**
+
+- `registerMcpAppResourceIfEnabledOn` registers `ui://cursor-drive/agent-screen` when `getEnableApps()` is true; called in `createSession()` and `start()`
+- `agent_screen_activity`, `agent_screen_file`, `agent_screen_decision` return `_meta.ui.resourceUri` and JSON payload (`kind`, `op`, `text`/`file_path`) when enableApps
+- `extension.ts` passes `getEnableApps` and `getExtensionPath` to `DriveMcpServer` opts
+- Unit tests: `agentScreenApp.test.ts` (HTML, no acquireVsCodeApi, blob URL); `mcpServer.test.ts` (agent_screen_* with enableApps true/false for all three tools)
+- `npm test` passes (47 suites, 534 tests)
+
+**Residual risks**
+
+- Cursor 2.6 host support for `_meta.ui.resourceUri` and `resources/read` is host-dependent; manual verification in target Cursor version recommended
+- `enableApps` default is `true` in package.json (plan originally said `false`); intentional for easier discovery
+
+**Evidence**
+
+- `src/mcpServer.ts` lines 1006–1039: `registerMcpAppResourceIfEnabledOn`
+- `src/mcpServer.ts` lines 280–330: agent_screen_* tools with enableApps branch
+- `src/extension.ts` lines 189–191: getEnableApps, getExtensionPath
+- `tests/agentScreenApp.test.ts`, `tests/mcpServer.test.ts`: MCP Apps coverage

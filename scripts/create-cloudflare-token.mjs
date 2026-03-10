@@ -140,8 +140,23 @@ async function main() {
     console.error("No token secret in response");
     process.exit(1);
   }
-  console.log("Created token. Add to CLOUDFLARE_API_TOKEN (shown once):");
-  console.log(secret);
+
+  // Never log the secret. Copy to clipboard when available; otherwise instructions only.
+  let copied = false;
+  try {
+    const { default: clipboardy } = await import("clipboardy");
+    await clipboardy.write(secret);
+    copied = true;
+  } catch {
+    /* clipboardy not installed or clipboard failed */
+  }
+  if (copied) {
+    console.error("Token copied to clipboard. Add to CLOUDFLARE_API_TOKEN in .env or GitHub secrets.");
+  } else {
+    console.error(
+      "Token created. Store it now — it will not be shown again. Add to CLOUDFLARE_API_TOKEN in .env or GitHub secrets."
+    );
+  }
 }
 
 main().catch((e) => {

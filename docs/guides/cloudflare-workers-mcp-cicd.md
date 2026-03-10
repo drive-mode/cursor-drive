@@ -2,6 +2,8 @@
 
 Guide for deploying an MCP server to Cloudflare Workers via CI/CD and Terraform. Use this when you want to host a remote MCP server (e.g. tldraw-style) that users can connect to with a URL—no local process required.
 
+> **Deployment disclaimer:** Deploy at your own risk. Verify tokens, secrets, and account permissions before running in production. Never commit secrets to the repository.
+
 ---
 
 ## Overview
@@ -105,9 +107,26 @@ See [Create tokens via API](https://developers.cloudflare.com/fundamentals/api/h
 
 ---
 
+## 2a. Local .env
+
+Copy [.env.example](../../.env.example) to `.env` in the repo root (or use `%USERPROFILE%\.env\.env` per [mcp-user-setup](../reference/mcp-user-setup.md)). Set:
+
+| Variable | Purpose |
+|----------|---------|
+| `CLOUDFLARE_API_TOKEN` | Deploy token for verify script and local wrangler |
+| `CLOUDFLARE_ACCOUNT_ID` | Account ID for create-token and verify |
+| `API_FIXER` | Optional; bootstrap token for create-token script |
+
+`.env` is in [.gitignore](../../.gitignore) — never commit it.
+
 ## 2b. GitHub Repository secrets (not Environment secrets)
 
 Add secrets under **Settings → Secrets and variables → Actions → Repository secrets**. Do not use Environment secrets unless you have a specific reason (e.g. per-environment tokens).
+
+| Secret | Value | Source |
+|--------|-------|--------|
+| `CLOUDFLARE_API_TOKEN` | Deploy token | Dashboard → Account API Tokens → Edit Cloudflare Workers, or `npm run cloudflare:create-token` |
+| `CLOUDFLARE_ACCOUNT_ID` | Account ID | Workers & Pages → Account details |
 
 **GLOBAL_API_KEY and ORIGIN_CA_KEY:** Not needed for Workers deploy or the token test workflow. Add only if you use Terraform with legacy auth (`api_key` + `email`) or Origin CA certificate operations.
 

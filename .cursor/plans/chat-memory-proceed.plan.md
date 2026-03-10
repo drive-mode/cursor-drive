@@ -9,24 +9,24 @@ overview: Summarize 11 agent transcripts into a memory aid and a consolidated li
 todos:
   - id: sync-registry
     content: Run plan-runner.py sync-registry and fix any gate errors
-    status: pending
+    status: completed
   - id: fix-windows-tests
     content: Fix Windows path-separator test failures in persistentMemory.test.ts and worktreeManager.test.ts
-    status: pending
+    status: completed
   - id: sdk-port
     content: Install @agentclientprotocol/sdk and port SessionAccumulator, ToolCallTracker, PermissionBroker (per ADR-0023)
-    status: pending
+    status: completed
   - id: doc-agent-teams
     content: Document agent-teams methodology in docs/design/architecture
-    status: pending
+    status: completed
   - id: compound-engineering
     content: Choose and implement one compound-engineering item (brainstorm skill or compound workflow)
-    status: pending
+    status: completed
   - id: resume-cli
     content: Add --resume support to RunCursorCliOptions when stateful CLI sessions are needed
-    status: pending
+    status: completed
 isProject: false
-state: pending
+state: completed
 ---
 
 # Chat Memory and How to Proceed
@@ -128,3 +128,28 @@ You can create these as a checklist (e.g. in Cursor todos or in a plan):
 6. Add `--resume` support to RunCursorCliOptions when stateful CLI sessions are needed (per 5290f3b3).
 
 If you say which option (A/B/C) and which todos you want to tackle first, the next agent can execute against this plan.
+
+---
+
+## Reconciliation
+
+**What was verified**
+
+| TODO | Outcome |
+|------|---------|
+| sync-registry | `plan-runner.py sync-registry` ran successfully; auto-registered 2 plans; no gate errors |
+| fix-windows-tests | `persistentMemory.test.ts` and `worktreeManager.test.ts` pass on Windows; path handling uses `path.join` / `path.normalize` |
+| sdk-port | `@agentclientprotocol/sdk` in package.json; `SessionAccumulator`, `ToolCallTracker`, `PermissionBroker`, `AcpRequestError` in `src/cursor-sdk/` |
+| doc-agent-teams | `docs/design/architecture/agent-teams-methodology.md` exists; linked from architecture README |
+| compound-engineering | Added `.cursor/skills/brainstorm/SKILL.md` (brainstorm before plan flow) |
+| resume-cli | `RunCursorCliOptions.resumeChatId`, `--resume` in buildCliArgs, `RunCursorCliResult.chatId`, `createCursorCliChat` already implemented |
+
+**Residual risks**
+
+- Brainstorm skill is new; no integration test with plan-system-maintainer
+- Streaming CLI result does not extract `chatId` from NDJSON (echoes `resumeChatId` when passed); fresh-run chatId extraction may need enhancement if CLI returns it in stream
+
+**Evidence**
+
+- `npm test` — all tests pass
+- `python .cursor/hooks/plan-runner.py sync-registry` — decision: allow

@@ -688,6 +688,62 @@ describe("DriveMcpServer", () => {
     expect(resultWithMeta._meta).toBeUndefined();
   });
 
+  it("agent_screen_file returns _meta.ui.resourceUri and JSON payload when getEnableApps is true", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getEnableApps: () => true,
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const result = await callMcpTool(port, sessionId, "agent_screen_file", {
+      operator_name: "Beta",
+      file_path: "src/mcpServer.ts",
+    });
+
+    expect(result.isError).not.toBe(true);
+    const payload = JSON.parse((result.content as Array<{ text: string }>)[0].text);
+    expect(payload).toEqual({ kind: "file", op: "Beta", file_path: "src/mcpServer.ts" });
+    const resultWithMeta = result as { _meta?: { ui?: { resourceUri?: string } } };
+    expect(resultWithMeta._meta?.ui?.resourceUri).toBe(AGENT_SCREEN_APP_RESOURCE_URI);
+  });
+
+  it("agent_screen_decision returns _meta.ui.resourceUri and JSON payload when getEnableApps is true", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({
+      port,
+      driveMgr,
+      operatorRegistry,
+      sessionMemory,
+      getEnableApps: () => true,
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const result = await callMcpTool(port, sessionId, "agent_screen_decision", {
+      operator_name: "Gamma",
+      text: "Chose token bucket for rate limiting",
+    });
+
+    expect(result.isError).not.toBe(true);
+    const payload = JSON.parse((result.content as Array<{ text: string }>)[0].text);
+    expect(payload).toEqual({ kind: "decision", op: "Gamma", text: "Chose token bucket for rate limiting" });
+    const resultWithMeta = result as { _meta?: { ui?: { resourceUri?: string } } };
+    expect(resultWithMeta._meta?.ui?.resourceUri).toBe(AGENT_SCREEN_APP_RESOURCE_URI);
+  });
+
   it("cursor_cli_run_streaming MCP tool calls postEvent for each cliStream data event", async () => {
     const port = nextPort();
     const driveMgr = makeDriveMgr();

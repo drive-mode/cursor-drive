@@ -432,6 +432,27 @@
           "default": true,
           "description": "When switching Drive sub-modes, also call the matching Cursor native composerMode.* command to keep Cursor's UI in sync."
         },
+        "cursorDrive.modeSwitching.voiceEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow voice-triggered mode switches (e.g. 'switch to plan mode')."
+        },
+        "cursorDrive.modeSwitching.semanticEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow AI-suggested mode switches from semantic intent."
+        },
+        "cursorDrive.modeSwitching.requireConfirmation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show confirmation before switching modes."
+        },
+        "cursorDrive.modeSwitching.allowedModes": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["plan", "agent", "ask", "debug"] },
+          "default": ["plan", "agent", "ask", "debug"],
+          "description": "Modes the user is allowed to switch to."
+        },
         "cursorDrive.operators.autoInjectOpenFiles": {
           "type": "boolean",
           "default": false,

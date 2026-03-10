@@ -15,7 +15,7 @@ todos:
     status: completed
   - id: vf-03
     content: "Run npm run compile and npm test; verify wake-word flow with Drive off then 'hey drive' submission."
-    status: pending
+    status: completed
   - id: vf-04
     content: Add cursorDrive.sleepWord to package.json; change wakeWord default to "drive mode"
     status: completed
@@ -24,28 +24,28 @@ todos:
     status: completed
   - id: vf-06
     content: Add sleepWord to driveSidebar config and webview settings UI
-    status: pending
+    status: completed
   - id: vf-07
     content: Add wakeWord/sleepWord to sandbox/.vscode/settings.json
-    status: pending
+    status: cancelled
   - id: vf-08
     content: Update extension.test.ts and add pipeline sleep-word tests
-    status: pending
+    status: completed
   - id: vf-09
     content: Add cursorDrive.sleepWord to package.json contributes.configuration
-    status: pending
+    status: completed
   - id: vf-10
     content: In pipeline.ts add sleep-word block after wake-word (read config, strip phrase, setActive(false), speak, return early)
-    status: pending
+    status: completed
   - id: vf-11
     content: Add sleepWord to driveSidebar config and webview Settings; update config-schema.md
-    status: pending
+    status: completed
   - id: vf-12
     content: Extend mock config and pipeline tests for sleep word (deactivate, strip, early return; pass-through when text remains)
-    status: pending
+    status: completed
   - id: vf-13
     content: In voiceCommands.ts always append built-in candidates after user primary/fallbacks in all four execute functions (executeChatOpen, executeMicStart, executeMicStopSubmit, executeMicStopCancel); deduplicate
-    status: pending
+    status: completed
 ---
 
 # Voice features (wake, sleep, fallback)

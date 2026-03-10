@@ -12,6 +12,16 @@ Setup guide for new contributors. For full smoke testing, see [live-testing.md](
 
 ---
 
+## Get Cursor Drive Working (GCD)
+
+1. **Build** — `npm ci && npm run compile`
+2. **MCP** — Extension starts MCP server on port 7891; register in `.cursor/mcp.json` with the URL shown in the Drive output channel
+3. **Plugin** — Run `Drive: Install Drive Plugin to Workspace` to copy plugin assets and hooks
+4. **Sandbox** — (Optional) `.\sandbox\setup-drive-dev.ps1` for isolated dev testing
+5. **Smoke** — Press F5, select "Dev: Drive in sandbox" or "Dev: Drive in repo root", toggle Drive with `Ctrl+Shift+D`
+
+---
+
 ## Setup
 
 ```powershell

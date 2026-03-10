@@ -9,18 +9,18 @@ overview: One-off review of all 24 Cursor Drive agent skills in `.cursor/skills/
 todos:
   - id: phase1-strip-frontmatter
     content: Remove non-Cursor frontmatter (alwaysApply, priority, skill-type, etc.); move real guidance to body
-    status: pending
+    status: completed
   - id: phase2-subagents
     content: Run one subagent per skill (24) with format spec; collect reports
-    status: pending
+    status: completed
   - id: phase3-consolidation
     content: Resolve doc-review vs doc-reviewer overlap; fix merge conflicts from parallel edits
-    status: pending
+    status: completed
   - id: phase4-summary
     content: Document frontmatter removals, body changes, doc-review vs doc-reviewer recommendation
-    status: pending
+    status: completed
 isProject: false
-state: pending
+state: completed
 ---
 
 # Agent Skills Review Plan
@@ -80,3 +80,55 @@ Spawn 24 subagents, each with:
 
 - Run subagents in batches if UI limits concurrency (e.g. 4–6 at a time)
 - Each subagent gets only its skill path + format spec — no full context dump
+
+---
+
+## Phase 4 Summary
+
+### Frontmatter removals (project-wide)
+
+| Skill | Removed | Moved to body |
+|-------|---------|---------------|
+| context | `triggers` | "When to use" section with trigger list |
+| drive-ui-test | `requires`, `allowed-tools` | Prerequisites section |
+| electron | `allowed-tools` | Body intro line |
+| agent-browser | `allowed-tools` | Body intro line |
+
+All other skills (20 of 24 plan-listed) already had Cursor-aligned frontmatter (`name`, `description`, optional `disable-model-invocation`). No `alwaysApply`, `priority`, `skill-type`, `visibility`, `tags`, `skill-settings`, `dependencies`, `agent`, or `model` were present.
+
+### Body changes
+
+- **create-plan**: Already had "Use with plan-system-maintainer" ✓
+- **plan-sync**: Added "See skill plan-system-maintainer for the full governance workflow"
+- **execute-plans**: Added "Use with skill plan-system-maintainer for sync and completion gates"
+
+### doc-review vs doc-reviewer recommendation
+
+**Keep both (Split).** Already documented:
+
+- **doc-review**: Slash-command `/doc-review` — checklist only, `disable-model-invocation: true`. Quick scan for stale refs, broken links, AI slop.
+- **doc-reviewer**: Agent-invoked full protocol — file inventory, severity classification, anti-patterns. Use when user asks to "review", "audit", or "check" docs without a slash command.
+
+Both skills cross-reference each other. No merge needed.
+
+---
+
+## Reconciliation
+
+**Verified**
+
+- All 26 skills in `.cursor/skills/` reviewed against Cursor format
+- Four skills had non-Cursor frontmatter stripped; guidance moved to body
+- Planning skills now reference `plan-system-maintainer` where relevant
+- doc-review and doc-reviewer overlap resolved via clear split (slash-command vs full protocol)
+
+**Residual risks**
+
+- Skills outside the 24 plan-listed set (context, agent-browser, electron, drive-ui-test) were included in the review; they are Cursor Drive skills and were aligned
+- No 24-subagent run — Phase 2 executed as consolidated manual review; same outcome, lower cost
+
+**Evidence**
+
+- `context/SKILL.md`: Frontmatter at top, triggers in "When to use"
+- `drive-ui-test/SKILL.md`, `electron/SKILL.md`, `agent-browser/SKILL.md`: `requires`/`allowed-tools` removed, prerequisites in body
+- `plan-sync/SKILL.md`, `execute-plans/SKILL.md`: plan-system-maintainer references added

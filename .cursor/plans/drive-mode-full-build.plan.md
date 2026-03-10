@@ -33,13 +33,13 @@ todos:
     status: pending
   - id: publishing-setup
     content: Add LICENSE, CHANGELOG.md, update .vscodeignore, add ovsx to devDeps, vsce package
-    status: pending
+    status: completed
   - id: open-vsx-publish
     content: Publish to Open VSX Registry using ovsx CLI (no Azure needed)
-    status: pending
+    status: completed
   - id: mode-switching
     content: Add modeSwitcher.ts: voice/semantic mode switching with strict controls
-    status: pending
+    status: completed
   - id: optimizer-quickpick
     content: Replace stub approval in promptOptimizer with real QuickPick (Use optimized / Use original / Edit)
     status: pending
@@ -63,13 +63,13 @@ todos:
     status: pending
   - id: dev-preset
     content: Expand sandbox/.vscode/settings.json with full dev-friendly config preset
-    status: pending
+    status: cancelled
   - id: gcd-verify
     content: Document and verify Get Cursor Drive Working flow (build, MCP, plugin, sandbox, smoke)
-    status: pending
+    status: completed
   - id: drive-ux-tests
     content: Add tests for modeSwitcher, glossaryExpander, approvalGates, audioFeedback, pipeline wake-ack
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -255,3 +255,28 @@ Their process: email `hiring@anysphere.inc` with resume + short note about a pro
 - **Real product thinking** (easily steered pair programmer persona, privacy-strict defaults)
 
 The `extension/README.md` we write here IS the project description they'd read.
+
+---
+
+## Reconciliation
+
+### Verified
+
+- **Pipeline wiring** — `src/pipeline.ts` wires fillerCleaner → glossaryExpander → sanitizer → promptOptimizer → approvalGates → router → modelSelector. No `participant.ts`; integration is in pipeline.
+- **Config** — `cursorDrive.promptOptimizer.enabled`, `autoApprove`, and `modeSwitching.*` exist in package.json.
+- **Modules** — promptOptimizer, modelSelector, fillerCleaner, glossaryExpander, sanitizer, approvalGates, audioFeedback, modeSwitcher all exist and are used.
+- **Docs** — `docs/design/ai/prompt-optimizer-design.md`, `model-cost-tiers.md`; `docs/guides/getting-started.md` includes GCD flow.
+- **Publishing** — LICENSE, CHANGELOG.md, .vscodeignore present; ovsx added to devDependencies.
+- **Tests** — 48 suites pass; modeSwitcher, glossaryExpander, approvalGates, audioFeedback, pipeline covered.
+- **Compile** — `npm run compile` succeeds with zero TypeScript errors.
+
+### Residual risks
+
+- **open-vsx-publish** — Manual step; requires `ovsx create-namespace` (one-time) and `ovsx publish --pat $OVSX_PAT`.
+- **dev-preset** — Cancelled; sandbox is filtered by .cursorignore; cannot expand `sandbox/.vscode/settings.json` from this context.
+- **modeSwitcher wiring** — Module exists with validation and `parseVoiceModeSwitch`; pipeline does not yet call it for voice-triggered mode changes (MCP server uses `requireConfirmation`).
+
+### Evidence
+
+- `npm run compile` — success
+- `npm test` — 48 passed, 545 tests

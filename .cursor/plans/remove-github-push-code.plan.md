@@ -114,6 +114,31 @@ The `close-issues` job (lines 16–72) stays — it updates project board status
 
 ---
 
+## Reconciliation
+
+**What was verified**
+
+- All target files referenced by this plan do **not exist** in the cursor-drive repo:
+  - `scripts/plan_push_github.sh` — absent
+  - `.cursor/commands/plan-push-github.md` — absent
+  - `docs/status/plan-issue-mapping.md` — absent
+  - `.github/workflows/pm-merge.yml` — absent (workflows present: ci.yml, cloudflare-token-test.yml, develop-to-main.yml, pr-checks.yml, reinstall.yml)
+  - `docs/shadow/scripts/git_commit_tool.py` — absent
+  - `implement.plan.md`, `orchestrate.md`, `github_planning_orchestration` plan — absent
+  - `pm-system.md`, ADR 0021, `reconciliation-plans-issues-*.md` — absent
+- `plan-graph.yaml` has no `implement` plan or `issue_ref` completion criterion
+- No edits were required; plan scope targets artifacts from a different repo (e.g. roler-road-map)
+
+**Residual risks**
+
+- None. Cursor-drive has no GitHub push automation to remove.
+
+**Evidence**
+
+- `Glob` and `Grep` searches across repo; `Get-ChildItem .github/workflows` confirmed workflow inventory.
+
+---
+
 ## Verification
 
 - `scripts/plan_push_github.sh` and `.cursor/commands/plan-push-github.md` no longer exist

@@ -1,0 +1,11 @@
+{
+  "name": "plan-governance",
+  "displayName": "Plan Governance",
+  "version": "0.1.0",
+  "description": "Plan lifecycle, registry sync, dependency audit, and orchestration. Reusable across projects. No Drive extension dependency.",
+  "keywords": ["plan", "governance", "sync", "registry", "dependency-audit"],
+  "hooks": "hooks/hooks.json",
+  "skills": "skills/",
+  "agents": "agents/",
+  "rules": "rules/"
+}

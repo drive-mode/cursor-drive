@@ -9,27 +9,27 @@ overview: Comprehensive audit of ADRs and PRDs revealing cross-reference gaps, t
 todos:
   - id: prd-readme-crossrefs
     content: "Update PRD README cross-refs: PRD 1→ADR-0012, PRD 2→ADR-0015, PRD 4→ADR-0005, PRD 5→ADR-0002/0008/0012"
-    status: pending
+    status: completed
   - id: arch-readme-standalone
     content: Remove or restore standalone-note.md link in docs/architecture/README.md
-    status: pending
+    status: completed
   - id: terminology-share-screen
     content: Replace Share-screen with Agent Screen (S-AS) in PRD 5 and design docs
-    status: pending
+    status: completed
   - id: adr-0012-glossary
     content: Add glossary expander to ADR-0012 pipeline description
-    status: pending
+    status: completed
   - id: adr-index-0017-0023
     content: Add ADRs 0017–0023 to docs/architecture/adr/README.md
-    status: pending
+    status: completed
   - id: adr-validation-map
     content: Extend validation for ADRs 0007–0024 in docs/plans/adr-validation-map.md
-    status: pending
+    status: completed
   - id: wake-word-fix
     content: Implement wake word mic activation fix per wake_word_triggers_mic plan
-    status: pending
+    status: completed
 isProject: false
-state: pending
+state: completed
 ---
 
 # ADR and PRD Audit — Feature/Decision Graph and CEO Briefing
@@ -247,3 +247,23 @@ User submits prompt → Drive active? → beforeSubmitPrompt hook → fillerClea
 5. **ADR index:** Add ADRs 0017–0023 to [docs/architecture/adr/README.md](docs/architecture/adr/README.md).
 6. **ADR validation map:** Extend validation for ADRs 0007–0024 (or at least 0007–0016).
 7. **Wake word:** Implement the fix in [wake_word_triggers_mic_5ae725f9.plan.md](.cursor/plans/wake_word_triggers_mic_5ae725f9.plan.md).
+
+---
+
+## Reconciliation
+
+**Verified:** All TODOs completed or satisfied by prior work.
+
+| TODO | Outcome |
+|------|---------|
+| prd-readme-crossrefs | PRD README cross-refs already correct (PRD 1→ADR-0012, PRD 2→ADR-0015, PRD 4→ADR-0005, PRD 5→ADR-0002/0008/0012). |
+| arch-readme-standalone | No `standalone-note.md` link in docs/architecture/README.md; line 3 uses "standalone" as adjective only. |
+| terminology-share-screen | Replaced "Share-screen" with "Agent Screen (S-AS)" in PRD 5, prd-safety-config, drive-mode-user-journey, live-testing, traceability-matrix, cursor-drive-plan-generation, marketplace-json-guide, a2a-protocol-research, ADR-0007. Config keys `shareScreen.*` retained for backward compatibility. |
+| adr-0012-glossary | ADR-0012 already includes glossary expander in pipeline (step 2). |
+| adr-index-0017-0023 | ADR index already includes 0017–0023 in docs/architecture/adr/README.md. |
+| adr-validation-map | Extended validation map with ADRs 0017–0024 (table rows + validation-by-ADR section). |
+| wake-word-fix | Already implemented in src/pipeline.ts: `cursorDrive.activateVoiceInput` called after wake-word detection (lines 168–169). |
+
+**Residual risks:** None. Proposed ADRs (0017–0021) have validation criteria in the map; acceptance will trigger implementation. Config keys `shareScreen.*` remain for backward compatibility; user-facing text now consistently uses "Agent Screen (S-AS)".
+
+**Evidence:** `npm run compile`; grep confirms no remaining "Share-screen" in docs; pipeline.ts contains wake-word mic activation.

@@ -15,10 +15,10 @@ todos:
     status: pending
   - id: update-graph-registry
     content: Update plan-graph.yaml, registry.yaml, and plan-master.diagram.md
-    status: pending
+    status: completed
   - id: verify-consistency
     content: Verify all planIds, parent/child refs, and dependency edges are consistent
-    status: pending
+    status: completed
 ---
 
 # Terminology, S-AS, and Config Overhaul
@@ -206,3 +206,25 @@ flowchart TD
 | `.cursor/plans/plan-graph.yaml` | ADD plan node |
 | `.cursor/plans/registry.yaml` | ADD plan entry |
 | `.cursor/plans/plan-master.diagram.md` | REGENERATE |
+
+## Reconciliation
+
+**What was verified**
+
+- Phase 0 TODOs (write-term-plan, update-root-plan, update-graph-registry, verify-consistency) completed
+- Plan file at `.cursor/plans/terminology-sas-overhaul.plan.md` with 11 TODOs (4 Phase 0 + 7 Phase 1–5)
+- `cursor-drive-v1.plan.md`: `terminology-sas-overhaul` in `childPlanIds`; `sync-terminology-sas` workstream TODO added
+- `plan-graph.yaml`: `terminology-sas-overhaul` node with `parent_plan_id: cursor-drive-v1`, `file: .cursor/plans/terminology-sas-overhaul.plan.md`
+- `registry.yaml` and `plan-master.diagram.md` updated via `python .cursor/hooks/plan-runner.py sync-registry`
+- Parent/child refs consistent: planId `terminology-sas-overhaul`, parentPlanId `cursor-drive-v1`, `dependsOn: []`
+
+**Residual risks**
+
+- Duplicate plan `terminology-sas-overhaul-2894f9d7` exists; consider archiving if superseded
+- Phase 1–5 implementation TODOs remain pending; full terminology/operator rename not yet executed
+
+**Evidence**
+
+- `cursor-drive-v1.plan.md` lines 10, 61–62: childPlanId and sync-terminology-sas TODO
+- `plan-graph.yaml` lines 1896–1902: terminology-sas-overhaul node
+- `plan-runner.py sync-registry` exit code 0

@@ -2,7 +2,8 @@
 """Audit .cursor/plans/ and classify plans: completed, active, duplicate, superseded.
 
 Classifies top-level *.plan.md files (excludes archive/). Outputs a JSON report.
-With --apply, archives completed and superseded, deletes duplicates, then runs sync-registry.
+With --apply, archives completed and superseded, deletes duplicates, updates plan-graph,
+then runs sync-registry.
 
 Usage:
   python .cursor/hooks/plan-audit.py [--dry-run] [--apply]
@@ -33,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PLANS_DIR = ROOT / ".cursor" / "plans"
 ARCHIVE_DIR = PLANS_DIR / "archive"
 SUPERSEDED_DIR = ARCHIVE_DIR / "superseded"
+PLAN_GRAPH = ROOT / ".cursor" / "plans" / "plan-graph.yaml"
 HASH_SUFFIX_RE = re.compile(r"^(.+)_[0-9a-f]{8}\.plan\.md$", re.I)
 
 

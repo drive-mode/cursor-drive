@@ -43,7 +43,7 @@ plans:
   file: .cursor/plans/readme-redesign.plan.md
   title: README Redesign
   plan_type: task
-  state: pending
+  state: completed
   priority: medium
   tags:
   - docs
@@ -1931,6 +1931,62 @@ plans:
   plan_type: task
   state: pending
   depends_on: []
+- id: directory_exploration_orchestration_3fb21f59
+  file: .cursor/plans/directory_exploration_orchestration_3fb21f59.plan.md
+  title: Directory Exploration Orchestration
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: optimal_execution_todos_8c7a3c0d
+  file: .cursor/plans/optimal_execution_todos_8c7a3c0d.plan.md
+  title: Optimal Execution Todos
+  plan_type: task
+  state: pending
+  depends_on: []
+- id: security-review-backlog
+  file: .cursor/plans/security-review-backlog.plan.md
+  title: security-review-backlog
+  plan_type: task
+  state: pending
+  depends_on:
+  - security-review-file-audit
+  parent_plan_id: security-review
+- id: security-review-docs-cleanup
+  file: .cursor/plans/security-review-docs-cleanup.plan.md
+  title: security-review-docs-cleanup
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: security-review
+- id: security-review-file-audit
+  file: .cursor/plans/security-review-file-audit.plan.md
+  title: security-review-file-audit
+  plan_type: task
+  state: pending
+  depends_on:
+  - security-review-ignore-files
+  parent_plan_id: security-review
+- id: security-review-ignore-files
+  file: .cursor/plans/security-review-ignore-files.plan.md
+  title: security-review-ignore-files
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: security-review
+- id: security-review-token-fix
+  file: .cursor/plans/security-review-token-fix.plan.md
+  title: security-review-token-fix
+  plan_type: task
+  state: pending
+  depends_on: []
+  parent_plan_id: security-review
+- id: security-review
+  file: .cursor/plans/security-review.plan.md
+  title: security-review
+  plan_type: project
+  state: pending
+  depends_on: []
+  parent_plan_id: cursor-drive-v1
 workflows:
   on_plan_start:
   - validate_dependencies_complete: true

@@ -9,16 +9,16 @@ overview: Parallel plan orchestration, subagent plan execution, and hook/subagen
 todos:
   - id: oh-01
     content: "Draft the new `orchestrate-parallel-work` skill: phases, batching, recursion guardrails, and concrete prompt/return templates (derived from `docs/plans/pipeline-parallel-review-plan.md`)."
-    status: pending
+    status: completed
   - id: oh-02
     content: Add `.cursor/commands/orchestrate.md` that loads the new skill and drives the opt-in workflow; update `.cursor/commands/README.md` to advertise it.
-    status: pending
+    status: completed
   - id: oh-03
     content: Optionally update `.cursor/agents/coordinator.md` and `.cursor/plans/plan-orchestration-spec.md` to explicitly support the meta-plan + parallel subagent orchestration pattern without changing single-active-plan governance.
-    status: pending
+    status: completed
   - id: oh-04
     content: "Run a smoke verification: ensure new command/skill are discoverable and run `python .cursor/hooks/plan-runner.py sessionStart` to confirm no governance regressions."
-    status: pending
+    status: in_progress
   - id: oh-05
     content: Create orchestrator command/skill (.cursor/commands/execute-plans.md or extend execute-plan.md)
     status: pending
