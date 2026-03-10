@@ -1,9 +1,4 @@
 ---
-planId: pr-merge-workflow-primitives
-planType: task
-parentPlanId: cursor-drive-v1
-childPlanIds: []
-dependsOn: []
 name: PR Merge Workflow Primitives
 overview: Set up rules, commands, skills, and subagents to strategically merge open PRs into develop one at a time, with file-level merge plans for conflict handling. Includes both workflow-phase subagents and a coordinator that manages the Cursor primitives.
 todos:
@@ -22,6 +17,7 @@ todos:
   - id: skill-usage
     content: Add pr-merge-strategy to skill-usage.mdc Context Signal Matching table
     status: completed
+isProject: false
 ---
 
 # PR Merge Workflow Primitives Plan
@@ -50,9 +46,11 @@ flowchart TD
     ME --> Git
 ```
 
+
+
 ## 1. Rule: PR Merge Workflow
 
-**File:** [`.cursor/rules/pr-merge-workflow.mdc`](.cursor/rules/pr-merge-workflow.mdc)
+**File:** `[.cursor/rules/pr-merge-workflow.mdc](.cursor/rules/pr-merge-workflow.mdc)`
 
 - **Globs:** None (loaded via skill/command context)
 - **Purpose:** Standards when running PR merge workflow
@@ -66,7 +64,7 @@ flowchart TD
 
 ## 2. Command: /merge-prs-to-develop
 
-**File:** [`.cursor/commands/merge-prs-to-develop.md`](.cursor/commands/merge-prs-to-develop.md)
+**File:** `[.cursor/commands/merge-prs-to-develop.md](.cursor/commands/merge-prs-to-develop.md)`
 
 - **Purpose:** Orchestrate the full PR merge workflow
 - **Steps:**
@@ -78,9 +76,10 @@ flowchart TD
 
 ## 3. Skill: pr-merge-strategy
 
-**Location:** [`.cursor/skills/pr-merge-strategy/`](.cursor/skills/pr-merge-strategy/)
+**Location:** `[.cursor/skills/pr-merge-strategy/](.cursor/skills/pr-merge-strategy/)`
 
 **SKILL.md:**
+
 - Load when: PR merge, merge conflicts, strategic merge, "PRs into develop"
 - Core workflow:
   1. List open PRs targeting develop (GitHub MCP `list_pull_requests`)
@@ -90,6 +89,7 @@ flowchart TD
   5. Produce merge plan with per-file conflict notes
 
 **Reference files:**
+
 - `reference/merge-plan-format.md` - Schema for merge plan doc
 - `reference/conflict-patterns.md` - Common conflict patterns and resolution strategies
 
@@ -115,16 +115,18 @@ flowchart TD
 
 ### 4a. Workflow-Phase Subagents
 
-| Agent | File | Responsibility |
-|-------|------|----------------|
-| **PR Discovery Agent** | [`.cursor/agents/pr-discovery-agent.md`](.cursor/agents/pr-discovery-agent.md) | List open PRs targeting develop via GitHub MCP; fetch PR metadata, files changed, status checks |
-| **Conflict Analyst Agent** | [`.cursor/agents/conflict-analyst-agent.md`](.cursor/agents/conflict-analyst-agent.md) | Compare PR branch vs develop; identify overlapping files; predict conflict hotspots; output file-level risk matrix |
-| **Merge Planner Agent** | [`.cursor/agents/merge-planner-agent.md`](.cursor/agents/merge-planner-agent.md) | Order PRs for merge; produce merge plan doc with per-file details; suggest resolution strategies |
-| **Merge Executor Agent** | [`.cursor/agents/merge-executor-agent.md`](.cursor/agents/merge-executor-agent.md) | Execute merge (Git MCP or `gh pr merge`); handle conflicts with documented strategy; verify post-merge |
+
+| Agent                      | File                                                                                   | Responsibility                                                                                                     |
+| -------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **PR Discovery Agent**     | `[.cursor/agents/pr-discovery-agent.md](.cursor/agents/pr-discovery-agent.md)`         | List open PRs targeting develop via GitHub MCP; fetch PR metadata, files changed, status checks                    |
+| **Conflict Analyst Agent** | `[.cursor/agents/conflict-analyst-agent.md](.cursor/agents/conflict-analyst-agent.md)` | Compare PR branch vs develop; identify overlapping files; predict conflict hotspots; output file-level risk matrix |
+| **Merge Planner Agent**    | `[.cursor/agents/merge-planner-agent.md](.cursor/agents/merge-planner-agent.md)`       | Order PRs for merge; produce merge plan doc with per-file details; suggest resolution strategies                   |
+| **Merge Executor Agent**   | `[.cursor/agents/merge-executor-agent.md](.cursor/agents/merge-executor-agent.md)`     | Execute merge (Git MCP or `gh pr merge`); handle conflicts with documented strategy; verify post-merge             |
+
 
 ### 4b. Primitives Manager (Coordinator Subagent)
 
-**File:** [`.cursor/agents/primitives-manager-agent.md`](.cursor/agents/primitives-manager-agent.md)
+**File:** `[.cursor/agents/primitives-manager-agent.md](.cursor/agents/primitives-manager-agent.md)`
 
 - **Purpose:** Manage rules, commands, skills, and agents for the PR merge workflow
 - **Responsibilities:**
@@ -136,7 +138,7 @@ flowchart TD
 
 ### 4c. PR Merge Coordinator
 
-**File:** [`.cursor/agents/pr-merge-coordinator.md`](.cursor/agents/pr-merge-coordinator.md)
+**File:** `[.cursor/agents/pr-merge-coordinator.md](.cursor/agents/pr-merge-coordinator.md)`
 
 - **Purpose:** Orchestrate the full workflow; delegate to workflow-phase agents and Primitives Manager
 - **Flow:**
@@ -175,26 +177,30 @@ flowchart TD
 
 Add to **Context Signal Matching** table:
 
-| Signal | Skill to Load |
-|--------|---------------|
+
+| Signal                                                                | Skill to Load       |
+| --------------------------------------------------------------------- | ------------------- |
 | "merge PRs", "PRs into develop", "strategic merge", "merge conflicts" | `pr-merge-strategy` |
+
 
 ## 6. File Summary
 
-| Type | Path |
-|------|------|
-| Rule | `.cursor/rules/pr-merge-workflow.mdc` |
-| Command | `.cursor/commands/merge-prs-to-develop.md` |
-| Skill | `.cursor/skills/pr-merge-strategy/SKILL.md` |
-| Skill ref | `.cursor/skills/pr-merge-strategy/reference/merge-plan-format.md` |
-| Skill ref | `.cursor/skills/pr-merge-strategy/reference/conflict-patterns.md` |
-| Agent | `.cursor/agents/pr-merge-coordinator.md` |
-| Agent | `.cursor/agents/pr-discovery-agent.md` |
-| Agent | `.cursor/agents/conflict-analyst-agent.md` |
-| Agent | `.cursor/agents/merge-planner-agent.md` |
-| Agent | `.cursor/agents/merge-executor-agent.md` |
-| Agent | `.cursor/agents/primitives-manager-agent.md` |
-| Rule update | `.cursor/rules/skill-usage.mdc` (add pr-merge-strategy trigger) |
+
+| Type        | Path                                                              |
+| ----------- | ----------------------------------------------------------------- |
+| Rule        | `.cursor/rules/pr-merge-workflow.mdc`                             |
+| Command     | `.cursor/commands/merge-prs-to-develop.md`                        |
+| Skill       | `.cursor/skills/pr-merge-strategy/SKILL.md`                       |
+| Skill ref   | `.cursor/skills/pr-merge-strategy/reference/merge-plan-format.md` |
+| Skill ref   | `.cursor/skills/pr-merge-strategy/reference/conflict-patterns.md` |
+| Agent       | `.cursor/agents/pr-merge-coordinator.md`                          |
+| Agent       | `.cursor/agents/pr-discovery-agent.md`                            |
+| Agent       | `.cursor/agents/conflict-analyst-agent.md`                        |
+| Agent       | `.cursor/agents/merge-planner-agent.md`                           |
+| Agent       | `.cursor/agents/merge-executor-agent.md`                          |
+| Agent       | `.cursor/agents/primitives-manager-agent.md`                      |
+| Rule update | `.cursor/rules/skill-usage.mdc` (add pr-merge-strategy trigger)   |
+
 
 ## 7. Additional Suggestions
 
