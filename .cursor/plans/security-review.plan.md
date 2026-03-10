@@ -1,15 +1,6 @@
 ---
-planId: security-review
-planType: project
-parentPlanId: cursor-drive-v1
-childPlanIds:
-  - security-review-token-fix
-  - security-review-ignore-files
-  - security-review-file-audit
-  - security-review-docs-cleanup
-  - security-review-backlog
-dependsOn: []
-overview: "Orchestrates security review across token fix, ignore files, file audit, docs cleanup, and vulnerability backlog. Integrates with cursor-drive-v1."
+name: ""
+overview: Orchestrates security review across token fix, ignore files, file audit, docs cleanup, and vulnerability backlog. Integrates with cursor-drive-v1.
 todos:
   - id: sync-token-fix
     content: Complete security-review-token-fix
@@ -26,6 +17,7 @@ todos:
   - id: sync-backlog
     content: Complete security-review-backlog (after file-audit)
     status: pending
+isProject: false
 ---
 
 # Security Review — Project Plan
@@ -42,11 +34,13 @@ Five child plans orchestrate the security review:
 
 ## Execution Order (by dependency)
 
-| Wave | Plans |
-|------|-------|
-| 1 | security-review-token-fix, security-review-ignore-files, security-review-docs-cleanup |
-| 2 | security-review-file-audit (after ignore-files) |
-| 3 | security-review-backlog (after file-audit) |
+
+| Wave | Plans                                                                                 |
+| ---- | ------------------------------------------------------------------------------------- |
+| 1    | security-review-token-fix, security-review-ignore-files, security-review-docs-cleanup |
+| 2    | security-review-file-audit (after ignore-files)                                       |
+| 3    | security-review-backlog (after file-audit)                                            |
+
 
 ## Completion Criteria
 

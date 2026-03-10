@@ -1987,6 +1987,12 @@ plans:
   state: pending
   depends_on: []
   parent_plan_id: cursor-drive-v1
+- id: basedpyright_fixes_plan_968624ee
+  file: .cursor/plans/basedpyright_fixes_plan_968624ee.plan.md
+  title: Basedpyright Fixes Plan
+  plan_type: task
+  state: pending
+  depends_on: []
 workflows:
   on_plan_start:
   - validate_dependencies_complete: true
