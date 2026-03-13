@@ -37,16 +37,18 @@ Thumbs.db
 .cache/
 *.orig
 
-# Secrets / privacy
+# Secrets / privacy — never commit; add new secret-bearing paths here
 .env
 .env.local
 .env.*.local
+.env.*
 secrets.json
 secrets.*.json
 private.*
 identity.*
 tokens.*
 auth.*
+*.pem
 /.logs/
 
 # Local / misc (sync scripts in .local/ — never tracked)

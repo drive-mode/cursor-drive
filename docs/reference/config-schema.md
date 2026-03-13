@@ -1,6 +1,6 @@
 # Configuration Schema Reference
 
-All `cursorDrive.*` settings. Source of truth: `src/config.ts` and `package.json`.
+All `cursorDrive.*` settings. Source: `package.json` contributes.configuration. A future `src/config.ts` will provide typed `readConfig()`.
 
 ---
 
@@ -106,7 +106,7 @@ Default warn patterns: `revert`, `undo all`, `hard reset`, `reset --hard`, `forc
 |---|---|---|---|
 | `cursorDrive.agentScreen.enabled` | boolean | `true` | Enable the Agent Screen (S-AS) panel |
 | `cursorDrive.agentScreen.autoOpen` | boolean | `false` | Auto-open Agent Screen when Drive activates |
-| `cursorDrive.agentScreen.displayMode` | `"tab" \| "panel" \| "bottomLog"` | `"tab"` | How the Agent Screen is displayed (webview vs Output Channel) |
+| `cursorDrive.agentScreen.displayMode` | `"tab" \| "panel" \| "bottomLog"` | `"tab"` | How the Agent Screen is displayed. `tab`: webview beside editor. `panel`: same as tab (legacy). `bottomLog`: Output Channel, text-only — recommended for terminal-first/CLI users. |
 | `cursorDrive.agentScreen.clickBehavior` | `"openInEditor" \| "openInNewWindow"` | `"openInEditor"` | Behavior when clicking file paths in the Agent Screen |
 | `cursorDrive.agentScreen.showPlanProgress` | boolean | `true` | Show plan progress overlay (active plan, TODO counts) |
 | `cursorDrive.statusBar.showAgentName` | boolean | `true` | Show active operator name in status bar |
@@ -118,7 +118,7 @@ Default warn patterns: `revert`, `undo all`, `hard reset`, `reset --hard`, `forc
 
 ## TypeScript types
 
-Defined in `src/config.ts`:
+`src/config.ts` exports `readConfig(): DriveConfig` for a validated subset (mcp.port, agentScreen.displayMode, defaultSubMode). Other types remain inline until full migration.
 
 ```typescript
 type SubMode = "plan" | "agent" | "ask" | "direct"
@@ -130,4 +130,4 @@ type PermissionPreset = "readonly" | "standard" | "full"
 type TtsBackend = "webSpeech" | "piper" | "elevenLabs"
 ```
 
-Use `readConfig(): DriveConfig` to read the validated config. Use `onConfigChange(handler)` to subscribe to changes.
+Modules may still use `vscode.workspace.getConfiguration("cursorDrive")` directly until full migration.

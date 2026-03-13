@@ -6,7 +6,7 @@ Setup guide for new contributors. For full smoke testing, see [live-testing.md](
 
 ## Prerequisites
 
-- Node.js ≥ 18
+- Node.js ≥ 20
 - Python 3.x in PATH (`pip install pyyaml`)
 - Cursor IDE installed
 

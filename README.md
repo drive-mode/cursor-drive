@@ -156,7 +156,7 @@ See [prd-multi-agent](docs/prd/prd-multi-agent.md) for the full spec.
 
 ## Status
 
-Core pipeline working: filler cleaner, router, model selector, status bar, TTS (say.js), operator registry, Share-AgentScreen (S-AS) webview, MCP server with tools. Prompt optimizer pending (tracked in `.cursor/plans/archive/mvp-gaps.plan.md`). Several modules have unit tests.
+Tests pass. Config schema added. Core pipeline working: filler cleaner, router, model selector, status bar, TTS (say.js), operator registry, Share-AgentScreen (S-AS) webview, MCP server with tools.
 
 ---
 

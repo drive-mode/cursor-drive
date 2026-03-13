@@ -113,7 +113,7 @@ export class AgentScreenPanel {
         : vscode.ViewColumn.Two;
       const panel = vscode.window.createWebviewPanel(
         AgentScreenPanel.viewType,
-        "Drive â€” Agent Screen",
+        "Drive — Agent Screen",
         column,
         { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [extensionUri] }
       );
@@ -197,7 +197,7 @@ export class AgentScreenPanel {
   switchAgent(newOperatorName: string): void {
     this.postEvent({ type: "agentSwitch", operatorName: newOperatorName });
     if (this.panel) {
-      this.panel.title = `${newOperatorName} â€” Agent Screen`;
+      this.panel.title = `${newOperatorName} — Agent Screen`;
     }
   }
 
@@ -229,7 +229,7 @@ export class AgentScreenPanel {
   postProposalUpdate(proposalId: string, status: string, operatorName?: string): void {
     this.postEvent({
       type: "proposalUpdate",
-      text: `Proposal ${proposalId} â†’ ${status}${operatorName ? ` (${operatorName})` : ""}`,
+      text: `Proposal ${proposalId} → ${status}${operatorName ? ` (${operatorName})` : ""}`,
       timestamp: Date.now(),
     });
   }
@@ -312,9 +312,9 @@ export class AgentScreenPanel {
     const planProgressSection = showPlanProgress
       ? `
   <section class="plan-progress" id="plan-progress" data-testid="plan-progress" style="display:none" aria-label="Plan progress">
-    <button class="plan-progress-toggle" id="plan-progress-toggle" title="Expand/collapse" aria-label="Toggle plan progress">â–¸</button>
+    <button class="plan-progress-toggle" id="plan-progress-toggle" title="Expand/collapse" aria-label="Toggle plan progress">▶</button>
     <div class="plan-progress-content">
-      <span class="plan-name" id="plan-name">â€”</span>
+      <span class="plan-name" id="plan-name">—</span>
       <div class="plan-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="plan-progress-fill" id="plan-progress-fill"></div></div>
       <span class="plan-counts" id="plan-counts">0/0</span>
       <div class="plan-current-todo" id="plan-current-todo"></div>

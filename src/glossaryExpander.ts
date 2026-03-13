@@ -49,11 +49,21 @@ export function loadGlossary(): GlossaryEntry[] {
   return glossaryCache;
 }
 
+function ensureRegex(entry: GlossaryEntry): GlossaryEntry {
+  if (entry.regex) { return entry; }
+  const trigger = entry.trigger.trim();
+  return {
+    ...entry,
+    regex: trigger ? compileTriggerRegex(trigger) : undefined,
+  };
+}
+
 export function expandGlossary(
   text: string,
   glossary?: GlossaryEntry[]
 ): GlossaryExpandResult {
-  const entries = glossary ?? loadGlossary();
+  const raw = glossary ?? loadGlossary();
+  const entries = raw.map(ensureRegex);
   const original = text;
   const matched: string[] = [];
 

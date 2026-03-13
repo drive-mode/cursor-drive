@@ -11,6 +11,7 @@ import {
 
 jest.mock("vscode", () => ({
   workspace: {
+    onDidChangeConfiguration: jest.fn(() => ({ dispose: jest.fn() })),
     getConfiguration: jest.fn(() => ({
       get: jest.fn((key: string, def: unknown) => {
         const cfg: Record<string, unknown> = {

@@ -117,6 +117,16 @@ npm run compile   # TypeScript compilation — zero errors
 npm test          # All Jest tests pass
 ```
 
+### Before you push — no secrets
+
+**Never commit or push:**
+
+- `.env`, `.env.local`, `.env.*.local`
+- `secrets.json`, `secrets.*.json`, `private.*`, `identity.*`, `tokens.*`, `auth.*`
+- Any file containing real API keys, tokens, or passwords (placeholders like `your-token` or test mocks like `test-key` are fine)
+
+These paths are in `.gitignore`; if you add new secret-bearing paths, add them there too. Never log secrets (see `.cursor/rules/policy-pack.mdc`). Before pushing, run `git diff --cached` and spot-check that no real credentials are staged.
+
 ### Rules
 
 - Every new `.ts` file in `src/` must have a corresponding `*.test.ts` in `tests/`.

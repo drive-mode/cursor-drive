@@ -303,8 +303,8 @@
           ],
           "enumDescriptions": [
             "Webview panel beside editor",
-            "Panel in bottom area",
-            "Minimal Output Channel log"
+            "Same as tab (legacy)",
+            "Minimal Output Channel log. Recommended for terminal-first/CLI users (text-only)."
           ],
           "default": "tab",
           "description": "How the Agent Screen is displayed."
@@ -511,6 +511,78 @@
           "minimum": 1,
           "maximum": 365,
           "description": "Days to keep transcript logs before auto-deletion. Only applies when transcriptPersistence is enabled."
+        },
+        "cursorDrive.approvalGates.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable approval gates for high-impact actions."
+        },
+        "cursorDrive.approvalGates.blockPatterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Patterns that block actions when matched."
+        },
+        "cursorDrive.approvalGates.warnPatterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Patterns that trigger a warning when matched."
+        },
+        "cursorDrive.agents.permissions.default": {
+          "type": "string",
+          "enum": ["readonly", "standard", "full"],
+          "default": "standard",
+          "description": "Default permission preset for agents."
+        },
+        "cursorDrive.agents.permissions.overrides": {
+          "type": "object",
+          "default": {},
+          "description": "Per-agent permission overrides (restrict only, never grant beyond preset)."
+        },
+        "cursorDrive.sanitizer.maxLength": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 100,
+          "maximum": 50000,
+          "description": "Maximum length for sanitized content."
+        },
+        "cursorDrive.glossary": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "trigger": { "type": "string" },
+              "expansion": { "type": "string" }
+            }
+          },
+          "default": [],
+          "description": "Trigger-expansion pairs for glossary expansion."
+        },
+        "cursorDrive.agent.sessionMemory.maxEntries": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum session memory entries."
+        },
+        "cursorDrive.agent.sessionMemory.tokenBudget": {
+          "type": "number",
+          "default": 500,
+          "description": "Token budget for session memory."
+        },
+        "cursorDrive.agent.proactiveSteering.idleSeconds": {
+          "type": "number",
+          "default": 30,
+          "description": "Idle seconds before proactive steering suggestions."
+        },
+        "cursorDrive.agents.commsAgent.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the communications agent."
+        },
+        "cursorDrive.cloudAgents.apiBaseUrl": {
+          "type": "string",
+          "default": "https://api.cursor.com",
+          "description": "Base URL for Cloud Agents API."
         }
       }
     }
