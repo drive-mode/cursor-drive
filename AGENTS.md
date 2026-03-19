@@ -39,3 +39,16 @@ Four Cursor hooks in `.cursor/hooks/` are Python 3 scripts. They read JSON from 
 - Tests mock `vscode` via `tests/__mocks__/vscode.ts`; never import real vscode in tests.
 - `npm run watch` provides incremental recompilation during development.
 - VSIX packaging runs `npm run compile` automatically via the `vscode:prepublish` script.
+
+### Sync with claude-drive
+
+Shared types and logic are kept in sync with the sibling CLI port [`claude-drive`](https://github.com/hhalperin/claude-drive). When changing business logic here, mirror these files manually:
+
+- `src/syncTypes.ts` — copy to `claude-drive/src/syncTypes.ts` with minor import fixes
+- `src/operatorRegistry.ts`, `src/router.ts` — keep in sync
+- `src/tts.ts`, `src/edgeTts.ts`, `src/piper.ts` — keep in sync
+
+## Maintainers
+
+- [@hhalperin](https://github.com/hhalperin) — lead
+- [@ai-secretagent](https://github.com/ai-secretagent) — co-maintainer
