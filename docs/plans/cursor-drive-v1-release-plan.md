@@ -2,6 +2,16 @@
 
 Collaborative plan from parallel subagents: release readiness, S-AS UX (terminal-first, editor focus, chat/reasoning), and ACP/MCP integration.
 
+## Portfolio Context
+
+cursor-drive v1 is the top Now priority in the portfolio. Shipping it unblocks:
+1. claude-drive sync of v1 fixes (ai-secretagent)
+2. roler.ai ACP harness — which uses claude-agent-sdk patterns proven in claude-drive
+
+**Dependency chain:** cursor-drive v1 ships → claude-drive syncs v1 fixes → roler.ai ACP harness begins.
+
+See [drive-mode-portfolio-strategy.md](drive-mode-portfolio-strategy.md) for the full rationale.
+
 **User vision:** Agent Screen = terminal; editor shows edits (one file at a time when parallel); chat = line of thinking; full Cursor AI IDE with Drive features; leverage ACP, MCP apps, possibly UI integration.
 
 **Related docs:**
