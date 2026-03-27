@@ -31,7 +31,7 @@ CI pins Node 20 (see `.github/workflows/ci.yml`). Use `nvm use 20` if a differen
 
 ### Python hooks
 
-Four Cursor hooks in `.cursor/hooks/` are Python 3 scripts. They read JSON from stdin and are invoked by the Cursor plugin system — not run standalone. They only need stdlib (no pip dependencies). Verify with `python3 -c "import py_compile; py_compile.compile('.cursor/hooks/<name>.py', doraise=True)"`.
+Seven Cursor hooks in `.cursor/hooks/` are Python 3 scripts. They read JSON from stdin and are invoked by the Cursor plugin system — not run standalone. They only need stdlib (no pip dependencies). Verify with `python3 -c "import py_compile; py_compile.compile('.cursor/hooks/<name>.py', doraise=True)"`.
 
 ### Gotchas
 
