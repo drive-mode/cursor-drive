@@ -1,6 +1,16 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import { appendFileSync, mkdirSync } from "fs";
 import { agentScreenTemplate } from "./agentScreenTemplate";
+
+function writeDebugLog(payload: { hypothesisId: string; location: string; message: string; data: Record<string, unknown>; timestamp: number }): void {
+  try {
+    mkdirSync("/opt/cursor/logs", { recursive: true });
+    appendFileSync("/opt/cursor/logs/debug.log", `${JSON.stringify(payload)}\n`);
+  } catch {
+    // Debug logging must never interfere with extension behavior.
+  }
+}
 
 export interface ActivityEvent {
   type: "activity" | "file" | "decision" | "agentSwitch" | "clear" | "planProgress" | "cliStream" | "cloudAgentStatus" | "cloudAgentArtifact" | "syncStatus" | "proposalUpdate" | "queueStatus";
@@ -41,6 +51,40 @@ export class AgentScreenPanel {
   private _pendingEvents: ActivityEvent[] = [];
   private static readonly MAX_QUEUE = 200;
 
+  private enqueueEvent(event: ActivityEvent): void {
+    this._pendingEvents.push(event);
+    if (this._pendingEvents.length > AgentScreenPanel.MAX_QUEUE) this._pendingEvents.shift();
+  }
+
+  private async postToWebview(message: Record<string, unknown>): Promise<boolean> {
+    if (!this.panel) { return false; }
+    try {
+      const delivered = await this.panel.webview.postMessage(message);
+      return delivered !== false;
+    } catch {
+      return false;
+    }
+  }
+
+  private async flushPendingEvents(trigger: "viewStateVisible" | "webviewReady"): Promise<void> {
+    if (!this.panel || !this.panel.visible || this._pendingEvents.length === 0) { return; }
+    // #region agent log
+    writeDebugLog({ hypothesisId: "C", location: "agentScreen.ts:flushPendingEvents", message: "Flushing queued events", data: { trigger, pendingCount: this._pendingEvents.length }, timestamp: Date.now() });
+    // #endregion
+    const pending = this._pendingEvents.splice(0, this._pendingEvents.length);
+    await this.postToWebview({ type: "replayStart", count: pending.length });
+    for (const ev of pending) {
+      const delivered = await this.postToWebview({ ...ev, timestamp: ev.timestamp ?? Date.now() });
+      if (!delivered) {
+        // #region agent log
+        writeDebugLog({ hypothesisId: "D", location: "agentScreen.ts:flushPendingEvents:undelivered", message: "Replay event undelivered; re-queueing", data: { type: ev.type, operatorName: ev.operatorName ?? null }, timestamp: Date.now() });
+        // #endregion
+        this.enqueueEvent(ev);
+      }
+    }
+    await this.postToWebview({ type: "replayEnd" });
+  }
+
   private constructor(
     extensionUri: vscode.Uri,
     panel?: vscode.WebviewPanel,
@@ -49,11 +93,24 @@ export class AgentScreenPanel {
     this.extensionUri = extensionUri;
     this.panel = panel;
     this.outputChannel = outputChannel;
+    // #region agent log
+    writeDebugLog({ hypothesisId: "B", location: "agentScreen.ts:constructor", message: "AgentScreenPanel constructed", data: { hasPanel: !!panel, hasOutputChannel: !!outputChannel }, timestamp: Date.now() });
+    // #endregion
 
     if (panel) {
       panel.webview.html = this.buildHtml(panel);
       panel.webview.onDidReceiveMessage((msg: { type: string; path?: string; text?: string; planPath?: string; level?: string; msg?: string; src?: string; line?: number; col?: number }) => {
+        if (msg.type === "webviewReady") {
+          // #region agent log
+          writeDebugLog({ hypothesisId: "D", location: "agentScreen.ts:onDidReceiveMessage", message: "Webview ready message received", data: {}, timestamp: Date.now() });
+          // #endregion
+          void this.flushPendingEvents("webviewReady");
+          return;
+        }
         if (msg.type === "__debug") {
+          // #region agent log
+          writeDebugLog({ hypothesisId: "E", location: "agentScreen.ts:onDidReceiveMessage", message: "Webview debug message", data: { level: msg.level ?? "error", msg: msg.msg ?? "" }, timestamp: Date.now() });
+          // #endregion
           const ch = this.outputChannel ?? vscode.window.createOutputChannel("Drive Agent Screen");
           const level = msg.level ?? "error";
           const loc = msg.src ? ` (${msg.src}:${msg.line ?? 0}:${msg.col ?? 0})` : "";
@@ -65,13 +122,11 @@ export class AgentScreenPanel {
         else if (msg.type === "openPlanTodo" && msg.planPath) { void this.openFile(msg.planPath); }
       });
       panel.onDidChangeViewState((e: { webviewPanel: vscode.WebviewPanel }) => {
+        // #region agent log
+        writeDebugLog({ hypothesisId: "C", location: "agentScreen.ts:onDidChangeViewState", message: "View state changed", data: { visible: e.webviewPanel.visible, pendingCount: this._pendingEvents.length }, timestamp: Date.now() });
+        // #endregion
         if (e.webviewPanel.visible && this._pendingEvents.length > 0) {
-          void this.panel!.webview.postMessage({ type: "replayStart", count: this._pendingEvents.length });
-          for (const ev of this._pendingEvents) {
-            void this.panel!.webview.postMessage({ ...ev, timestamp: ev.timestamp ?? Date.now() });
-          }
-          this._pendingEvents.length = 0;
-          void this.panel!.webview.postMessage({ type: "replayEnd" });
+          void this.flushPendingEvents("viewStateVisible");
         }
       });
       vscode.workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
@@ -133,6 +188,9 @@ export class AgentScreenPanel {
 
   postEvent(event: ActivityEvent): void {
     if (this.disposed) { return; }
+    // #region agent log
+    writeDebugLog({ hypothesisId: "B", location: "agentScreen.ts:postEvent", message: "postEvent called", data: { type: event.type, operatorName: event.operatorName ?? null, hasPanel: !!this.panel, hasOutputChannel: !!this.outputChannel, panelVisible: this.panel ? this.panel.visible : null, pendingCount: this._pendingEvents.length }, timestamp: Date.now() });
+    // #endregion
     if (this.outputChannel) {
       if (event.type === "activity" && event.text) {
         const prefix = event.operatorName ? `[${event.operatorName}] ` : "";
@@ -175,11 +233,24 @@ export class AgentScreenPanel {
     }
     if (!this.panel) return;
     if (!this.panel.visible) {
-      this._pendingEvents.push(event);
-      if (this._pendingEvents.length > AgentScreenPanel.MAX_QUEUE) this._pendingEvents.shift();
+      // #region agent log
+      writeDebugLog({ hypothesisId: "C", location: "agentScreen.ts:postEvent:queue", message: "Panel hidden; queueing event", data: { type: event.type, queueBefore: this._pendingEvents.length }, timestamp: Date.now() });
+      // #endregion
+      this.enqueueEvent(event);
       return;
     }
-    void this.panel.webview.postMessage({ ...event, timestamp: event.timestamp ?? Date.now() });
+    // #region agent log
+    writeDebugLog({ hypothesisId: "D", location: "agentScreen.ts:postEvent:postMessage", message: "Posting event to webview", data: { type: event.type, operatorName: event.operatorName ?? null }, timestamp: Date.now() });
+    // #endregion
+    void (async () => {
+      const delivered = await this.postToWebview({ ...event, timestamp: event.timestamp ?? Date.now() });
+      if (!delivered) {
+        // #region agent log
+        writeDebugLog({ hypothesisId: "D", location: "agentScreen.ts:postEvent:undelivered", message: "Event undelivered; queueing for replay", data: { type: event.type, operatorName: event.operatorName ?? null }, timestamp: Date.now() });
+        // #endregion
+        this.enqueueEvent(event);
+      }
+    })();
   }
 
   logActivity(operatorName: string, text: string): void {

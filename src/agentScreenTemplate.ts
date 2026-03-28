@@ -464,6 +464,8 @@ export const agentScreenTemplate = `<!DOCTYPE html>
     }
 
     // ── Utility ──────────────────────────────────────────────────────────────
+    vscodeApi.postMessage({ type: 'webviewReady' });
+
     function formatTime(ts) {
       const d = new Date(ts);
       return d.getHours().toString().padStart(2, '0') + ':' +

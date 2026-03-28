@@ -19,6 +19,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
+import { appendFileSync, mkdirSync } from "fs";
 import { createDriveModeManager, CursorMode } from "./driveMode.js";
 import { createDriveStatusBar } from "./statusBar.js";
 import { speak, stop as ttsStop, isEnabled as ttsEnabled } from "./tts.js";
@@ -49,6 +50,15 @@ import { getAvailableModels } from "./modelUtils.js";
 
 /** Set when we register the Drive MCP server via vscode.cursor.mcp.registerServer; cleared in deactivate. */
 let mcpRegisteredByExtensionApi = false;
+
+function writeDebugLog(payload: { hypothesisId: string; location: string; message: string; data: Record<string, unknown>; timestamp: number }): void {
+  try {
+    mkdirSync("/opt/cursor/logs", { recursive: true });
+    appendFileSync("/opt/cursor/logs/debug.log", `${JSON.stringify(payload)}\n`);
+  } catch {
+    // best-effort instrumentation
+  }
+}
 
 async function persistActiveMcpPort(
   port: number,
@@ -526,6 +536,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(
     vscode.commands.registerCommand("cursorDrive.debug.sendTestEvent", async () => {
+      // #region agent log
+      writeDebugLog({ hypothesisId: "A", location: "extension.ts:debug.sendTestEvent:entry", message: "Debug command invoked", data: { hasExistingPanel: !!AgentScreenPanel.getInstance(), driveActive: driveMgr.active }, timestamp: Date.now() });
+      // #endregion
       const panel = AgentScreenPanel.createOrShow(context.extensionUri);
       panel.setDriveActive(driveMgr.active);
 
@@ -579,8 +592,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         placeHolder: "Select scenario",
       });
       if (!picked) return;
+      // #region agent log
+      writeDebugLog({ hypothesisId: "A", location: "extension.ts:debug.sendTestEvent:picked", message: "Scenario selected", data: { label: picked.label, eventCount: picked.scenario.length }, timestamp: Date.now() });
+      // #endregion
 
       for (const ev of picked.scenario) {
+        // #region agent log
+        writeDebugLog({ hypothesisId: "B", location: "extension.ts:debug.sendTestEvent:dispatch", message: "Dispatching event to panel", data: { eventType: ev.type, operatorName: ev.operatorName ?? null }, timestamp: Date.now() });
+        // #endregion
         if (ev.type === "chime") {
           panel.playChime((ev.count as 1 | 2) ?? 1);
         } else {
