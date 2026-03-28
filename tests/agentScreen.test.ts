@@ -653,6 +653,23 @@ describe("AgentScreenPanel", () => {
     expect(html).toContain('id="sync-queue"');
   });
 
+  it("webview HTML includes polished visual styling rules", () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    const html = webviewPanel.webview.html as string;
+
+    expect(html).toContain("radial-gradient");
+    expect(html).toContain("backdrop-filter");
+    expect(html).toContain("transition: color 0.15s ease, background 0.15s ease, border-bottom-color 0.15s ease");
+  });
+
   it("webview HTML includes Artifacts tab and panel", () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {

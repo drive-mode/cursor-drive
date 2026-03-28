@@ -50,7 +50,10 @@ describe("activate", () => {
         "cursorDrive.tts": { enabled: false },
       };
       const key = section ?? "cursorDrive";
-      return { get: jest.fn((k: string, fallback: unknown) => config[key]?.[k] ?? fallback) };
+      return {
+        get: jest.fn((k: string, fallback: unknown) => config[key]?.[k] ?? fallback),
+        update: jest.fn().mockResolvedValue(undefined),
+      };
     });
   });
 

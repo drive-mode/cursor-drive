@@ -21,17 +21,32 @@
       color: var(--vscode-editor-foreground);
       background: var(--vscode-sideBar-background);
       margin: 0;
-      padding: 16px;
+      padding: 14px;
       min-height: 100%;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 10% -10%, color-mix(in srgb, var(--vscode-focusBorder) 22%, transparent), transparent 40%),
+        radial-gradient(circle at 90% -8%, color-mix(in srgb, var(--vscode-textLink-foreground) 16%, transparent), transparent 35%);
+      opacity: 0.75;
     }
 
     .card {
       background: var(--vscode-editor-background);
       border: 1px solid var(--vscode-widget-border, transparent);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 12px;
       margin-bottom: 12px;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      position: relative;
+      backdrop-filter: blur(4px);
     }
 
     .card.drive-on {
@@ -44,8 +59,14 @@
       font-weight: 600;
       color: var(--vscode-descriptionForeground);
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.7px;
       margin-bottom: 10px;
+    }
+
+    .status-subtext {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
     }
 
     .status-row {
@@ -165,18 +186,26 @@
     }
 
     .operator-item {
-      padding: 8px 0;
+      padding: 8px 10px;
       font-size: 12px;
-      border-bottom: 1px solid var(--vscode-widget-border);
+      border: 1px solid transparent;
+      border-radius: 8px;
       transition: background 0.1s ease;
+      margin-bottom: 6px;
     }
 
     .operator-item:hover {
       background: var(--vscode-list-hoverBackground, transparent);
+      border-color: var(--vscode-widget-border);
+    }
+
+    .operator-item.foreground {
+      border-color: color-mix(in srgb, var(--vscode-textLink-foreground) 60%, transparent);
+      background: color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent);
     }
 
     .operator-item:last-child {
-      border-bottom: none;
+      margin-bottom: 0;
     }
 
     .operator-name {
@@ -187,6 +216,23 @@
       font-size: 11px;
       color: var(--vscode-descriptionForeground);
       margin-top: 2px;
+    }
+
+    .operator-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .operator-status {
+      font-size: 10px;
+      border-radius: 999px;
+      padding: 2px 6px;
+      background: var(--vscode-badge-background);
+      color: var(--vscode-badge-foreground);
+      text-transform: capitalize;
+      letter-spacing: 0.3px;
     }
 
     .empty-ops {
@@ -201,15 +247,18 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--vscode-widget-border);
+      padding: 10px 12px;
+      border: 1px solid var(--vscode-widget-border);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--vscode-editor-background) 78%, transparent);
     }
 
     .panel-header h2 {
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       margin: 0;
       color: var(--vscode-editor-foreground);
+      letter-spacing: 0.25px;
     }
 
     .btn-icon {
@@ -301,7 +350,10 @@
     <div class="status-row">
       <div class="status-label">
         <span class="status-dot off" id="status-dot" aria-hidden="true"></span>
-        <span id="status-text">Off</span>
+        <div>
+          <div id="status-text">Off</div>
+          <div class="status-subtext">Voice-first multi-operator pair mode</div>
+        </div>
       </div>
       <button class="toggle-switch off" id="toggle-switch" data-testid="btn-toggle" role="switch" aria-checked="false"
         aria-label="Toggle Drive mode"></button>
@@ -355,6 +407,14 @@
       <label><input type="checkbox" id="input-autoMic" data-key="voice.autoActivateMicOnToggle" /> Auto mic when Drive
         on</label>
     </div>
+    <div class="settings-row">
+      <label for="input-mcpPort">Saved MCP port</label>
+      <input type="number" id="input-mcpPort" min="1024" max="65535" step="1" data-key="mcp.port" />
+      <span class="hint">Used for startup preference and written to workspace settings.</span>
+    </div>
+    <div class="settings-row">
+      <label><input type="checkbox" id="input-mcpEnableApps" data-key="mcp.enableApps" /> Enable MCP Apps inline UI</label>
+    </div>
     <div class="settings-actions">
       <button class="btn btn-secondary" id="btn-open-full-settings">Open full settings</button>
     </div>
@@ -387,7 +447,11 @@
           opsList.innerHTML = '<div class="empty-ops">No active operators</div>';
         } else {
           opsList.innerHTML = state.operators.map(function (o) {
-            return '<div class="operator-item"><span class="operator-name">' + escapeHtml(o.name) + '</span>' +
+            var status = escapeHtml(o.status || '');
+            var isForeground = o.status === 'active';
+            return '<div class="operator-item ' + (isForeground ? 'foreground' : '') + '">' +
+              '<div class="operator-row"><span class="operator-name">' + escapeHtml(o.name) + '</span>' +
+              '<span class="operator-status">' + status + '</span></div>' +
               (o.task ? '<div class="operator-task">' + escapeHtml(o.task) + '</div>' : '') + '</div>';
           }).join('');
         }
@@ -399,11 +463,15 @@
         var t = document.getElementById('input-tangentKeyword');
         var n = document.getElementById('input-namePool');
         var m = document.getElementById('input-autoMic');
+        var p = document.getElementById('input-mcpPort');
+        var a = document.getElementById('input-mcpEnableApps');
         if (w) w.value = c.wakeWord || '';
         if (s) s.value = c.submitWord || '';
         if (t) t.value = c.tangentKeyword || '';
         if (n) n.value = c.namePool || '';
         if (m) m.checked = !!c.autoActivateMicOnToggle;
+        if (p) p.value = String(c.mcpPort || 7891);
+        if (a) a.checked = !!c.mcpEnableApps;
       }
     }
     function escapeHtml(s) {
@@ -432,12 +500,14 @@
       var value = input.type === 'checkbox' ? input.checked : input.value;
       vscodeApi.postMessage({ type: 'updateConfig', key: key, value: value });
     }
-    ['input-wakeWord', 'input-submitWord', 'input-tangentKeyword', 'input-namePool'].forEach(function (id) {
+    ['input-wakeWord', 'input-submitWord', 'input-tangentKeyword', 'input-namePool', 'input-mcpPort'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener('blur', function () { saveConfig(el); });
     });
     var autoMic = document.getElementById('input-autoMic');
     if (autoMic) autoMic.addEventListener('change', function () { saveConfig(autoMic); });
+    var mcpEnableApps = document.getElementById('input-mcpEnableApps');
+    if (mcpEnableApps) mcpEnableApps.addEventListener('change', function () { saveConfig(mcpEnableApps); });
   </script>
 </body>
 

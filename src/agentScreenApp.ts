@@ -20,11 +20,11 @@ export function buildAgentScreenAppHtml(bundle?: string): string {
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 12px;
       line-height: 1.5;
       color: #d4d4d4;
-      background: #1e1e1e;
+      background: radial-gradient(circle at 15% 0%, rgba(0, 122, 204, 0.16), transparent 45%), #1e1e1e;
       margin: 0;
       padding: 0;
       display: flex;
@@ -33,14 +33,15 @@ export function buildAgentScreenAppHtml(bundle?: string): string {
       overflow: hidden;
     }
     header {
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-bottom: 1px solid #3c3c3c;
       display: flex;
       align-items: center;
       gap: 8px;
       flex-shrink: 0;
+      backdrop-filter: blur(6px);
     }
-    header h1 { font-size: 13px; font-weight: 600; margin: 0; color: #d4d4d4; }
+    header h1 { font-size: 13px; font-weight: 600; margin: 0; color: #d4d4d4; letter-spacing: 0.2px; }
     .tabs {
       display: flex;
       gap: 0;
@@ -48,7 +49,7 @@ export function buildAgentScreenAppHtml(bundle?: string): string {
       flex-shrink: 0;
     }
     .tab {
-      padding: 4px 10px;
+      padding: 6px 12px;
       font-size: 11px;
       cursor: pointer;
       border: none;
@@ -56,15 +57,18 @@ export function buildAgentScreenAppHtml(bundle?: string): string {
       color: #969696;
       border-bottom: 2px solid transparent;
       margin-bottom: -1px;
+      transition: color 120ms ease, background 120ms ease;
     }
     .tab.active { color: #007acc; border-bottom-color: #007acc; }
     .tab:hover { color: #d4d4d4; background: #2d2d2d; }
-    .panel { display: none; flex: 1; overflow-y: auto; padding: 6px 0; }
+    .panel { display: none; flex: 1; overflow-y: auto; padding: 8px 0; }
     .panel.active { display: block; }
     .activity-item, .file-item, .decision-item {
-      padding: 3px 10px;
+      padding: 6px 12px;
       font-size: 12px;
       border-bottom: 1px solid #2d2d2d;
+      margin: 2px 6px;
+      border-radius: 7px;
     }
     .activity-item:hover, .file-item:hover { background: #2d2d2d; }
     .activity-operator, .file-operator, .decision-operator {
@@ -72,7 +76,7 @@ export function buildAgentScreenAppHtml(bundle?: string): string {
       color: #969696;
       margin-right: 6px;
     }
-    .empty-state { color: #969696; font-size: 12px; text-align: center; padding: 16px; font-style: italic; }
+    .empty-state { color: #969696; font-size: 12px; text-align: center; padding: 18px; font-style: italic; }
   </style>
 </head>
 <body>

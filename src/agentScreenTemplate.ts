@@ -25,7 +25,10 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       font-size: 13px;
       line-height: 1.5;
       color: var(--vscode-editor-foreground);
-      background: var(--vscode-sideBar-background);
+      background:
+        radial-gradient(circle at 18% -20%, color-mix(in srgb, var(--vscode-testing-iconPassed, #4ec9b0) 16%, transparent), transparent 46%),
+        radial-gradient(circle at 90% 0%, color-mix(in srgb, var(--vscode-textLink-foreground, #3794ff) 13%, transparent), transparent 42%),
+        var(--vscode-sideBar-background);
       margin: 0;
       padding: 0;
       display: flex;
@@ -46,7 +49,8 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       justify-content: space-between;
       gap: 10px;
       flex-shrink: 0;
-      background: var(--vscode-editor-background);
+      background: color-mix(in srgb, var(--vscode-editor-background) 84%, transparent);
+      backdrop-filter: blur(7px);
     }
 
     header h1 {
@@ -63,6 +67,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       background: var(--vscode-badge-background);
       color: var(--vscode-badge-foreground);
       font-weight: 600;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--vscode-badge-background) 48%, transparent);
     }
 
     main {
@@ -77,7 +82,8 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       gap: 0;
       border-bottom: 1px solid var(--vscode-panel-border);
       flex-shrink: 0;
-      background: var(--vscode-editor-background);
+      background: color-mix(in srgb, var(--vscode-editor-background) 88%, transparent);
+      backdrop-filter: blur(5px);
     }
 
     .tab {
@@ -90,7 +96,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       color: var(--vscode-tab-inactiveForeground);
       border-bottom: 2px solid transparent;
       margin-bottom: -1px;
-      transition: color 0.15s ease;
+      transition: color 0.15s ease, background 0.15s ease, border-bottom-color 0.15s ease;
     }
 
     .tab.active {
@@ -109,6 +115,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       overflow-y: auto;
       padding: 12px;
       flex-direction: column;
+      background: color-mix(in srgb, var(--vscode-editor-background) 92%, transparent);
     }
 
     .panel.active { display: flex; }
@@ -160,9 +167,13 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       align-items: flex-start;
       border-radius: 6px;
       margin-bottom: 2px;
+      border: 1px solid transparent;
     }
 
-    .activity-item:hover { background: var(--vscode-list-hoverBackground); }
+    .activity-item:hover {
+      background: var(--vscode-list-hoverBackground);
+      border-color: color-mix(in srgb, var(--vscode-widget-border) 70%, transparent);
+    }
 
     .activity-time {
       color: var(--vscode-descriptionForeground);
@@ -195,11 +206,13 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       cursor: pointer;
       border-radius: 6px;
       margin-bottom: 2px;
+      border: 1px solid transparent;
     }
 
     .file-item:hover {
       background: var(--vscode-list-hoverBackground);
       color: var(--vscode-textLink-activeForeground);
+      border-color: color-mix(in srgb, var(--vscode-widget-border) 70%, transparent);
     }
 
     .file-icon { opacity: 0.8; flex-shrink: 0; font-size: 14px; }
@@ -213,7 +226,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       margin: 4px 0;
       padding-left: 10px;
       border-radius: 0 6px 6px 0;
-      background: var(--vscode-textBlockQuote-background, var(--vscode-editor-background));
+      background: color-mix(in srgb, var(--vscode-textBlockQuote-background, var(--vscode-editor-background)) 86%, transparent);
     }
 
     .decision-operator {
