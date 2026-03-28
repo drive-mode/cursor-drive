@@ -24,4 +24,3 @@ tsconfig.test.json
 sandbox/**
 playwright-report/**
 ui-screenshots/**
-**/node_modules/**
