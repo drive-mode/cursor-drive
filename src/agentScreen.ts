@@ -201,10 +201,6 @@ export class AgentScreenPanel {
       return;
     }
     if (!this.panel) return;
-    if (!this.panel.visible) {
-      this.enqueueEvent(event);
-      return;
-    }
     void (async () => {
       const delivered = await this.postToWebview({ ...event, timestamp: event.timestamp ?? Date.now() });
       if (!delivered) {
