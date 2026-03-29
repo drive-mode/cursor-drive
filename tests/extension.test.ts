@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { activate } from "../src/extension";
+import { AgentScreenPanel } from "../src/agentScreen";
 
 jest.mock("../src/mcpServer", () => ({
   DriveMcpServer: jest.fn().mockImplementation(() => ({
@@ -11,7 +12,14 @@ jest.mock("../src/mcpServer", () => ({
 
 jest.mock("../src/agentScreen", () => ({
   AgentScreenPanel: {
-    createOrShow: jest.fn(() => ({ logActivity: jest.fn(), switchAgent: jest.fn(), clear: jest.fn() })),
+    createOrShow: jest.fn(() => ({
+      logActivity: jest.fn(),
+      switchAgent: jest.fn(),
+      clear: jest.fn(),
+      setDriveActive: jest.fn(),
+      postEvent: jest.fn(),
+      waitForWebviewReady: jest.fn().mockResolvedValue(undefined),
+    })),
     getInstance: jest.fn(() => null),
   },
 }));
@@ -74,6 +82,24 @@ describe("activate", () => {
     expect(registered).toContain("cursorDrive.installPluginToWorkspace");
     expect(registered).toContain("cursorDrive.diagnose");
     expect(registered).toContain("cursorDrive.discoverAPIs");
+  });
+
+  it("waits for Agent Screen webview readiness before debug test events", async () => {
+    const ctx = makeContext();
+    await activate(ctx);
+
+    const calls = (vscode.commands.registerCommand as jest.Mock).mock.calls as Array<[string, (...args: unknown[]) => unknown]>;
+    const debugCmd = calls.find((c) => c[0] === "cursorDrive.debug.sendTestEvent");
+    expect(debugCmd).toBeDefined();
+    const handler = debugCmd?.[1];
+    expect(typeof handler).toBe("function");
+
+    await (handler as () => Promise<void>)();
+
+    const createOrShowMock = AgentScreenPanel.createOrShow as unknown as jest.Mock;
+    const panelInstance = createOrShowMock.mock.results[0]?.value as { waitForWebviewReady?: jest.Mock };
+    expect(panelInstance?.waitForWebviewReady).toBeDefined();
+    expect(panelInstance.waitForWebviewReady).toHaveBeenCalled();
   });
 
   it("creates Cursor Drive Output Channel and logs activation", async () => {

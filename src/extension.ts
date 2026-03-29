@@ -528,6 +528,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("cursorDrive.debug.sendTestEvent", async () => {
       const panel = AgentScreenPanel.createOrShow(context.extensionUri);
       panel.setDriveActive(driveMgr.active);
+      await panel.waitForWebviewReady();
 
       const scenarios: Record<string, Array<{ type: string; operatorName?: string; text?: string; filePath?: string; timestamp?: number; planId?: string; planName?: string; completedCount?: number; totalCount?: number; currentTodo?: string; cliStreamType?: string; cliToolName?: string; cloudAgentId?: string; cloudStatus?: string; prUrl?: string; artifactType?: string; artifactUrl?: string; artifactLabel?: string; syncSnapshot?: unknown; count?: number }>> = {
         "Basic Activity": [

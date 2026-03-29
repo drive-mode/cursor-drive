@@ -39,6 +39,8 @@ export class AgentScreenPanel {
   private readonly extensionUri: vscode.Uri;
   private disposed = false;
   private _pendingEvents: ActivityEvent[] = [];
+  private _webviewReady = false;
+  private _readyResolvers: Array<() => void> = [];
   private static readonly MAX_QUEUE = 200;
 
   private enqueueEvent(event: ActivityEvent): void {
@@ -77,11 +79,15 @@ export class AgentScreenPanel {
     this.extensionUri = extensionUri;
     this.panel = panel;
     this.outputChannel = outputChannel;
-
     if (panel) {
       panel.webview.html = this.buildHtml(panel);
       panel.webview.onDidReceiveMessage((msg: { type: string; path?: string; text?: string; planPath?: string; level?: string; msg?: string; src?: string; line?: number; col?: number }) => {
         if (msg.type === "webviewReady") {
+          this._webviewReady = true;
+          while (this._readyResolvers.length > 0) {
+            const resolve = this._readyResolvers.shift();
+            resolve?.();
+          }
           void this.flushPendingEvents("webviewReady");
           return;
         }
@@ -153,6 +159,18 @@ export class AgentScreenPanel {
     return AgentScreenPanel.instance;
   }
 
+  async waitForWebviewReady(timeoutMs = 1500): Promise<void> {
+    if (!this.panel || this.outputChannel || this.disposed || this._webviewReady) {
+      return;
+    }
+    await Promise.race([
+      new Promise<void>((resolve) => {
+        this._readyResolvers.push(resolve);
+      }),
+      new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
+    ]);
+  }
+
   setDriveActive(active: boolean): void {
     if (this.disposed || !this.panel) return;
     void this.panel.webview.postMessage({ type: "driveState", active });
@@ -204,6 +222,9 @@ export class AgentScreenPanel {
     void (async () => {
       const delivered = await this.postToWebview({ ...event, timestamp: event.timestamp ?? Date.now() });
       if (!delivered) {
+        if (typeof this.outputChannel?.appendLine === "function") {
+          this.outputChannel.appendLine(`[AgentScreen] postMessage undelivered, queueing type=${event.type}`);
+        }
         this.enqueueEvent(event);
       }
     })();
