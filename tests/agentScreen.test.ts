@@ -688,6 +688,37 @@ describe("AgentScreenPanel", () => {
     expect(postMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: "replayEnd" }));
   });
 
+  it("retries flushing queued pre-ready events after ready flips true", async () => {
+    jest.useFakeTimers();
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    const postMessageMock = webviewPanel.webview.postMessage as jest.Mock;
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+
+    // Queue before ready (no immediate post).
+    panel.postEvent({ type: "activity", operatorName: "Alpha", text: "Retry after ready" });
+    await flushAsyncTicks();
+    expect(postMessageMock).not.toHaveBeenCalled();
+
+    // Make webview "ready" after queueing and trigger timer retry flush.
+    receiveListener({ type: "webviewReady" });
+    jest.advanceTimersByTime(130);
+    await flushAsyncTicks();
+
+    expect(postMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: "replayStart", count: 1 }));
+    expect(postMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: "activity", text: "Retry after ready" }));
+    expect(postMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: "replayEnd" }));
+    jest.useRealTimers();
+  });
+
   it("caps queue at MAX_QUEUE when panel hidden", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {

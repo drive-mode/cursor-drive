@@ -23,6 +23,34 @@ export const window = {
   showWarningMessage: jest.fn(),
   showErrorMessage: jest.fn(),
   showQuickPick: jest.fn(),
+  createQuickPick: jest.fn(() => {
+    let acceptListener: (() => void) | undefined;
+    let hideListener: (() => void) | undefined;
+    const quickPick = {
+      title: "",
+      placeholder: "",
+      items: [] as Array<{ label: string }>,
+      selectedItems: [] as Array<{ label: string }>,
+      onDidAccept: jest.fn((listener: () => void) => {
+        acceptListener = listener;
+        return { dispose: jest.fn() };
+      }),
+      onDidHide: jest.fn((listener: () => void) => {
+        hideListener = listener;
+        return { dispose: jest.fn() };
+      }),
+      show: jest.fn(() => {
+        const first = quickPick.items[0];
+        quickPick.selectedItems = first ? [first] : [];
+        acceptListener?.();
+      }),
+      hide: jest.fn(() => {
+        hideListener?.();
+      }),
+      dispose: jest.fn(),
+    };
+    return quickPick;
+  }),
   showInputBox: jest.fn(),
   setStatusBarMessage: jest.fn(() => ({ dispose: jest.fn() })),
   createStatusBarItem: jest.fn(() => ({

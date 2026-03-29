@@ -419,7 +419,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
     // ── Activity: file path links and Ctrl+click ask ───────────────────────────
     function linkifyPaths(text) {
       const s = String(text || '');
-      const pathRe = /(?:[a-zA-Z]:\\\\[^\\\\s<>"']+)|(?:\\\\.\\\\/|\\\\/)?[a-zA-Z0-9_.-]+(?:\\\\/[a-zA-Z0-9_.-]+)+(?:\\\\.(?:ts|js|tsx|jsx|json|md|py|css|html|yaml|yml))?/g;
+      const pathRe = /(?:[A-Za-z]:[\\/][^\\s<>"']+|(?:\\.\\/|\\/)?[A-Za-z0-9_.-]+(?:\\/[A-Za-z0-9_.-]+)+(?:\\.(?:ts|js|tsx|jsx|json|md|py|css|html|yaml|yml))?)/g;
       return s.replace(pathRe, (m) => '<span class="file-path-link" data-path="' + escapeHtml(m).replace(/"/g, '&quot;') + '" data-testid="file-link" title="Click to open" role="link">' + escapeHtml(m) + '</span>');
     }
 
@@ -498,7 +498,6 @@ export const agentScreenTemplate = `<!DOCTYPE html>
     window.addEventListener('message', (e) => {
       const msg = e.data;
       if (!msg || !msg.type) { return; }
-      vscodeApi.postMessage({ type: '__debug', level: 'info', msg: 'webview message received: ' + String(msg.type) });
 
       if (msg.type === 'driveState') {
         document.body.classList.toggle('drive-active', !!msg.active);

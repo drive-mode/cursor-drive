@@ -19,7 +19,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
-import { appendFileSync, mkdirSync } from "fs";
 import { createDriveModeManager, CursorMode } from "./driveMode.js";
 import { createDriveStatusBar } from "./statusBar.js";
 import { speak, stop as ttsStop, isEnabled as ttsEnabled } from "./tts.js";
@@ -50,19 +49,6 @@ import { getAvailableModels } from "./modelUtils.js";
 
 /** Set when we register the Drive MCP server via vscode.cursor.mcp.registerServer; cleared in deactivate. */
 let mcpRegisteredByExtensionApi = false;
-
-function writeDebugLog(payload: { hypothesisId: string; location: string; message: string; data: Record<string, unknown>; timestamp: number }): void {
-  try {
-    mkdirSync("/opt/cursor/logs", { recursive: true });
-    appendFileSync("/opt/cursor/logs/debug.log", `${JSON.stringify(payload)}\n`);
-  } catch {
-    try {
-      appendFileSync("/workspace/.cursor-debug-agent-screen.log", `${JSON.stringify(payload)}\n`);
-    } catch {
-      // Debug instrumentation must never break command flow.
-    }
-  }
-}
 
 async function persistActiveMcpPort(
   port: number,
@@ -540,30 +526,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(
     vscode.commands.registerCommand("cursorDrive.debug.sendTestEvent", async () => {
-      try {
-        // #region agent log
-        writeDebugLog({
-          hypothesisId: "A",
-          location: "extension.ts:cursorDrive.debug.sendTestEvent:entry",
-          message: "Debug command invoked",
-          data: { hasPanelInstance: !!AgentScreenPanel.getInstance(), driveActive: driveMgr.active },
-          timestamp: Date.now(),
-        });
-        // #endregion
-        const panel = AgentScreenPanel.createOrShow(context.extensionUri);
-        panel.setDriveActive(driveMgr.active);
-        await panel.waitForWebviewReady();
-        // #region agent log
-        writeDebugLog({
-          hypothesisId: "A",
-          location: "extension.ts:cursorDrive.debug.sendTestEvent:afterWaitForReady",
-          message: "waitForWebviewReady completed",
-          data: {},
-          timestamp: Date.now(),
-        });
-        // #endregion
+      const panel = AgentScreenPanel.createOrShow(context.extensionUri);
+      panel.setDriveActive(driveMgr.active);
+      await panel.waitForWebviewReady();
 
-        const scenarios: Record<string, Array<{ type: string; operatorName?: string; text?: string; filePath?: string; timestamp?: number; planId?: string; planName?: string; completedCount?: number; totalCount?: number; currentTodo?: string; cliStreamType?: string; cliToolName?: string; cloudAgentId?: string; cloudStatus?: string; prUrl?: string; artifactType?: string; artifactUrl?: string; artifactLabel?: string; syncSnapshot?: unknown; count?: number }>> = {
+      const scenarios: Record<string, Array<{ type: string; operatorName?: string; text?: string; filePath?: string; timestamp?: number; planId?: string; planName?: string; completedCount?: number; totalCount?: number; currentTodo?: string; cliStreamType?: string; cliToolName?: string; cloudAgentId?: string; cloudStatus?: string; prUrl?: string; artifactType?: string; artifactUrl?: string; artifactLabel?: string; syncSnapshot?: unknown; count?: number }>> = {
         "Basic Activity": [
           { type: "activity", operatorName: "Alpha", text: "Reading src/auth.ts", timestamp: Date.now() },
           { type: "file", operatorName: "Alpha", filePath: "src/auth.ts", timestamp: Date.now() },
@@ -607,72 +574,40 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         "Clear": [{ type: "clear" }],
       };
 
-        const items = Object.keys(scenarios).map((label) => ({ label }));
-        const picked = await vscode.window.showQuickPick(items, {
-          title: "Drive: Send Test Event to Agent Screen",
-          placeHolder: "Select scenario",
+      const items = Object.keys(scenarios).map((label) => ({ label }));
+      const picked = await new Promise<{ label: string } | undefined>((resolve) => {
+        const qp = vscode.window.createQuickPick<{ label: string }>();
+        qp.title = "Drive: Send Test Event to Agent Screen";
+        qp.placeholder = "Select scenario";
+        qp.items = items;
+        let settled = false;
+        const settle = (value: { label: string } | undefined): void => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+        qp.onDidAccept(() => {
+          const pickedItem = qp.selectedItems[0];
+          settle(pickedItem);
+          qp.hide();
         });
-        if (!picked) {
-          // #region agent log
-          writeDebugLog({
-            hypothesisId: "A",
-            location: "extension.ts:cursorDrive.debug.sendTestEvent:noSelection",
-            message: "Scenario picker returned no selection",
-            data: {},
-            timestamp: Date.now(),
-          });
-          // #endregion
-          return;
-        }
-        const selectedScenario = scenarios[picked.label];
-        if (!selectedScenario) {
-          // #region agent log
-          writeDebugLog({
-            hypothesisId: "A",
-            location: "extension.ts:cursorDrive.debug.sendTestEvent:missingScenario",
-            message: "Selected scenario label not found",
-            data: { label: picked.label },
-            timestamp: Date.now(),
-          });
-          // #endregion
-          return;
-        }
-        // #region agent log
-        writeDebugLog({
-          hypothesisId: "A",
-          location: "extension.ts:cursorDrive.debug.sendTestEvent:selectedScenario",
-          message: "Scenario selected",
-          data: { scenario: picked.label, eventCount: selectedScenario.length },
-          timestamp: Date.now(),
+        qp.onDidHide(() => {
+          settle(undefined);
+          qp.dispose();
         });
-        // #endregion
-        for (const ev of selectedScenario) {
-          // #region agent log
-          writeDebugLog({
-            hypothesisId: "B",
-            location: "extension.ts:cursorDrive.debug.sendTestEvent:dispatchEvent",
-            message: "Dispatching event",
-            data: { type: ev.type, operatorName: ev.operatorName ?? null },
-            timestamp: Date.now(),
-          });
-          // #endregion
-          if (ev.type === "chime") {
-            panel.playChime((ev.count as 1 | 2) ?? 1);
-          } else {
-            panel.postEvent(ev as Parameters<typeof panel.postEvent>[0]);
-          }
-          await new Promise((r) => setTimeout(r, 80));
+        qp.show();
+      });
+      if (!picked) return;
+
+      const selectedScenario = scenarios[picked.label];
+      if (!selectedScenario) return;
+      for (const ev of selectedScenario) {
+        if (ev.type === "chime") {
+          panel.playChime((ev.count as 1 | 2) ?? 1);
+        } else {
+          panel.postEvent(ev as Parameters<typeof panel.postEvent>[0]);
         }
-      } catch (err) {
-        // #region agent log
-        writeDebugLog({
-          hypothesisId: "A",
-          location: "extension.ts:cursorDrive.debug.sendTestEvent:error",
-          message: "Unhandled error in debug command",
-          data: { error: String(err) },
-          timestamp: Date.now(),
-        });
-        // #endregion
+        await new Promise((r) => setTimeout(r, 80));
       }
     })
   );
