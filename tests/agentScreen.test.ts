@@ -8,7 +8,7 @@ function resetAgentScreenSingleton(): void {
 }
 
 describe("AgentScreenPanel", () => {
-  async function flushAsyncTicks(count = 4): Promise<void> {
+  async function flushAsyncTicks(count = 8): Promise<void> {
     for (let i = 0; i < count; i++) {
       await Promise.resolve();
     }
@@ -152,7 +152,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("switchAgent updates webview title in tab mode", () => {
+  it("switchAgent updates webview title in tab mode", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -163,7 +163,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.switchAgent("Beta");
+    await flushAsyncTicks();
 
     expect(webviewPanel.title).toBe("Beta — Agent Screen");
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
@@ -172,7 +177,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("logActivity posts activity event via postMessage in tab mode", () => {
+  it("logActivity posts activity event via postMessage in tab mode", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -183,7 +188,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.logActivity("Alpha", "Investigating auth module");
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "activity",
@@ -192,7 +202,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("logFile posts file event via postMessage in tab mode", () => {
+  it("logFile posts file event via postMessage in tab mode", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -203,7 +213,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.logFile("Alpha", "src/auth.ts");
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "file",
@@ -212,7 +227,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("logDecision posts decision event via postMessage in tab mode", () => {
+  it("logDecision posts decision event via postMessage in tab mode", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -223,7 +238,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.logDecision("Alpha", "Chose token bucket over leaky bucket");
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "decision",
@@ -232,7 +252,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("clear posts clear event via postMessage in tab mode", () => {
+  it("clear posts clear event via postMessage in tab mode", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -243,7 +263,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.clear();
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "clear",
@@ -288,7 +313,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("postSyncStatus posts syncStatus event", () => {
+  it("postSyncStatus posts syncStatus event", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -300,7 +325,12 @@ describe("AgentScreenPanel", () => {
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
     const snapshot = { userBranch: "main", userHeadCommit: "abc123", operators: [] };
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.postSyncStatus(snapshot);
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "syncStatus",
@@ -308,7 +338,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("postProposalUpdate posts proposalUpdate event", () => {
+  it("postProposalUpdate posts proposalUpdate event", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -319,7 +349,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.postProposalUpdate("proposal-1", "approved", "Alpha");
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "proposalUpdate",
@@ -327,7 +362,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("postQueueStatus posts queueStatus event", () => {
+  it("postQueueStatus posts queueStatus event", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -338,7 +373,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.postQueueStatus("proposal-1", 3);
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "queueStatus",
@@ -346,7 +386,7 @@ describe("AgentScreenPanel", () => {
     }));
   });
 
-  it("postQueueStatus shows idle when not processing", () => {
+  it("postQueueStatus shows idle when not processing", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -357,7 +397,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.postQueueStatus(null, 0);
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({
       type: "queueStatus",
@@ -511,7 +556,7 @@ describe("AgentScreenPanel", () => {
     );
   });
 
-  it("attempts postMessage even when panel is hidden", async () => {
+  it("queues while hidden when not ready, then flushes after ready+visible", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -525,7 +570,15 @@ describe("AgentScreenPanel", () => {
 
     panel.postEvent({ type: "activity", operatorName: "Alpha", text: "Queued" });
     await flushAsyncTicks();
-
+    expect(webviewPanel.webview.postMessage).not.toHaveBeenCalled();
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    webviewPanel.visible = true;
+    const viewStateListener = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value.onDidChangeViewState as jest.Mock;
+    const listener = viewStateListener.mock.calls[0]?.[0];
+    listener({ webviewPanel });
+    await flushAsyncTicks();
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({ type: "activity", text: "Queued" })
     );
@@ -542,6 +595,10 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
     const postMessageMock = webviewPanel.webview.postMessage as jest.Mock;
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     webviewPanel.visible = false;
     // Hidden panel alone should not block delivery; simulate undelivered post to queue.
     postMessageMock.mockResolvedValue(false);
@@ -578,7 +635,12 @@ describe("AgentScreenPanel", () => {
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
     const postMessageMock = webviewPanel.webview.postMessage as jest.Mock;
 
-    // Simulate webview not ready: first post attempts are undelivered (false).
+    // Simulate webview ready but transport undelivered: first post attempts return false.
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
+
     let delivered = false;
     postMessageMock.mockImplementation(() => Promise.resolve(delivered));
 
@@ -589,9 +651,6 @@ describe("AgentScreenPanel", () => {
       (c: unknown[]) => (c[0] as { type?: string })?.type === "activity"
     ).length;
     expect(attemptedBeforeReady).toBe(1);
-
-    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
-    expect(receiveListener).toBeDefined();
     delivered = true;
     receiveListener({ type: "webviewReady" });
     await flushAsyncTicks();
@@ -600,6 +659,33 @@ describe("AgentScreenPanel", () => {
       (c: unknown[]) => (c[0] as { type?: string })?.type === "activity"
     ).length;
     expect(deliveredAfterReady).toBeGreaterThan(1);
+  });
+
+  it("queues events before webviewReady and flushes on readiness", async () => {
+    (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
+      if (section === "cursorDrive.agentScreen") {
+        return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
+      }
+      return { get: jest.fn((_key: string, fallback: unknown) => fallback) };
+    });
+
+    const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
+    const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    const postMessageMock = webviewPanel.webview.postMessage as jest.Mock;
+
+    // Not ready yet; nothing should be posted.
+    panel.postEvent({ type: "activity", operatorName: "Alpha", text: "Before ready" });
+    await flushAsyncTicks();
+    expect(postMessageMock).not.toHaveBeenCalled();
+
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
+
+    expect(postMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: "replayStart", count: 1 }));
+    expect(postMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: "activity", text: "Before ready" }));
+    expect(postMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: "replayEnd" }));
   });
 
   it("caps queue at MAX_QUEUE when panel hidden", async () => {
@@ -636,7 +722,7 @@ describe("AgentScreenPanel", () => {
     expect(replayStartCall[0].count).toBe(MAX_QUEUE);
   });
 
-  it("syncStatus message updates sync-user and sync-operators in HTML", () => {
+  it("syncStatus message updates sync-user and sync-operators in HTML", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -647,6 +733,10 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.postSyncStatus({
       userBranch: "main",
       userHeadCommit: "abc1234",
@@ -654,6 +744,7 @@ describe("AgentScreenPanel", () => {
       proposals: [],
       timestamp: Date.now(),
     });
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -663,7 +754,7 @@ describe("AgentScreenPanel", () => {
     );
   });
 
-  it("queueStatus message triggers postMessage with queue text", () => {
+  it("queueStatus message triggers postMessage with queue text", async () => {
     (vscode.workspace.getConfiguration as jest.Mock).mockImplementation((section?: string) => {
       if (section === "cursorDrive.agentScreen") {
         return { get: jest.fn((key: string, fallback: unknown) => (key === "displayMode" ? "tab" : fallback)) };
@@ -674,7 +765,12 @@ describe("AgentScreenPanel", () => {
     const panel = AgentScreenPanel.createOrShow({ fsPath: "/ext" } as vscode.Uri);
     const webviewPanel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
 
+    const receiveListener = (webviewPanel.webview.onDidReceiveMessage as jest.Mock).mock.calls[0]?.[0];
+    expect(receiveListener).toBeDefined();
+    receiveListener({ type: "webviewReady" });
+    await flushAsyncTicks();
     panel.postQueueStatus("p-1", 2);
+    await flushAsyncTicks();
 
     expect(webviewPanel.webview.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -371,7 +371,16 @@ export const agentScreenTemplate = `<!DOCTYPE html>
   </main>
 
   <script nonce="{{NONCE}}">
-    const vscodeApi = acquireVsCodeApi();
+    const vscodeApi = (() => {
+      try {
+        if (typeof acquireVsCodeApi === 'function') {
+          return acquireVsCodeApi();
+        }
+      } catch (_) {}
+      return {
+        postMessage: function() {},
+      };
+    })();
     const clickBehavior = "{{CLICK_BEHAVIOR}}";
 
     const opColorMap = new Map();
@@ -489,6 +498,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
     window.addEventListener('message', (e) => {
       const msg = e.data;
       if (!msg || !msg.type) { return; }
+      vscodeApi.postMessage({ type: '__debug', level: 'info', msg: 'webview message received: ' + String(msg.type) });
 
       if (msg.type === 'driveState') {
         document.body.classList.toggle('drive-active', !!msg.active);
@@ -529,6 +539,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       switch (msg.type) {
 
         case 'agentSwitch': {
+          vscodeApi.postMessage({ type: '__debug', level: 'info', msg: 'render agentSwitch op=' + String(opName || '') });
           const badge = document.getElementById('operator-badge');
           if (badge) {
             badge.textContent = opName || '—';
@@ -539,6 +550,7 @@ export const agentScreenTemplate = `<!DOCTYPE html>
         }
 
         case 'activity': {
+          vscodeApi.postMessage({ type: '__debug', level: 'info', msg: 'render activity op=' + String(opName || '') + ' text=' + String(msg.text || '') });
           addActivity(opName, msg.text, msg.timestamp);
           break;
         }
