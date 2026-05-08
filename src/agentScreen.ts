@@ -39,7 +39,49 @@ export class AgentScreenPanel {
   private readonly extensionUri: vscode.Uri;
   private disposed = false;
   private _pendingEvents: ActivityEvent[] = [];
+  private _webviewReady = false;
+  private _readyResolvers: Array<() => void> = [];
+  private _flushRetryHandle: ReturnType<typeof setTimeout> | undefined;
   private static readonly MAX_QUEUE = 200;
+
+  private enqueueEvent(event: ActivityEvent): void {
+    this._pendingEvents.push(event);
+    if (this._pendingEvents.length > AgentScreenPanel.MAX_QUEUE) this._pendingEvents.shift();
+  }
+
+  private async postToWebview(message: Record<string, unknown>): Promise<boolean> {
+    if (!this.panel) { return false; }
+    try {
+      const delivered = await this.panel.webview.postMessage(message);
+      return delivered !== false;
+    } catch {
+      return false;
+    }
+  }
+
+  private scheduleFlushRetry(): void {
+    if (this._flushRetryHandle || this.disposed) { return; }
+    this._flushRetryHandle = setTimeout(() => {
+      this._flushRetryHandle = undefined;
+      void this.flushPendingEvents("retryTimer");
+    }, 120);
+  }
+
+  private async flushPendingEvents(trigger: "viewStateVisible" | "webviewReady" | "retryTimer"): Promise<void> {
+    if (!this.panel || !this.panel.visible || this._pendingEvents.length === 0) { return; }
+    const pending = this._pendingEvents.splice(0, this._pendingEvents.length);
+    await this.postToWebview({ type: "replayStart", count: pending.length });
+    for (const ev of pending) {
+      const delivered = await this.postToWebview({ ...ev, timestamp: ev.timestamp ?? Date.now() });
+      if (!delivered) {
+        this.enqueueEvent(ev);
+      }
+    }
+    await this.postToWebview({ type: "replayEnd" });
+    if (this._pendingEvents.length > 0) {
+      this.scheduleFlushRetry();
+    }
+  }
 
   private constructor(
     extensionUri: vscode.Uri,
@@ -49,10 +91,17 @@ export class AgentScreenPanel {
     this.extensionUri = extensionUri;
     this.panel = panel;
     this.outputChannel = outputChannel;
-
     if (panel) {
-      panel.webview.html = this.buildHtml(panel);
       panel.webview.onDidReceiveMessage((msg: { type: string; path?: string; text?: string; planPath?: string; level?: string; msg?: string; src?: string; line?: number; col?: number }) => {
+        if (msg.type === "webviewReady") {
+          this._webviewReady = true;
+          while (this._readyResolvers.length > 0) {
+            const resolve = this._readyResolvers.shift();
+            resolve?.();
+          }
+          void this.flushPendingEvents("webviewReady");
+          return;
+        }
         if (msg.type === "__debug") {
           const ch = this.outputChannel ?? vscode.window.createOutputChannel("Drive Agent Screen");
           const level = msg.level ?? "error";
@@ -64,14 +113,10 @@ export class AgentScreenPanel {
         else if (msg.type === "askAboutItem" && msg.text) { void this.handleAskAboutItem(msg.text); }
         else if (msg.type === "openPlanTodo" && msg.planPath) { void this.openFile(msg.planPath); }
       });
+      panel.webview.html = this.buildHtml(panel);
       panel.onDidChangeViewState((e: { webviewPanel: vscode.WebviewPanel }) => {
         if (e.webviewPanel.visible && this._pendingEvents.length > 0) {
-          void this.panel!.webview.postMessage({ type: "replayStart", count: this._pendingEvents.length });
-          for (const ev of this._pendingEvents) {
-            void this.panel!.webview.postMessage({ ...ev, timestamp: ev.timestamp ?? Date.now() });
-          }
-          this._pendingEvents.length = 0;
-          void this.panel!.webview.postMessage({ type: "replayEnd" });
+          void this.flushPendingEvents("viewStateVisible");
         }
       });
       vscode.workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
@@ -126,6 +171,18 @@ export class AgentScreenPanel {
     return AgentScreenPanel.instance;
   }
 
+  async waitForWebviewReady(timeoutMs = 1500): Promise<void> {
+    if (!this.panel || this.outputChannel || this.disposed || this._webviewReady) {
+      return;
+    }
+    await Promise.race([
+      new Promise<void>((resolve) => {
+        this._readyResolvers.push(resolve);
+      }),
+      new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
+    ]);
+  }
+
   setDriveActive(active: boolean): void {
     if (this.disposed || !this.panel) return;
     void this.panel.webview.postMessage({ type: "driveState", active });
@@ -174,12 +231,21 @@ export class AgentScreenPanel {
       return;
     }
     if (!this.panel) return;
-    if (!this.panel.visible) {
-      this._pendingEvents.push(event);
-      if (this._pendingEvents.length > AgentScreenPanel.MAX_QUEUE) this._pendingEvents.shift();
+    if (!this._webviewReady) {
+      this.enqueueEvent(event);
+      this.scheduleFlushRetry();
       return;
     }
-    void this.panel.webview.postMessage({ ...event, timestamp: event.timestamp ?? Date.now() });
+    void (async () => {
+      const delivered = await this.postToWebview({ ...event, timestamp: event.timestamp ?? Date.now() });
+      if (!delivered) {
+        if (typeof this.outputChannel?.appendLine === "function") {
+          this.outputChannel.appendLine(`[AgentScreen] postMessage undelivered, queueing type=${event.type}`);
+        }
+        this.enqueueEvent(event);
+        this.scheduleFlushRetry();
+      }
+    })();
   }
 
   logActivity(operatorName: string, text: string): void {

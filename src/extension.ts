@@ -18,6 +18,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs/promises";
 import { createDriveModeManager, CursorMode } from "./driveMode.js";
 import { createDriveStatusBar } from "./statusBar.js";
 import { speak, stop as ttsStop, isEnabled as ttsEnabled } from "./tts.js";
@@ -48,6 +49,44 @@ import { getAvailableModels } from "./modelUtils.js";
 
 /** Set when we register the Drive MCP server via vscode.cursor.mcp.registerServer; cleared in deactivate. */
 let mcpRegisteredByExtensionApi = false;
+
+async function persistActiveMcpPort(
+  port: number,
+  out: vscode.OutputChannel
+): Promise<void> {
+  const workspaceTarget = (vscode.ConfigurationTarget as { Workspace?: vscode.ConfigurationTarget } | undefined)?.Workspace;
+  const cfg = vscode.workspace.getConfiguration("cursorDrive");
+  const currentPort = cfg.get<number>("mcp.port", 7891);
+  if (currentPort !== port && typeof (cfg as { update?: unknown }).update === "function") {
+    await (cfg as { update: (key: string, value: unknown, target?: vscode.ConfigurationTarget) => Thenable<void> })
+      .update("mcp.port", port, workspaceTarget);
+    out.appendLine(`[Drive] Persisted cursorDrive.mcp.port=${port} to workspace settings`);
+  }
+
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!workspaceRoot) { return; }
+
+  const mcpPath = path.join(workspaceRoot, ".cursor", "mcp.json");
+  try {
+    let doc: { mcpServers?: Record<string, unknown> } = {};
+    try {
+      const raw = await fs.readFile(mcpPath, "utf8");
+      doc = JSON.parse(raw) as { mcpServers?: Record<string, unknown> };
+    } catch {
+      doc = {};
+    }
+
+    const mcpServers = { ...(doc.mcpServers ?? {}) };
+    mcpServers.drive = { url: `http://127.0.0.1:${port}/mcp` };
+    const nextDoc = { ...doc, mcpServers };
+
+    await fs.mkdir(path.dirname(mcpPath), { recursive: true });
+    await fs.writeFile(mcpPath, `${JSON.stringify(nextDoc, null, 2)}\n`, "utf8");
+    out.appendLine(`[Drive] Synced .cursor/mcp.json drive URL to port ${port}`);
+  } catch (err) {
+    out.appendLine(`[Drive] Warning: failed to persist MCP port in .cursor/mcp.json: ${String(err)}`);
+  }
+}
 
 /** Get Cursor API key from SecretStorage. Used by Cloud Agent MCP tools. */
 export async function getApiKey(context: vscode.ExtensionContext): Promise<string | undefined> {
@@ -216,6 +255,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if ("debug" in out && typeof (out as { debug: (s: string) => void }).debug === "function") {
         (out as { debug: (s: string) => void }).debug(`MCP HTTP root: http://127.0.0.1:${actualPort}`);
       }
+      await persistActiveMcpPort(actualPort, out);
       // Programmatic MCP registration when Cursor exposes the API (cursor.com/docs/context/mcp-extension-api)
       const cursorMcp = (vscode as { cursor?: { mcp?: { registerServer: (c: unknown) => void } } }).cursor?.mcp;
       if (typeof cursorMcp?.registerServer === "function") {
@@ -488,6 +528,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("cursorDrive.debug.sendTestEvent", async () => {
       const panel = AgentScreenPanel.createOrShow(context.extensionUri);
       panel.setDriveActive(driveMgr.active);
+      await panel.waitForWebviewReady();
 
       const scenarios: Record<string, Array<{ type: string; operatorName?: string; text?: string; filePath?: string; timestamp?: number; planId?: string; planName?: string; completedCount?: number; totalCount?: number; currentTodo?: string; cliStreamType?: string; cliToolName?: string; cloudAgentId?: string; cloudStatus?: string; prUrl?: string; artifactType?: string; artifactUrl?: string; artifactLabel?: string; syncSnapshot?: unknown; count?: number }>> = {
         "Basic Activity": [
@@ -533,14 +574,34 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         "Clear": [{ type: "clear" }],
       };
 
-      const items = Object.keys(scenarios).map((label) => ({ label, scenario: scenarios[label] }));
-      const picked = await vscode.window.showQuickPick(items, {
-        title: "Drive: Send Test Event to Agent Screen",
-        placeHolder: "Select scenario",
+      const items = Object.keys(scenarios).map((label) => ({ label }));
+      const picked = await new Promise<{ label: string } | undefined>((resolve) => {
+        const qp = vscode.window.createQuickPick<{ label: string }>();
+        qp.title = "Drive: Send Test Event to Agent Screen";
+        qp.placeholder = "Select scenario";
+        qp.items = items;
+        let settled = false;
+        const settle = (value: { label: string } | undefined): void => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+        qp.onDidAccept(() => {
+          const pickedItem = qp.selectedItems[0];
+          settle(pickedItem);
+          qp.hide();
+        });
+        qp.onDidHide(() => {
+          settle(undefined);
+          qp.dispose();
+        });
+        qp.show();
       });
       if (!picked) return;
 
-      for (const ev of picked.scenario) {
+      const selectedScenario = scenarios[picked.label];
+      if (!selectedScenario) return;
+      for (const ev of selectedScenario) {
         if (ev.type === "chime") {
           panel.playChime((ev.count as 1 | 2) ?? 1);
         } else {

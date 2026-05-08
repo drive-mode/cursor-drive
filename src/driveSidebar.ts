@@ -25,6 +25,8 @@ export interface DriveSidebarState {
     tangentKeyword: string;
     namePool: string;
     autoActivateMicOnToggle: boolean;
+    mcpPort: number;
+    mcpEnableApps: boolean;
   };
 }
 
@@ -118,6 +120,8 @@ export class DriveSidebarProvider implements vscode.WebviewViewProvider {
         tangentKeyword: cfg.get<string>("agents.tangentKeyword", "tangent"),
         namePool: Array.isArray(namePool) ? namePool.join(", ") : String(namePool ?? ""),
         autoActivateMicOnToggle: cfg.get<boolean>("voice.autoActivateMicOnToggle", false),
+        mcpPort: cfg.get<number>("mcp.port", 7891),
+        mcpEnableApps: cfg.get<boolean>("mcp.enableApps", true),
       },
     };
   }
@@ -139,11 +143,21 @@ export class DriveSidebarProvider implements vscode.WebviewViewProvider {
     if (msg.type === "updateConfig" && msg.key !== undefined) {
       const cfg = vscode.workspace.getConfiguration("cursorDrive");
       const key = msg.key as string;
-      let value = msg.value;
+      let value: string | boolean | string[] | number | undefined = msg.value;
       if (key === "operators.namePool" && typeof value === "string") {
         value = value.split(",").map((s) => s.trim()).filter(Boolean);
       }
-      void cfg.update(key, value, vscode.ConfigurationTarget.Global);
+      if (key === "mcp.port" && typeof value === "string") {
+        const parsed = Number.parseInt(value, 10);
+        if (Number.isFinite(parsed)) {
+          value = parsed;
+        } else {
+          return;
+        }
+      }
+      const target = (vscode as unknown as { ConfigurationTarget?: { Workspace?: vscode.ConfigurationTarget } })
+        .ConfigurationTarget?.Workspace;
+      void cfg.update(key, value, target);
       this._postState();
       return;
     }
