@@ -31,7 +31,23 @@ CI pins Node 20 (see `.github/workflows/ci.yml`). Use `nvm use 20` if a differen
 
 ### Python hooks
 
-Four Cursor hooks in `.cursor/hooks/` are Python 3 scripts. They read JSON from stdin and are invoked by the Cursor plugin system — not run standalone. They only need stdlib (no pip dependencies). Verify with `python3 -c "import py_compile; py_compile.compile('.cursor/hooks/<name>.py', doraise=True)"`.
+Seven Cursor hooks in `.cursor/hooks/` are Python 3 scripts. They read JSON from stdin and are invoked by the Cursor plugin system — not run standalone. They only need stdlib (no pip dependencies). Verify with `python3 -c "import py_compile; py_compile.compile('.cursor/hooks/<name>.py', doraise=True)"`.
+
+### Running the extension (Cloud Agent VM)
+
+VS Code (`code` CLI) is installed in the VM. To test the extension visually:
+
+```bash
+# 1. Package and install the VSIX
+npx vsce package --allow-missing-repository
+code --install-extension cursor-drive-*.vsix --force
+
+# 2. Launch VS Code serve-web (browser-accessible)
+code serve-web --without-connection-token --accept-server-license-terms --port 8000 --host 0.0.0.0
+# Then open http://localhost:8000 in the browser
+```
+
+Alternatively, `xvfb-run` can launch a headless desktop VS Code instance for automated testing.
 
 ### Gotchas
 
@@ -39,6 +55,7 @@ Four Cursor hooks in `.cursor/hooks/` are Python 3 scripts. They read JSON from 
 - Tests mock `vscode` via `tests/__mocks__/vscode.ts`; never import real vscode in tests.
 - `npm run watch` provides incremental recompilation during development.
 - VSIX packaging runs `npm run compile` automatically via the `vscode:prepublish` script.
+- In Cloud Agent VMs, `code serve-web` is the easiest way to visually test the extension. The VSIX must be installed into the `code` CLI before launching.
 
 ### Sync with claude-drive
 
