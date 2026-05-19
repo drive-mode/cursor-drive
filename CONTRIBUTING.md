@@ -113,9 +113,21 @@ docs: update branch strategy in CONTRIBUTING.md
 Before opening a PR, verify:
 
 ```bash
-npm run compile   # TypeScript compilation — zero errors
-npm test          # All Jest tests pass
+npm run compile        # TypeScript compilation — zero errors
+npm test               # All Jest unit tests pass
+npm run test:integration   # (Optional) Integration tests in Extension Host — runs on CI
 ```
+
+See [live-testing.md](docs/guides/live-testing.md#review-while-developing) for the full review-while-developing checklist.
+
+### Verify MVP (smoke test)
+
+1. Press **F5** to launch the Extension Development Host (or `npm run reinstall:dev-sandbox` for a clean install).
+2. Toggle Drive with **Ctrl+Shift+D** (or click the status bar).
+3. Submit a prompt (e.g. `hello` or *"Call agent_screen_activity and log a short status"*).
+4. Confirm the model responds and the **Agent Screen** shows activity (tab or inline MCP App).
+
+See [docs/guides/live-testing.md](docs/guides/live-testing.md) for the full smoke test suite. Setup: [getting-started.md](docs/guides/getting-started.md).
 
 ### Before you push — no secrets
 

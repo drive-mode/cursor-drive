@@ -130,6 +130,21 @@ Use browser dev for faster iteration on webview UI (ShareScreen, status bar). Us
 
 ## Smoke tests
 
+### MVP verification (quick)
+
+New contributors: run this first to confirm the core loop works.
+
+1. **F5** → Extension Development Host (or `npm run reinstall:dev-sandbox`).
+2. **Ctrl+Shift+D** → Toggle Drive.
+3. Submit a prompt (e.g. `hello` or *"Call agent_screen_activity and log a short status"*).
+4. Confirm the model responds and the **Agent Screen** shows activity.
+
+Setup: [getting-started.md](getting-started.md). MCP App UI: [demo-mcp-apps.md](demo-mcp-apps.md).
+
+---
+
+### Full suite (A–E)
+
 Run these in the **dev-host window** Agent chat in order. Each test has a clear expected result.
 
 ### A — Extension UI surfaces
@@ -246,6 +261,26 @@ echo '{"prompt":"uhh like plan the refactor"}' | python .cursor/hooks/drive-prep
 python .cursor/hooks/plan-runner.py beforeSubmitPrompt
 # Expected JSON: {"decision":"allow","reason":"plan governance active","details":{"reminder":"..."}}
 ```
+
+---
+
+## Review While Developing
+
+Use these tools to verify changes as you develop:
+
+| Goal | Tool |
+|------|------|
+| **Unit tests** | `npm test` (Jest + vscode mock) |
+| **Integration tests** | `npm run test:integration` — runs tests inside Extension Host (VS Code stable). On Linux CI: `xvfb-run -a npm run test:integration` |
+| **Debug integration tests** | Launch **"Extension Tests"** from Run and Debug (or install [Extension Test Runner](https://marketplace.visualstudio.com/items?itemName=ms-vscode.extension-test-runner) for Test: Run/Debug All Tests) |
+| **Inspect why UI is enabled/disabled** | Command Palette → **Developer: Inspect Context Keys** — hover/click UI to see active context keys in Console |
+| **Increase extension log verbosity** | Command Palette → **Developer: Set Log Level…** → choose "Cursor Drive" → Trace/Debug/Info |
+| **Debug Agent Screen webview** | Command Palette → **Drive: Open AgentScreen Developer Tools** |
+| **Manual E2E (status bar, QuickPicks)** | Use the [drive-ui-test](../../.cursor/skills/drive-ui-test/SKILL.md) skill — agent-browser + Electron CDP. Requires `cursor --remote-debugging-port=9222` |
+
+**Test pyramid:** Unit tests (fast, many) → Integration tests (Extension Host, activation/commands/config) → Manual E2E (drive-ui-test for UI flows).
+
+**Note:** Integration tests run in VS Code stable (downloaded by vscode-test). On Windows, paths containing spaces may cause failures; use WSL or a path without spaces. CI runs on Linux (ubuntu-latest) where this is not an issue.
 
 ---
 

@@ -2,6 +2,25 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Extension Tests",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "${workspaceFolder}/sampleWorkspace",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "sourceMaps": true,
+      "preLaunchTask": "compile",
+      "presentation": {
+        "group": "Drive Dev",
+        "order": 0
+      }
+    },
+    {
       "name": "Dev: Drive in sandbox",
       "type": "extensionHost",
       "request": "launch",

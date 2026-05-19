@@ -10,15 +10,25 @@
         "owner": "typescript",
         "source": "ts",
         "applyTo": "allDocuments",
-        "fileLocation": ["relative", "${workspaceFolder}"],
+        "fileLocation": [
+          "relative",
+          "${workspaceFolder}"
+        ],
         "pattern": "$tsc",
         "background": {
           "activeOnStart": true,
-          "beginsPattern": {"regexp": "Starting compilation in watch mode"},
-          "endsPattern": {"regexp": "Found 0 errors\\. Watching for file changes\\."}
+          "beginsPattern": {
+            "regexp": "Starting compilation in watch mode"
+          },
+          "endsPattern": {
+            "regexp": "Found 0 errors\\. Watching for file changes\\."
+          }
         }
       },
-      "group": {"kind": "build", "isDefault": true}
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     },
     {
       "label": "compile",
@@ -42,6 +52,16 @@
       "dependsOn": "package-extension",
       "problemMatcher": [],
       "group": "build"
+    },
+    {
+      "label": "install-vsix",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File ${workspaceFolder}/scripts/install-vsix.ps1",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      }
     },
     {
       "label": "browser-dev-prep",

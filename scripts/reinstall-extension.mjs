@@ -31,6 +31,12 @@ const DEFAULT_SERVE_WEB_PORT = 8000;
 /** Extension IDs to uninstall (both may exist; uninstall each separately). */
 const DEFAULT_EXTENSION_IDS = ["drive-mode.cursor-drive", "hh.cursor-drive"];
 
+/** Read extension ID (publisher.name) from package.json. */
+function getExtensionId() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8"));
+  return `${pkg.publisher}.${pkg.name}`;
+}
+
 function log(msg) {
   console.log(`[reinstall] ${msg}`);
 }
@@ -192,10 +198,11 @@ async function main() {
   const skipCompile = args.includes("--skip-compile");
   const noUninstall = args.includes("--no-uninstall");
 
-  let extensionIds = DEFAULT_EXTENSION_IDS;
+  const currentId = getExtensionId();
+  let idsToUninstall = [...new Set([currentId, ...DEFAULT_EXTENSION_IDS])];
   const extIdIdx = args.indexOf("--extension-id");
   if (extIdIdx >= 0 && args[extIdIdx + 1]) {
-    extensionIds = [args[extIdIdx + 1]];
+    idsToUninstall = [args[extIdIdx + 1]];
   }
 
   const mcpPort = await resolveMcpPort();
@@ -203,9 +210,10 @@ async function main() {
   writeMcpJson(mcpPort);
 
   if (!noUninstall) {
-    for (const extId of extensionIds) {
+    for (const extId of idsToUninstall) {
       uninstallExtension(extId);
     }
+    await new Promise((r) => setTimeout(r, 500));
   }
 
   if (!skipCompile) {
@@ -224,7 +232,7 @@ async function main() {
   }
   const vsixPath = path.join(REPO_ROOT, vsixFiles[0]);
   run(`cursor --install-extension "${vsixPath}" --force`);
-  log("Extension installed. Reload the Extension Development Host or serve-web window to pick up changes.");
+  log("Extension installed. IMPORTANT: Reload Cursor to apply changes (Ctrl+Shift+P → Developer: Reload Window).");
 
   if (devSandbox) {
     launchDevSandbox();

@@ -18,25 +18,30 @@
       font-family: var(--vscode-font-family), system-ui, -apple-system, sans-serif;
       font-size: 13px;
       line-height: 1.5;
-      color: var(--vscode-editor-foreground);
+      color: var(--vscode-sideBar-foreground, var(--vscode-editor-foreground));
       background: var(--vscode-sideBar-background);
       margin: 0;
-      padding: 16px;
+      padding: 12px 8px;
       min-height: 100%;
     }
 
     .card {
-      background: var(--vscode-editor-background);
-      border: 1px solid var(--vscode-widget-border, transparent);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 12px;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      background: var(--vscode-sideBar-background);
+      border: none;
+      border-radius: 4px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      transition: background 0.15s ease;
+    }
+
+    .card:hover {
+      background: var(--vscode-list-hoverBackground, transparent);
     }
 
     .card.drive-on {
-      border-color: var(--vscode-testing-iconPassed, #4ec9b0);
-      box-shadow: 0 0 0 1px rgba(78, 201, 176, 0.15);
+      background: var(--vscode-list-activeSelectionBackground, rgba(78, 201, 176, 0.12));
+      border-left: 3px solid var(--vscode-testing-iconPassed, #4ec9b0);
+      padding-left: 9px;
     }
 
     .section-title {
@@ -44,8 +49,9 @@
       font-weight: 600;
       color: var(--vscode-descriptionForeground);
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      padding: 0 4px;
     }
 
     .status-row {
@@ -81,10 +87,10 @@
     }
 
     .toggle-switch {
-      width: 40px;
-      height: 22px;
-      border-radius: 11px;
-      background: var(--vscode-widget-border);
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--vscode-widget-border, rgba(128, 128, 128, 0.4));
       cursor: pointer;
       position: relative;
       transition: background 0.2s ease;
@@ -156,8 +162,9 @@
     }
 
     .btn-secondary {
-      background: var(--vscode-list-hoverBackground, transparent);
+      background: transparent;
       color: var(--vscode-foreground);
+      border: 1px solid var(--vscode-widget-border, transparent);
     }
 
     .btn-secondary:hover {
@@ -200,16 +207,18 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--vscode-widget-border);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border));
     }
 
     .panel-header h2 {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       margin: 0;
-      color: var(--vscode-editor-foreground);
+      color: var(--vscode-descriptionForeground);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .btn-icon {
@@ -329,6 +338,33 @@
       Screen</button>
   </div>
 
+  <div class="card" id="mic-test-card">
+    <div class="section-title">Microphone Test</div>
+    <p class="mic-hint" style="font-size: 11px; color: var(--vscode-descriptionForeground); margin: 0 0 8px 0;">
+      See which mic is available and test its level. Cursor uses your system default for voice chat; this helps verify
+      it works.
+    </p>
+    <div class="settings-row">
+      <label for="mic-device-select">Input device</label>
+      <select id="mic-device-select" class="mic-select"
+        style="width:100%; padding:6px 8px; font-size:12px; border:1px solid var(--vscode-input-border); background:var(--vscode-input-background); color:var(--vscode-input-foreground); border-radius:4px;">
+        <option value="">— Select device —</option>
+      </select>
+    </div>
+    <div class="mic-level-row" style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
+      <div class="mic-level-bar"
+        style="flex:1; height: 8px; background: var(--vscode-input-background); border-radius: 4px; overflow: hidden;">
+        <div id="mic-level-fill"
+          style="height:100%; width:0%; background: var(--vscode-testing-iconPassed, #4ec9b0); transition: width 0.05s;">
+        </div>
+      </div>
+      <span id="mic-level-label" style="font-size: 11px; min-width: 32px;">—</span>
+    </div>
+    <div class="actions" style="margin-top: 8px;">
+      <button class="btn btn-secondary" id="btn-mic-test" data-testid="btn-mic-test">Start Mic Test</button>
+    </div>
+  </div>
+
   <div class="card settings-panel" id="settings-panel">
     <div class="section-title">Quick Settings</div>
     <div class="settings-row">
@@ -352,6 +388,13 @@
       <span class="hint">Comma-separated. Used when spawning operators.</span>
     </div>
     <div class="settings-row">
+      <label for="input-ttsVolume">TTS volume (agent voice)</label>
+      <input type="range" id="input-ttsVolume" min="20" max="100" value="50" data-key="tts.volume"
+        style="width:100%; accent-color: var(--vscode-focusBorder);" />
+      <span class="hint" id="ttsVolume-value">50%</span>
+      <button class="btn btn-secondary" id="btn-test-tts" style="margin-top:6px;">Test TTS</button>
+    </div>
+    <div class="settings-row">
       <label><input type="checkbox" id="input-autoMic" data-key="voice.autoActivateMicOnToggle" /> Auto mic when Drive
         on</label>
     </div>
@@ -361,6 +404,7 @@
   </div>
 
   <script nonce="{{CSP_NONCE}}">
+    var lastState = null;
     function render(state) {
       const card = document.getElementById('status-card');
       const dot = document.getElementById('status-dot');
@@ -399,11 +443,15 @@
         var t = document.getElementById('input-tangentKeyword');
         var n = document.getElementById('input-namePool');
         var m = document.getElementById('input-autoMic');
+        var vol = document.getElementById('input-ttsVolume');
+        var volLabel = document.getElementById('ttsVolume-value');
         if (w) w.value = c.wakeWord || '';
         if (s) s.value = c.submitWord || '';
         if (t) t.value = c.tangentKeyword || '';
         if (n) n.value = c.namePool || '';
         if (m) m.checked = !!c.autoActivateMicOnToggle;
+        if (vol) vol.value = String(c.ttsVolume ?? 50);
+        if (volLabel) volLabel.textContent = (c.ttsVolume ?? 50) + '%';
       }
     }
     function escapeHtml(s) {
@@ -411,7 +459,34 @@
     }
     window.addEventListener('message', function (e) {
       const msg = e.data;
-      if (msg && msg.type === 'state' && msg.state) render(msg.state);
+      if (!msg || !msg.type) return;
+      if (msg.type === 'state' && msg.state) {
+        lastState = msg.state;
+        render(msg.state);
+        return;
+      }
+      if (msg.type === 'ttsSpeak' && msg.text && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(msg.text);
+        u.volume = Math.max(0.2, Math.min(1, msg.volume ?? 0.5));
+        u.rate = 1;
+        window.speechSynthesis.speak(u);
+        return;
+      }
+      if (msg.type === 'ttsStop') {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        if (window._driveTtsAudio) { window._driveTtsAudio.pause(); window._driveTtsAudio = null; }
+        return;
+      }
+      if (msg.type === 'playAudio' && msg.base64 && msg.mimeType) {
+        if (window._driveTtsAudio) { window._driveTtsAudio.pause(); window._driveTtsAudio = null; }
+        var a = new Audio('data:' + (msg.mimeType || 'audio/mpeg') + ';base64,' + msg.base64);
+        a.volume = Math.max(0.2, Math.min(1, msg.volume ?? 0.6));
+        window._driveTtsAudio = a;
+        a.onended = function () { window._driveTtsAudio = null; vscodeApi.postMessage({ type: 'ttsEnded' }); };
+        a.onerror = function () { window._driveTtsAudio = null; vscodeApi.postMessage({ type: 'ttsEnded' }); };
+        a.play();
+      }
     });
     const vscodeApi = acquireVsCodeApi();
     document.getElementById('toggle-switch').onclick = function () { vscodeApi.postMessage({ type: 'toggle' }); };
@@ -421,6 +496,19 @@
     document.getElementById('btn-spawn').onclick = function () { vscodeApi.postMessage({ type: 'spawnOperator' }); };
     document.getElementById('btn-agent-screen').onclick = function () { vscodeApi.postMessage({ type: 'showAgentScreen' }); };
     document.getElementById('btn-open-full-settings').onclick = function () { vscodeApi.postMessage({ type: 'openSettings' }); };
+    var btnTestTts = document.getElementById('btn-test-tts');
+    if (btnTestTts) btnTestTts.onclick = function () {
+      var vol = (lastState && lastState.config && lastState.config.ttsVolume != null) ? lastState.config.ttsVolume / 100 : 0.5;
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance('Drive agent voice test. Volume is set to ' + Math.round(vol * 100) + ' percent.');
+        u.volume = Math.max(0.2, Math.min(1, vol));
+        u.rate = 1;
+        window.speechSynthesis.speak(u);
+      } else {
+        vscodeApi.postMessage({ type: 'testTts' });
+      }
+    };
 
     document.getElementById('btn-settings').onclick = function () {
       var panel = document.getElementById('settings-panel');
@@ -438,6 +526,92 @@
     });
     var autoMic = document.getElementById('input-autoMic');
     if (autoMic) autoMic.addEventListener('change', function () { saveConfig(autoMic); });
+
+    var ttsVol = document.getElementById('input-ttsVolume');
+    if (ttsVol) {
+      ttsVol.addEventListener('input', function () {
+        var label = document.getElementById('ttsVolume-value');
+        if (label) label.textContent = ttsVol.value + '%';
+        vscodeApi.postMessage({ type: 'updateConfig', key: 'tts.volume', value: ttsVol.value });
+      });
+    }
+
+    (function micTest() {
+      var btn = document.getElementById('btn-mic-test');
+      var select = document.getElementById('mic-device-select');
+      var levelFill = document.getElementById('mic-level-fill');
+      var levelLabel = document.getElementById('mic-level-label');
+      var stream = null;
+      var analyser = null;
+      var animationId = null;
+
+      function stopMic() {
+        if (animationId) cancelAnimationFrame(animationId);
+        animationId = null;
+        if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+        stream = null;
+        analyser = null;
+        if (btn) btn.textContent = 'Start Mic Test';
+        if (levelFill) levelFill.style.width = '0%';
+        if (levelLabel) levelLabel.textContent = '—';
+      }
+
+      function updateLevel() {
+        if (!analyser || !levelFill || !levelLabel) return;
+        var data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
+        var sum = 0;
+        for (var i = 0; i < data.length; i++) sum += data[i];
+        var avg = data.length ? sum / data.length : 0;
+        var pct = Math.min(100, Math.round(avg * 0.4));
+        levelFill.style.width = pct + '%';
+        levelLabel.textContent = pct + '%';
+        animationId = requestAnimationFrame(updateLevel);
+      }
+
+      async function loadDevices() {
+        try {
+          var devices = await navigator.mediaDevices.enumerateDevices();
+          var inputs = devices.filter(function (d) { return d.kind === 'audioinput'; });
+          if (!select) return;
+          select.innerHTML = '<option value="">— Default (system) —</option>';
+          inputs.forEach(function (d) {
+            var opt = document.createElement('option');
+            opt.value = d.deviceId;
+            opt.textContent = d.label || ('Microphone ' + (select.options.length));
+            select.appendChild(opt);
+          });
+        } catch (e) {
+          if (select) select.innerHTML = '<option value="">Error: ' + escapeHtml(String(e.message || e)) + '</option>';
+        }
+      }
+
+      if (btn) {
+        btn.onclick = async function () {
+          if (stream) {
+            stopMic();
+            return;
+          }
+          try {
+            var constraints = { audio: true };
+            if (select && select.value) constraints.audio = { deviceId: { exact: select.value } };
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            loadDevices();
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            var src = ctx.createMediaStreamSource(stream);
+            analyser = ctx.createAnalyser();
+            analyser.fftSize = 256;
+            src.connect(analyser);
+            btn.textContent = 'Stop Mic Test';
+            updateLevel();
+          } catch (e) {
+            if (levelLabel) levelLabel.textContent = 'Error';
+            vscodeApi.postMessage({ type: 'micTestError', error: String(e && e.message ? e.message : e) });
+          }
+        };
+      }
+      loadDevices();
+    })();
   </script>
 </body>
 

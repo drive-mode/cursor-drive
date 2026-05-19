@@ -63,9 +63,10 @@ Press **F5** in Cursor to launch an Extension Development Host.
 1. Clone and install (see above).
 2. Run `npm run compile`.
 3. Press **F5** in Cursor to open the Extension Development Host.
-4. Toggle Drive or use the first-run prompt.
+4. Toggle Drive (**Ctrl+Shift+D**) and submit a prompt (e.g. `hello`).
+5. Confirm the model responds and the **Agent Screen** shows activity.
 
-See [getting started](docs/guides/getting-started.md) for the full dev loop.
+See [getting started](docs/guides/getting-started.md) for the full dev loop and [live-testing](docs/guides/live-testing.md) for the smoke test suite.
 
 ---
 

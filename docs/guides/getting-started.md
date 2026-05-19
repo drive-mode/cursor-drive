@@ -44,13 +44,23 @@ npm run compile
 npm run watch
 
 # Run tests
-npm test
+npm test                    # Unit tests (Jest)
+npm run test:integration    # Integration tests (Extension Host)
 
 # Package extension
 npx vsce package
 ```
 
 **Launch dev host:** Press **F5** in Cursor. Select "Dev: Drive in sandbox" or "Dev: Drive in repo root".
+
+### Verify MVP
+
+1. **F5** → Extension Development Host opens.
+2. **Ctrl+Shift+D** → Toggle Drive (status bar shows `Drive > [Mode]`).
+3. Submit a prompt (e.g. `hello` or *"Call agent_screen_activity and log a short status"*).
+4. Confirm the model responds and the **Agent Screen** shows activity (tab or inline MCP App in Cursor 2.6+).
+
+For full smoke tests, see [live-testing.md](live-testing.md). For MCP App UI demo, see [demo-mcp-apps.md](demo-mcp-apps.md).
 
 ---
 
@@ -59,8 +69,9 @@ npx vsce package
 ```
 cursor-drive/
 ├── src/                    # TypeScript extension source (18 modules)
+│   └── test/suite/         # Integration tests (Extension Host)
 ├── out/                    # Compiled JS output (gitignored)
-├── tests/                  # Jest test suite
+├── tests/                  # Jest unit test suite
 │   └── __mocks__/vscode.ts # VS Code API mock
 ├── .cursor/                # Cursor plugin layer
 │   ├── commands/           # Slash commands (/tangent, /switch, etc.)

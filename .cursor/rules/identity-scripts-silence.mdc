@@ -1,0 +1,15 @@
+---
+description: Do not mention identity-sensitive scripts or dual-profile push in any documentation
+globs: ['**/*.md', '**/*.mdc', 'docs/**', 'README*', 'CONTRIBUTING*']
+---
+
+# Identity scripts — do not document
+
+**Never mention** in documentation, README, CONTRIBUTING, plans, or any committed text:
+
+- `scripts/send-to-github` or `send-to-github`
+- The dual-profile push workflow (hhalperin / ai-secretagent)
+- Identity rewriting, author masking, or push-to-both-remotes
+- Any script or path that is git ignored for identity/privacy reasons
+
+These are local-only, identity-sensitive. Documentation must not reference them.

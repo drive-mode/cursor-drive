@@ -12,6 +12,7 @@ import * as fs from "fs";
 import * as path from "path";
 import type { DriveModeManager } from "./driveMode.js";
 import type { OperatorRegistry } from "./operatorRegistry.js";
+import { notifyPlaybackEnded } from "./tts.js";
 
 export const DRIVE_SIDEBAR_VIEW_ID = "cursorDrive.panel";
 
@@ -25,6 +26,7 @@ export interface DriveSidebarState {
     tangentKeyword: string;
     namePool: string;
     autoActivateMicOnToggle: boolean;
+    ttsVolume: number;
   };
 }
 
@@ -91,6 +93,26 @@ export class DriveSidebarProvider implements vscode.WebviewViewProvider {
     this._postState();
   }
 
+  /** Speak text via webview speechSynthesis (volume 0.2–1). Returns true if sent. */
+  speakTts(text: string, volume: number): boolean {
+    if (!this._view?.webview) { return false; }
+    void this._view.webview.postMessage({ type: "ttsSpeak", text, volume });
+    return true;
+  }
+
+  /** Stop current TTS playback. */
+  stopTts(): void {
+    if (!this._view?.webview) { return; }
+    void this._view.webview.postMessage({ type: "ttsStop" });
+  }
+
+  /** Play audio (base64) via webview. Returns true if sent. */
+  playAudio(base64: string, mimeType: string, volume: number): boolean {
+    if (!this._view?.webview) { return false; }
+    void this._view.webview.postMessage({ type: "playAudio", base64, mimeType, volume });
+    return true;
+  }
+
   private _postState(): void {
     if (!this._view) return;
     const state = this._getState();
@@ -107,6 +129,7 @@ export class DriveSidebarProvider implements vscode.WebviewViewProvider {
       status: o.status,
     })) ?? [];
     const cfg = vscode.workspace.getConfiguration("cursorDrive");
+    const ttsCfg = vscode.workspace.getConfiguration("cursorDrive.tts");
     const namePool = cfg.get<string[]>("operators.namePool", []);
     return {
       active: driveMgr?.active ?? false,
@@ -118,11 +141,12 @@ export class DriveSidebarProvider implements vscode.WebviewViewProvider {
         tangentKeyword: cfg.get<string>("agents.tangentKeyword", "tangent"),
         namePool: Array.isArray(namePool) ? namePool.join(", ") : String(namePool ?? ""),
         autoActivateMicOnToggle: cfg.get<boolean>("voice.autoActivateMicOnToggle", false),
+        ttsVolume: Math.round((ttsCfg.get<number>("volume", 0.5) ?? 0.5) * 100),
       },
     };
   }
 
-  private _handleMessage(msg: { type: string; key?: string; value?: string | boolean | string[] }): void {
+  private _handleMessage(msg: { type: string; key?: string; value?: string | boolean | number | string[]; error?: string }): void {
     const cmdMap: Record<string, string> = {
       toggle: "cursorDrive.toggle",
       setMode: "cursorDrive.setSubMode",
@@ -131,18 +155,34 @@ export class DriveSidebarProvider implements vscode.WebviewViewProvider {
       spawnOperator: "cursorDrive.spawnOperator",
       activateVoice: "cursorDrive.activateVoiceInput",
       openSettings: "workbench.action.openSettings",
+      testTts: "cursorDrive.speak",
     };
     if (msg.type === "openSettings") {
       void vscode.commands.executeCommand("workbench.action.openSettings", "cursorDrive");
       return;
     }
+    if (msg.type === "micTestError" && typeof msg.error === "string") {
+      void vscode.window.showErrorMessage(`Drive mic test: ${msg.error}`);
+      return;
+    }
+    if (msg.type === "ttsEnded") {
+      notifyPlaybackEnded();
+      return;
+    }
     if (msg.type === "updateConfig" && msg.key !== undefined) {
-      const cfg = vscode.workspace.getConfiguration("cursorDrive");
       const key = msg.key as string;
       let value = msg.value;
       if (key === "operators.namePool" && typeof value === "string") {
         value = value.split(",").map((s) => s.trim()).filter(Boolean);
+      } else if (key === "tts.volume") {
+        const ttsCfg = vscode.workspace.getConfiguration("cursorDrive.tts");
+        const num = typeof value === "number" ? value : parseInt(String(value ?? ""), 10);
+        const vol = Number.isNaN(num) ? 0.5 : Math.max(0.2, Math.min(1, num / 100));
+        void ttsCfg.update("volume", vol, vscode.ConfigurationTarget.Global);
+        this._postState();
+        return;
       }
+      const cfg = vscode.workspace.getConfiguration("cursorDrive");
       void cfg.update(key, value, vscode.ConfigurationTarget.Global);
       this._postState();
       return;

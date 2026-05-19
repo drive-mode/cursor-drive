@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import { notifyPlaybackEnded } from "./tts.js";
 import { agentScreenTemplate } from "./agentScreenTemplate";
 
 export interface ActivityEvent {
@@ -58,6 +59,10 @@ export class AgentScreenPanel {
           const level = msg.level ?? "error";
           const loc = msg.src ? ` (${msg.src}:${msg.line ?? 0}:${msg.col ?? 0})` : "";
           ch.appendLine(`[AgentScreen WebView ${level}] ${msg.msg ?? ""}${loc}`);
+          return;
+        }
+        if (msg.type === "ttsEnded") {
+          notifyPlaybackEnded();
           return;
         }
         if (msg.type === "openFile" && msg.path) { void this.openFile(msg.path); }
@@ -214,6 +219,26 @@ export class AgentScreenPanel {
     if (this.panel) {
       void this.panel.webview.postMessage({ type: "chime", count });
     }
+  }
+
+  /** Speak text via WebView's speechSynthesis (volume 0.2–1). Returns true if sent. */
+  speakTts(text: string, volume: number): boolean {
+    if (this.disposed || !this.panel) { return false; }
+    void this.panel.webview.postMessage({ type: "ttsSpeak", text, volume });
+    return true;
+  }
+
+  /** Stop current TTS playback. */
+  stopTts(): void {
+    if (this.disposed || !this.panel) { return; }
+    void this.panel.webview.postMessage({ type: "ttsStop" });
+  }
+
+  /** Play audio (base64) via webview. Returns true if sent. */
+  playAudio(base64: string, mimeType: string, volume: number): boolean {
+    if (this.disposed || !this.panel) { return false; }
+    void this.panel.webview.postMessage({ type: "playAudio", base64, mimeType, volume });
+    return true;
   }
 
   /** Post a sync status snapshot update to the Agent Screen. */

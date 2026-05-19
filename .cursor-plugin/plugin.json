@@ -17,7 +17,7 @@
     "tts",
     "share-screen"
   ],
-  "logo": "assets/logo.svg",
+  "logo": "assets/blackonwhite_steering_wheel.svg",
   "agents": "agents/",
   "skills": "skills/",
   "rules": "rules/",

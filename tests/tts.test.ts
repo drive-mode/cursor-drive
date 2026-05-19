@@ -5,6 +5,19 @@ jest.mock("say", () => ({
   stop: jest.fn(),
 }));
 
+jest.mock("../src/edgeTts", () => ({
+  speakEdgeTts: jest.fn().mockResolvedValue(false),
+  stopEdgeTts: jest.fn(),
+  isEdgeTtsAvailable: jest.fn().mockReturnValue(false),
+  registerEdgeTtsAudioPlayer: jest.fn(),
+}));
+
+jest.mock("../src/piper", () => ({
+  speakPiper: jest.fn().mockReturnValue(false),
+  stopPiper: jest.fn(),
+  isPiperAvailable: jest.fn().mockReturnValue(false),
+}));
+
 type TtsModule = typeof import("../src/tts");
 type SayMockModule = { speak: jest.Mock; stop: jest.Mock };
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-api)",
+      "Read(//c/Users/harri/Documents/dev/active/ai-secretagent/claude-drive/**)",
+      "Bash(gh repo:*)",
+      "Bash(node_modules/.bin/tsc -p ./)"
+    ]
+  }
+}

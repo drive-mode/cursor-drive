@@ -33,7 +33,7 @@ describe("createDriveStatusBar", () => {
     } as unknown as Parameters<typeof createDriveStatusBar>[0];
 
     createDriveStatusBar(mgr);
-    expect(item.text).toContain("Drive (off)");
+    expect(item.text).toContain("Drive");
 
     // keep listener referenced to satisfy linter/type usage
     expect(typeof driveListener).toBe("function");

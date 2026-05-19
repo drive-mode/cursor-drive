@@ -1,5 +1,5 @@
 {
-  "cursorDrive.mcp.port": 7892,
+  "cursorDrive.mcp.port": 7891,
   "cursorDrive.defaultSubMode": "agent",
   "cursorDrive.tts.enabled": true,
   "cursorDrive.tts.speed": 1,

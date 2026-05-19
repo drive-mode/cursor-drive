@@ -18,10 +18,12 @@ function emit(decision, message, details) {
 }
 
 function main() {
-  const result = spawnSync('python', [PLAN_RUNNER, 'stop'], {
+  const result = spawnSync('pythonw', [PLAN_RUNNER, 'stop'], {
     cwd: ROOT,
     encoding: 'utf8',
     timeout: 60000,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    windowsHide: true,
   });
 
   const warnings = [];

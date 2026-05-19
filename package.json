@@ -52,6 +52,11 @@
         "category": "Drive"
       },
       {
+        "command": "cursorDrive.setupPiper",
+        "title": "Setup Piper TTS (free local voice)",
+        "category": "Drive"
+      },
+      {
         "command": "cursorDrive.stopSpeaking",
         "title": "Stop Speaking",
         "category": "Drive"
@@ -176,7 +181,7 @@
         {
           "id": "cursorDrive",
           "title": "Drive",
-          "icon": "assets/logo.svg"
+          "icon": "assets/blackonwhite_steering_wheel.svg"
         }
       ]
     },
@@ -214,10 +219,49 @@
           "default": false,
           "description": "Enable text-to-speech responses. Drive will speak agent responses aloud."
         },
+        "cursorDrive.tts.backend": {
+          "type": "string",
+          "enum": [
+            "webSpeech",
+            "edgeTts",
+            "piper",
+            "say"
+          ],
+          "default": "webSpeech",
+          "enumDescriptions": [
+            "Webview first (volume control), then Piper, then say",
+            "Edge-TTS (free, high-quality, requires npm install edge-tts-universal)",
+            "Piper first (free local), then say. Requires cursorDrive.tts.piper.path and modelPath.",
+            "OS native only (say package)"
+          ],
+          "description": "TTS backend. webSpeech = best UX. edgeTts = Microsoft voices (free, needs network). piper = local neural. say = OS only."
+        },
+        "cursorDrive.tts.edgeTts.voice": {
+          "type": "string",
+          "default": "en-US-EmmaMultilingualNeural",
+          "description": "Edge-TTS voice ID. Examples: en-US-EmmaMultilingualNeural, en-GB-SoniaNeural, en-US-AriaNeural"
+        },
+        "cursorDrive.tts.piper.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Piper executable (e.g. C:\\piper\\piper.exe). Download from https://github.com/rhasspy/piper/releases"
+        },
+        "cursorDrive.tts.piper.modelPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Piper voice model .onnx file (e.g. en_US-lessac-medium.onnx). Download from https://huggingface.co/rhasspy/piper-voices"
+        },
+        "cursorDrive.tts.piper.speed": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.5,
+          "maximum": 2,
+          "description": "Piper speech speed (1 = normal)"
+        },
         "cursorDrive.tts.voice": {
           "type": "string",
           "default": "",
-          "description": "Voice name to use for TTS. Leave blank for system default. For Windows: e.g. 'Microsoft David Desktop'. For macOS: e.g. 'Alex'."
+          "description": "Voice name for TTS. Blank = system default. Windows: 'Microsoft Zira Desktop' (female), 'Microsoft David Desktop' (male). macOS: 'Alex', 'Samantha'. For less robotic sound, ElevenLabs backend (planned) will support voice IDs."
         },
         "cursorDrive.tts.speed": {
           "type": "number",
@@ -237,6 +281,13 @@
           "type": "boolean",
           "default": true,
           "description": "Stop speaking immediately when the user sends a new message."
+        },
+        "cursorDrive.tts.volume": {
+          "type": "number",
+          "default": 0.6,
+          "minimum": 0.2,
+          "maximum": 1,
+          "description": "Agent voice volume (0.2–1.0). Default 0.6 to avoid loud startup. Applied when using OS TTS; ElevenLabs/Piper backends will use this when added."
         },
         "cursorDrive.operators.maxConcurrent": {
           "type": "number",
@@ -454,8 +505,21 @@
         },
         "cursorDrive.modeSwitching.allowedModes": {
           "type": "array",
-          "items": { "type": "string", "enum": ["plan", "agent", "ask", "debug"] },
-          "default": ["plan", "agent", "ask", "debug"],
+          "items": {
+            "type": "string",
+            "enum": [
+              "plan",
+              "agent",
+              "ask",
+              "debug"
+            ]
+          },
+          "default": [
+            "plan",
+            "agent",
+            "ask",
+            "debug"
+          ],
           "description": "Modes the user is allowed to switch to."
         },
         "cursorDrive.operators.autoInjectOpenFiles": {
@@ -519,19 +583,27 @@
         },
         "cursorDrive.approvalGates.blockPatterns": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Patterns that block actions when matched."
         },
         "cursorDrive.approvalGates.warnPatterns": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Patterns that trigger a warning when matched."
         },
         "cursorDrive.agents.permissions.default": {
           "type": "string",
-          "enum": ["readonly", "standard", "full"],
+          "enum": [
+            "readonly",
+            "standard",
+            "full"
+          ],
           "default": "standard",
           "description": "Default permission preset for agents."
         },
@@ -552,8 +624,12 @@
           "items": {
             "type": "object",
             "properties": {
-              "trigger": { "type": "string" },
-              "expansion": { "type": "string" }
+              "trigger": {
+                "type": "string"
+              },
+              "expansion": {
+                "type": "string"
+              }
             }
           },
           "default": [],
@@ -594,6 +670,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "jest",
+    "test:integration": "vscode-test",
     "dev-loop": "node sandbox/dev-loop.mjs",
     "dev-loop:serve": "node sandbox/dev-loop.mjs --serve-web",
     "reinstall": "node scripts/reinstall-extension.mjs",
@@ -626,10 +703,15 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20",
     "@types/vscode": "^1.85.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
+    "glob": "^13.0.6",
     "jest": "^30.2.0",
+    "mocha": "^11.7.5",
     "ts-jest": "^29.4.6",
     "typescript": "^5.3.0"
   },
@@ -640,6 +722,7 @@
     "zod": "^4.3.6"
   },
   "optionalDependencies": {
+    "edge-tts-universal": "^1.4.0",
     "say": "^0.16.0"
   }
 }

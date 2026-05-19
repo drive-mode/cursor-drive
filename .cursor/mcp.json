@@ -2,7 +2,9 @@
   "mcpServers": {
     "system-logs-mcp": {
       "command": "node",
-      "args": ["mcp-servers/system-logs-mcp/dist/index.js"],
+      "args": [
+        "mcp-servers/system-logs-mcp/dist/index.js"
+      ],
       "description": "System logs observability (tail_logs tool)"
     },
     "drive": {

@@ -20,7 +20,9 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { createDriveModeManager, CursorMode } from "./driveMode.js";
 import { createDriveStatusBar } from "./statusBar.js";
-import { speak, stop as ttsStop, isEnabled as ttsEnabled } from "./tts.js";
+import { speak, stop as ttsStop, isEnabled as ttsEnabled, registerTtsWebviewProvider } from "./tts.js";
+import { registerEdgeTtsAudioPlayer } from "./edgeTts.js";
+import { isPiperAvailable } from "./piper.js";
 import { AgentScreenPanel } from "./agentScreen.js";
 import { DriveSidebarProvider, DRIVE_SIDEBAR_VIEW_ID } from "./driveSidebar.js";
 import { OperatorRegistry } from "./operatorRegistry.js";
@@ -119,6 +121,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   );
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(DRIVE_SIDEBAR_VIEW_ID, driveSidebarProvider)
+  );
+  registerTtsWebviewProvider({ speak: (t, v) => AgentScreenPanel.getInstance()?.speakTts(t, v) ?? false, stop: () => AgentScreenPanel.getInstance()?.stopTts() });
+  registerTtsWebviewProvider({ speak: (t, v) => driveSidebarProvider.speakTts(t, v), stop: () => driveSidebarProvider.stopTts() });
+  registerEdgeTtsAudioPlayer((base64, mimeType, volume) =>
+    AgentScreenPanel.getInstance()?.playAudio(base64, mimeType, volume) ?? driveSidebarProvider.playAudio(base64, mimeType, volume)
   );
   context.subscriptions.push(
     driveMgr.onDidChange(() => driveSidebarProvider.updateState())
@@ -411,7 +418,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(
     vscode.commands.registerCommand("cursorDrive.setSubMode", async () => {
-      const driveIconUri = vscode.Uri.joinPath(context.extensionUri, "assets", "logo.svg");
+      const driveIconUri = vscode.Uri.joinPath(context.extensionUri, "assets", "blackonwhite_steering_wheel.svg");
       const items: vscode.QuickPickItem[] = [
         { label: "Drive", description: "Voice-first (mic, wake word)", iconPath: driveIconUri },
         { label: "$(circle-slash) Off", description: "Disable drive mode" },
@@ -560,6 +567,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         placeHolder: "Hello from Drive",
       });
       if (text) { speak(text); }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("cursorDrive.setupPiper", async () => {
+      const msg = isPiperAvailable()
+        ? "Piper TTS is configured. Test with: Drive → Test TTS Speak."
+        : "Piper TTS setup:\n\n1. Download piper from https://github.com/rhasspy/piper/releases\n   (Windows: piper_windows_amd64.zip)\n\n2. Download a voice from https://huggingface.co/rhasspy/piper-voices\n   (e.g. en_US-lessac-medium)\n\n3. Set cursorDrive.tts.piper.path (piper.exe) and cursorDrive.tts.piper.modelPath (.onnx)\n\n4. Set cursorDrive.tts.backend to \"piper\" and cursorDrive.tts.enabled to true";
+      await vscode.window.showInformationMessage(msg, "Open Piper releases").then((choice) => {
+        if (choice === "Open Piper releases") {
+          void vscode.env.openExternal(vscode.Uri.parse("https://github.com/rhasspy/piper/releases"));
+        }
+      });
     })
   );
 

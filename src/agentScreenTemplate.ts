@@ -38,6 +38,11 @@ export const agentScreenTemplate = `<!DOCTYPE html>
       border-left: 3px solid var(--vscode-testing-iconPassed, #4ec9b0);
     }
 
+    body.drive-active header {
+      border-left: 2px solid var(--vscode-testing-iconPassed, #4ec9b0);
+      padding-left: 12px;
+    }
+
     header {
       padding: 10px 14px;
       border-bottom: 1px solid var(--vscode-panel-border);
@@ -50,10 +55,10 @@ export const agentScreenTemplate = `<!DOCTYPE html>
     }
 
     header h1 {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       margin: 0;
-      color: var(--vscode-titleBar-activeForeground, var(--vscode-editor-foreground));
+      color: var(--vscode-tab-activeForeground, var(--vscode-editor-foreground));
     }
 
     .operator-badge {
@@ -95,12 +100,16 @@ export const agentScreenTemplate = `<!DOCTYPE html>
 
     .tab.active {
       color: var(--vscode-tab-activeForeground);
-      border-bottom-color: var(--vscode-testing-iconPassed, #4ec9b0);
+      border-bottom-color: var(--vscode-focusBorder, var(--vscode-testing-iconPassed, #4ec9b0));
     }
 
     .tab:hover {
       color: var(--vscode-tab-activeForeground);
       background: var(--vscode-list-hoverBackground);
+    }
+
+    body.drive-active .tab.active {
+      border-bottom-color: var(--vscode-testing-iconPassed, #4ec9b0);
     }
 
     .panel {
@@ -601,6 +610,53 @@ export const agentScreenTemplate = `<!DOCTYPE html>
 
         case 'chime': {
           playChimes(msg.count || 1);
+          break;
+        }
+
+        case 'ttsSpeak': {
+          const text = msg.text || '';
+          const vol = Math.max(0.2, Math.min(1, msg.volume ?? 0.5));
+          if (text && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.volume = vol;
+            u.rate = 1;
+            window.speechSynthesis.speak(u);
+          }
+          break;
+        }
+
+        case 'ttsStop': {
+          if (window.speechSynthesis) window.speechSynthesis.cancel();
+          if (window._agentScreenTtsAudio) {
+            window._agentScreenTtsAudio.pause();
+            window._agentScreenTtsAudio = null;
+          }
+          break;
+        }
+
+        case 'playAudio': {
+          const base64 = msg.base64;
+          const mimeType = msg.mimeType || 'audio/mpeg';
+          const vol = Math.max(0.2, Math.min(1, msg.volume ?? 0.6));
+          if (base64) {
+            if (window._agentScreenTtsAudio) {
+              window._agentScreenTtsAudio.pause();
+              window._agentScreenTtsAudio = null;
+            }
+            const a = new Audio('data:' + mimeType + ';base64,' + base64);
+            a.volume = vol;
+            window._agentScreenTtsAudio = a;
+            a.onended = () => {
+              window._agentScreenTtsAudio = null;
+              vscodeApi.postMessage({ type: 'ttsEnded' });
+            };
+            a.onerror = () => {
+              window._agentScreenTtsAudio = null;
+              vscodeApi.postMessage({ type: 'ttsEnded' });
+            };
+            a.play();
+          }
           break;
         }
 
