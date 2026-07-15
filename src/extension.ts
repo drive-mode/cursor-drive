@@ -37,6 +37,7 @@ import {
 import { SessionMemory } from "./sessionMemory.js";
 import { PersistentMemory } from "./persistentMemory.js";
 import { installDrivePluginToWorkspace } from "./pluginInstaller.js";
+import { buildMcpInstallDeepLink } from "./mcpRegistration.js";
 import { playChime } from "./audioFeedback.js";
 import { GitService } from "./gitService.js";
 import { WorktreeManager } from "./worktreeManager.js";
@@ -189,7 +190,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         persistentMemory,
         stateSyncCoordinator,
         integrationQueue,
-        getEnableApps: () => vscode.workspace.getConfiguration("cursorDrive.mcp").get<boolean>("enableApps", false),
+        getEnableApps: () => vscode.workspace.getConfiguration("cursorDrive.mcp").get<boolean>("enableApps", true),
         getExtensionPath: () => context.extensionPath,
         getApiKey: () => getApiKey(context),
         getCloudAgentsApiBaseUrl: () =>
@@ -245,6 +246,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
       out.appendLine(`[Drive] MCP start error: ${e.message}`);
       console.error("[Drive MCP] Failed to start:", e.message);
+      void vscode.window.setStatusBarMessage(
+        "$(warning) Drive MCP failed — Agent Screen/MCP unavailable",
+        15000
+      );
       void vscode.window.showWarningMessage(
         `Drive MCP server failed to start${portInUse ? ` (tried ports ${preferredPort}–${preferredPort + maxPortAttempts - 1})` : ""}: ${e.message}`
       );
@@ -262,10 +267,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const alreadyRegistered = ctx.workspaceState.get<boolean>("drive.mcpRegistered", false);
     if (alreadyRegistered) { return; }
 
-    const config = JSON.stringify({ url: `http://127.0.0.1:${port}/mcp` });
-    const b64 = Buffer.from(config).toString("base64");
     const deepLinkUri = vscode.Uri.parse(
-      `cursor://anysphere.cursor-deeplink/mcp/install?name=drive&config=${encodeURIComponent(b64)}`
+      buildMcpInstallDeepLink({
+        name: "drive",
+        url: `http://127.0.0.1:${port}/mcp`,
+      })
     );
 
     const choice = await vscode.window.showInformationMessage(

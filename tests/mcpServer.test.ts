@@ -5,6 +5,13 @@ import { OperatorRegistry } from "../src/operatorRegistry";
 import { AGENT_SCREEN_APP_RESOURCE_URI } from "../src/agentScreenApp";
 import * as vscode from "vscode";
 
+const mockRegisterAppResource = jest.fn();
+jest.mock("@modelcontextprotocol/ext-apps/server", () => ({
+  __esModule: true,
+  registerAppResource: (...args: unknown[]) => mockRegisterAppResource(...args),
+  RESOURCE_MIME_TYPE: "text/html;profile=mcp-app",
+}));
+
 jest.mock("../src/tts", () => ({
   speak: jest.fn(),
   stop: jest.fn(),
@@ -15,6 +22,7 @@ const mockPostEvent = jest.fn();
 const mockLogActivity = jest.fn();
 const mockLogFile = jest.fn();
 const mockLogDecision = jest.fn();
+const mockUpdatePlanProgress = jest.fn();
 jest.mock("../src/agentScreen", () => ({
   AgentScreenPanel: {
     getInstance: jest.fn(() => ({
@@ -22,6 +30,8 @@ jest.mock("../src/agentScreen", () => ({
       logActivity: mockLogActivity,
       logFile: mockLogFile,
       logDecision: mockLogDecision,
+      updatePlanProgress: mockUpdatePlanProgress,
+      playChime: jest.fn(),
     })),
   },
 }));
@@ -628,6 +638,43 @@ describe("DriveMcpServer", () => {
     expect(allText).toContain("cursor_cli_run_streaming");
   }, 10_000);
 
+  it("drive_run_pipeline is registered as an MCP tool", async () => {
+    const port = nextPort();
+    const driveMgr = makeDriveMgr();
+    const operatorRegistry = new OperatorRegistry();
+    const sessionMemory = makeSessionMemory();
+
+    server = new DriveMcpServer({ port, driveMgr, operatorRegistry, sessionMemory });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+
+    const responseBody = await new Promise<string>((resolve, reject) => {
+      const req = http.request(
+        {
+          host: "127.0.0.1",
+          port,
+          path: "/mcp",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json, text/event-stream",
+            "Mcp-Session-Id": sessionId,
+            "Mcp-Protocol-Version": MCP_PROTOCOL_VERSION,
+          },
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => { data += chunk; });
+          res.on("end", () => resolve(data));
+        }
+      );
+      req.on("error", reject);
+      req.end(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }));
+    });
+
+    expect(responseBody).toContain("drive_run_pipeline");
+  }, 10_000);
+
   it("agent_screen_activity returns _meta.ui.resourceUri and JSON payload when getEnableApps is true", async () => {
     const port = nextPort();
     const driveMgr = makeDriveMgr();
@@ -742,6 +789,80 @@ describe("DriveMcpServer", () => {
     expect(payload).toEqual({ kind: "decision", op: "Gamma", text: "Chose token bucket for rate limiting" });
     const resultWithMeta = result as { _meta?: { ui?: { resourceUri?: string } } };
     expect(resultWithMeta._meta?.ui?.resourceUri).toBe(AGENT_SCREEN_APP_RESOURCE_URI);
+  });
+
+  it("agent_screen_plan_update returns _meta.ui when getEnableApps is true", async () => {
+    const port = nextPort();
+    server = new DriveMcpServer({
+      port,
+      driveMgr: makeDriveMgr(),
+      operatorRegistry: new OperatorRegistry(),
+      sessionMemory: makeSessionMemory(),
+      getEnableApps: () => true,
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+    const result = await callMcpTool(port, sessionId, "agent_screen_plan_update", {
+      plan_id: "p1",
+      plan_name: "Ship",
+      completed_count: 2,
+      total_count: 5,
+      current_todo: "Tests",
+    });
+    const payload = JSON.parse((result.content as Array<{ text: string }>)[0].text);
+    expect(payload.kind).toBe("plan");
+    expect(payload.plan_name).toBe("Ship");
+    expect((result as { _meta?: { ui?: { resourceUri?: string } } })._meta?.ui?.resourceUri).toBe(
+      AGENT_SCREEN_APP_RESOURCE_URI
+    );
+  });
+
+  it("agent_screen_clear returns _meta.ui clear payload when getEnableApps is true", async () => {
+    const port = nextPort();
+    server = new DriveMcpServer({
+      port,
+      driveMgr: makeDriveMgr(),
+      operatorRegistry: new OperatorRegistry(),
+      sessionMemory: makeSessionMemory(),
+      getEnableApps: () => true,
+    });
+    await server.start();
+    const sessionId = await initializeMcpSession(port);
+    const result = await callMcpTool(port, sessionId, "agent_screen_clear", {});
+    const payload = JSON.parse((result.content as Array<{ text: string }>)[0].text);
+    expect(payload).toEqual({ kind: "clear" });
+    expect((result as { _meta?: { ui?: { resourceUri?: string } } })._meta?.ui?.resourceUri).toBe(
+      AGENT_SCREEN_APP_RESOURCE_URI
+    );
+  });
+
+  it("registers App resource via registerAppResource when getEnableApps is true", async () => {
+    const port = nextPort();
+    mockRegisterAppResource.mockClear();
+    server = new DriveMcpServer({
+      port,
+      driveMgr: makeDriveMgr(),
+      operatorRegistry: new OperatorRegistry(),
+      sessionMemory: makeSessionMemory(),
+      getEnableApps: () => true,
+    });
+    await server.start();
+    expect(mockRegisterAppResource).toHaveBeenCalled();
+    expect(mockRegisterAppResource.mock.calls[0][2]).toBe(AGENT_SCREEN_APP_RESOURCE_URI);
+  });
+
+  it("does not call registerAppResource when getEnableApps is false", async () => {
+    const port = nextPort();
+    mockRegisterAppResource.mockClear();
+    server = new DriveMcpServer({
+      port,
+      driveMgr: makeDriveMgr(),
+      operatorRegistry: new OperatorRegistry(),
+      sessionMemory: makeSessionMemory(),
+      getEnableApps: () => false,
+    });
+    await server.start();
+    expect(mockRegisterAppResource).not.toHaveBeenCalled();
   });
 
   it("cursor_cli_run_streaming MCP tool calls postEvent for each cliStream data event", async () => {

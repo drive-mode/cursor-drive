@@ -1,0 +1,28 @@
+{
+  "session_id": "test-1",
+  "workflow_type": "code-review",
+  "workflow_confidence": 0.8,
+  "total_tokens": 60000,
+  "budget": 200000,
+  "budget_pct": 30.0,
+  "by_category": {},
+  "loaded_files": [
+    {
+      "path": "src/foo.ts",
+      "tokens": 5000,
+      "load_level_detected": "full",
+      "pct_of_total": 8.3,
+      "flag": "ok"
+    },
+    {
+      "path": "tests/foo.test.ts",
+      "tokens": 400,
+      "load_level_detected": "outline",
+      "pct_of_total": 0.7,
+      "flag": "ok"
+    }
+  ],
+  "recommendations": [],
+  "prior_available": true,
+  "prior_workflow": "code-review"
+}

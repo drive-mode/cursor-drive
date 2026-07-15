@@ -1,13 +1,12 @@
 /**
- * Config shape tests. src/config.ts does not exist — modules use
- * vscode.workspace.getConfiguration directly. These tests assert the config
- * keys and defaults expected by pipeline, driveMode, and agentScreen.
+ * Config loading tests for src/config.ts (zod-validated readConfig).
  */
 
 import * as vscode from "vscode";
+import { readConfig, DriveConfigSchema } from "../src/config";
 
 jest.mock("vscode", () => {
-  const base = jest.requireActual<typeof import("../__mocks__/vscode")>("vscode");
+  const base = jest.requireActual<typeof import("./__mocks__/vscode")>("vscode");
   return {
     ...base,
     workspace: {
@@ -19,58 +18,84 @@ jest.mock("vscode", () => {
 
 const mockGetConfiguration = vscode.workspace.getConfiguration as jest.Mock;
 
-describe("config shape (pipeline, driveMode, agentScreen)", () => {
+function mockSections(map: Record<string, Record<string, unknown>>) {
+  mockGetConfiguration.mockImplementation((section?: string) => {
+    const key = section ?? "cursorDrive";
+    const short = key.replace(/^cursorDrive\.?/, "") || "";
+    const defaults = map[short] ?? map[""] ?? {};
+    return {
+      get: jest.fn((k: string, fallback: unknown) =>
+        Object.prototype.hasOwnProperty.call(defaults, k) ? defaults[k] : fallback
+      ),
+    };
+  });
+}
+
+describe("readConfig", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("cursorDrive returns object with expected keys and defaults", () => {
-    const defaults: Record<string, unknown> = {
-      wakeWord: "drive mode",
-      defaultSubMode: "agent",
-      syncNativeMode: true,
-    };
-    mockGetConfiguration.mockReturnValue({
-      get: jest.fn((key: string, fallback: unknown) => defaults[key] ?? fallback),
+  it("returns validated defaults when settings are empty", () => {
+    mockSections({
+      "": {},
+      mcp: {},
+      agentScreen: {},
+      tts: {},
+      operators: {},
+      agents: {},
+      privacy: {},
+      approvalGates: {},
+      modeSwitching: {},
+      cursorCli: {},
     });
 
-    const cfg = vscode.workspace.getConfiguration("cursorDrive");
-    expect(cfg).toBeDefined();
-    expect(typeof cfg.get).toBe("function");
-
-    expect(cfg.get<string>("wakeWord", "drive mode")).toBe("drive mode");
-    expect(cfg.get<string>("defaultSubMode", "agent")).toBe("agent");
-    expect(cfg.get<boolean>("syncNativeMode", true)).toBe(true);
+    const cfg = readConfig();
+    expect(cfg.defaultSubMode).toBe("agent");
+    expect(cfg.mcp.port).toBe(7891);
+    expect(cfg.mcp.enableApps).toBe(true);
+    expect(cfg.agentScreen.displayMode).toBe("tab");
+    expect(cfg.agents.tangentKeyword).toBe("tangent");
+    expect(DriveConfigSchema.safeParse(cfg).success).toBe(true);
   });
 
-  it("cursorDrive.agentScreen returns object with expected keys and defaults", () => {
-    const defaults: Record<string, unknown> = {
-      showPlanProgress: true,
-      displayMode: "tab",
-    };
-    mockGetConfiguration.mockReturnValue({
-      get: jest.fn((key: string, fallback: unknown) => defaults[key] ?? fallback),
+  it("parses nested mcp / agentScreen overrides", () => {
+    mockSections({
+      "": { defaultSubMode: "plan", wakeWord: "hey drive" },
+      mcp: { port: 7900, enableApps: false },
+      agentScreen: { displayMode: "bottomLog", showPlanProgress: false },
+      tts: {},
+      operators: {},
+      agents: { subAgentApproval: true },
+      privacy: {},
+      approvalGates: {},
+      modeSwitching: {},
+      cursorCli: {},
     });
 
-    const cfg = vscode.workspace.getConfiguration("cursorDrive.agentScreen");
-    expect(cfg).toBeDefined();
-    expect(typeof cfg.get).toBe("function");
-
-    expect(cfg.get<boolean>("showPlanProgress", true)).toBe(true);
-    expect(cfg.get<string>("displayMode", "tab")).toBe("tab");
+    const cfg = readConfig();
+    expect(cfg.defaultSubMode).toBe("plan");
+    expect(cfg.wakeWord).toBe("hey drive");
+    expect(cfg.mcp.port).toBe(7900);
+    expect(cfg.mcp.enableApps).toBe(false);
+    expect(cfg.agentScreen.displayMode).toBe("bottomLog");
+    expect(cfg.agents.subAgentApproval).toBe(true);
   });
 
-  it("returns defaults when values are missing", () => {
-    mockGetConfiguration.mockReturnValue({
-      get: jest.fn((_key: string, fallback: unknown) => fallback),
+  it("throws on invalid enum values", () => {
+    mockSections({
+      "": { defaultSubMode: "nope" },
+      mcp: {},
+      agentScreen: {},
+      tts: {},
+      operators: {},
+      agents: {},
+      privacy: {},
+      approvalGates: {},
+      modeSwitching: {},
+      cursorCli: {},
     });
 
-    const cfg = vscode.workspace.getConfiguration("cursorDrive");
-    expect(cfg.get<string>("wakeWord", "drive mode")).toBe("drive mode");
-    expect(cfg.get<string>("defaultSubMode", "agent")).toBe("agent");
-
-    const agentCfg = vscode.workspace.getConfiguration("cursorDrive.agentScreen");
-    expect(agentCfg.get<boolean>("showPlanProgress", true)).toBe(true);
-    expect(agentCfg.get<string>("displayMode", "tab")).toBe("tab");
+    expect(() => readConfig()).toThrow();
   });
 });

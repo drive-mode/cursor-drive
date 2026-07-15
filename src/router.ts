@@ -26,6 +26,12 @@ export function route(cleanContext: {
   if (command === "drive") {
     return { mode: "agent", reason: "Explicit /drive—Drive mode" };
   }
+  if (command === "ask") {
+    return { mode: "ask", reason: "Explicit /ask command" };
+  }
+  if (command === "debug") {
+    return { mode: "debug", reason: "Explicit /debug command" };
+  }
 
   // Drive sub-mode hint (higher priority than keyword routing, lower than slash commands)
   if (driveSubMode !== undefined) {

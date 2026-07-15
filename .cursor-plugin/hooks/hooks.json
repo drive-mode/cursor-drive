@@ -3,7 +3,7 @@
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "python .cursor/hooks/drive-preprocessor.py beforeSubmitPrompt"
+        "command": "python hooks/drive-preprocessor.py beforeSubmitPrompt"
       }
     ]
   }

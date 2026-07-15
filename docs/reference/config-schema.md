@@ -1,6 +1,6 @@
 # Configuration Schema Reference
 
-All `cursorDrive.*` settings. Source: `package.json` contributes.configuration. A future `src/config.ts` will provide typed `readConfig()`.
+All `cursorDrive.*` settings. Source: `package.json` contributes.configuration. Typed loader: `src/config.ts` (`readConfig()` with zod).
 
 ---
 
@@ -8,10 +8,10 @@ All `cursorDrive.*` settings. Source: `package.json` contributes.configuration. 
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `cursorDrive.defaultSubMode` | `"plan" \| "agent" \| "ask" \| "direct"` | `"agent"` | Sub-mode applied when Drive activates |
+| `cursorDrive.defaultSubMode` | `"plan" \| "agent" \| "ask" \| "debug"` | `"agent"` | Sub-mode applied when Drive activates |
 | `cursorDrive.mcp.port` | number (1024–65535) | `7891` | Port for the Drive MCP server |
 | `cursorDrive.mcp.enableApps` | boolean | `true` | Enable MCP Apps: `agent_screen_*` tools return `_meta.ui` for inline UI in chat (Cursor 2.6+). When false, tools return text only. |
-| `cursorDrive.wakeWord` | string | `"hey drive"` | Voice phrase that activates Drive |
+| `cursorDrive.wakeWord` | string | `"drive mode"` | Voice phrase that activates Drive |
 | `cursorDrive.submitWord` | string | `"send it"` | Voice phrase that confirms and submits the prompt |
 
 ---

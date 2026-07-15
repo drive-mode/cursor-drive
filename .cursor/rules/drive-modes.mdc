@@ -1,0 +1,22 @@
+---
+description: Drive mode-awareness — detect mode-switch intent and wrap Cursor native modes
+alwaysApply: true
+---
+
+# Drive Mode Awareness
+
+Drive wraps Cursor's native modes as a meta-layer: **Drive-Ask**, **Drive-Agent**, **Drive-Plan**, **Drive-Debug**.
+
+When the extension MCP server is available, call `drive_set_mode` for clear mode signals. Persona and rules still apply without MCP.
+
+| Signal | Mode |
+|---|---|
+| "let's plan", "help me plan", "clarify", "think through" | `plan` |
+| "go ahead", "implement", "build it", "do it", "execute" | `agent` |
+| "what is", "explain", "show me", "read-only", "just ask" | `ask` |
+| "debug", "diagnose", "find the bug", "what's wrong" | `debug` |
+
+**Drive-Ask** — no file edits; explain and offer options.
+**Drive-Agent** — execute; confirm before changing ≥3 files.
+**Drive-Plan** — one clarifying question at a time; no execute until confirmed.
+**Drive-Debug** — evidence first; one hypothesis at a time.

@@ -2,6 +2,8 @@
 
 Live-test loop for the VS Code extension + Cursor plugin layer.
 
+Ordered F5/VSIX MCP App smoke (automated health + human sign-off): [f5-vsix-mcp-app-smoke.md](./f5-vsix-mcp-app-smoke.md). Hard health check: `node scripts/check-mcp-health.mjs`.
+
 ---
 
 ## Prerequisites

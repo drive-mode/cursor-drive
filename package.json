@@ -7,7 +7,8 @@
   },
   "displayName": "Cursor Drive",
   "description": "Your AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen. Integrates via Cursor Plugin + MCP server.",
-  "version": "0.3.1",
+  "version": "0.4.0",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -454,8 +455,21 @@
         },
         "cursorDrive.modeSwitching.allowedModes": {
           "type": "array",
-          "items": { "type": "string", "enum": ["plan", "agent", "ask", "debug"] },
-          "default": ["plan", "agent", "ask", "debug"],
+          "items": {
+            "type": "string",
+            "enum": [
+              "plan",
+              "agent",
+              "ask",
+              "debug"
+            ]
+          },
+          "default": [
+            "plan",
+            "agent",
+            "ask",
+            "debug"
+          ],
           "description": "Modes the user is allowed to switch to."
         },
         "cursorDrive.operators.autoInjectOpenFiles": {
@@ -495,6 +509,11 @@
           "default": false,
           "description": "Skip tangent agent confirmation flow; spawn and begin immediately."
         },
+        "cursorDrive.agents.subAgentApproval": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require confirmation before spawning a tangent/sub-agent operator."
+        },
         "cursorDrive.agents.delegateConfirmation": {
           "type": "boolean",
           "default": false,
@@ -519,19 +538,27 @@
         },
         "cursorDrive.approvalGates.blockPatterns": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Patterns that block actions when matched."
         },
         "cursorDrive.approvalGates.warnPatterns": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Patterns that trigger a warning when matched."
         },
         "cursorDrive.agents.permissions.default": {
           "type": "string",
-          "enum": ["readonly", "standard", "full"],
+          "enum": [
+            "readonly",
+            "standard",
+            "full"
+          ],
           "default": "standard",
           "description": "Default permission preset for agents."
         },
@@ -552,8 +579,12 @@
           "items": {
             "type": "object",
             "properties": {
-              "trigger": { "type": "string" },
-              "expansion": { "type": "string" }
+              "trigger": {
+                "type": "string"
+              },
+              "expansion": {
+                "type": "string"
+              }
             }
           },
           "default": [],
@@ -594,6 +625,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "jest",
+    "test:integration": "vscode-test",
     "dev-loop": "node sandbox/dev-loop.mjs",
     "dev-loop:serve": "node sandbox/dev-loop.mjs --serve-web",
     "reinstall": "node scripts/reinstall-extension.mjs",
@@ -628,7 +660,10 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/vscode": "^1.85.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
     "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.24.2",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.3.0"

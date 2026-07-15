@@ -1,0 +1,25 @@
+{
+  "session_id": "test-session",
+  "workflow_type": "plan-executor",
+  "workflow_confidence": 0.8,
+  "total_tokens": 95000,
+  "budget": 80000,
+  "budget_pct": 118.8,
+  "by_category": {
+    "system_prompt": { "tokens": 5000, "pct": 5.3, "items": 1 },
+    "loaded_files": { "tokens": 70000, "pct": 73.7, "items": 8 },
+    "tool_calls": { "tokens": 5000, "pct": 5.3, "items": 10 },
+    "tool_results": { "tokens": 10000, "pct": 10.5, "items": 10 },
+    "conversation": { "tokens": 5000, "pct": 5.3, "items": 5 }
+  },
+  "loaded_files": [
+    { "path": "README.md", "tokens": 2000, "load_level_detected": "full", "pct_of_total": 2.1, "flag": "ok" },
+    { "path": "AGENTS.md", "tokens": 1500, "load_level_detected": "full", "pct_of_total": 1.6, "flag": "ok" },
+    { "path": "package-lock.json", "tokens": 45000, "load_level_detected": "full", "pct_of_total": 47.4, "flag": "candidate_exclude" },
+    { "path": "src/main.ts", "tokens": 8000, "load_level_detected": "full", "pct_of_total": 8.4, "flag": "candidate_outline" },
+    { "path": "docs/design/foo.md", "tokens": 6000, "load_level_detected": "full", "pct_of_total": 6.3, "flag": "candidate_digest" }
+  ],
+  "recommendations": ["Over budget; consider /context optimize.", "Prior available for workflow: plan-executor", "Suggested action: /context optimize"],
+  "prior_available": true,
+  "prior_workflow": "plan-executor"
+}

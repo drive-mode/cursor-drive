@@ -65,8 +65,8 @@ Voice/Text Input
 
 - Unit tests live in `tests/` and use Jest + `ts-jest`.
 - VSCode APIs are mocked in `tests/__mocks__/vscode.ts`.
-- Integration tests (`.vscode-test.mjs`) run in a real Extension Development Host via `xvfb` in CI.
-- CI runs on push to `master`/`develop` and PRs: compile → unit test → integration test → package VSIX.
+- Integration tests (`.vscode-test.mjs` + `src/test/extension.test.ts`) run in a real Extension Development Host via `npm run test:integration` (Linux CI uses `xvfb-run`).
+- CI on push to `master`/`develop` and PRs: compile → unit test → Extension Host integration → package VSIX.
 
 ## Branch & Merge Strategy
 

@@ -1,12 +1,13 @@
 # ADR-0017: MCP Apps Adoption Strategy
 
 ## Status
-Proposed
+Accepted (MCP App UI shipped in 0.4.0; webview remains primary when VSIX is installed)
 
 ## Metadata
 - Date: 2026-02-24
+- Updated: 2026-07-11
 - Deciders: Cursor Drive maintainers
-- Related: ADR-0003 (MCP Bridge Pattern)
+- Related: ADR-0003 (MCP Bridge Pattern), ADR-0019 (Plugin / Extension SKU split)
 
 ## Context
 

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "python .cursor/hooks/drive-preprocessor.py beforeSubmitPrompt"
+      },
+      {
+        "command": "python .cursor/hooks/plan-runner.py beforeSubmitPrompt"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "python .cursor/hooks/plan-save-to-workspace.py"
+      },
+      {
+        "command": "python .cursor/hooks/plan-runner.py sessionStart"
+      }
+    ],
+    "stop": [
+      {
+        "command": "python .cursor/hooks/plan-runner.py stop"
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "python .cursor/hooks/plan-runner.py subagentStop"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "node .cursor/hooks/pre-tool-use.js"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "node .cursor/hooks/post-tool-use.js"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "node .cursor/hooks/after-file-edit.js"
+      }
+    ]
+  }
+}

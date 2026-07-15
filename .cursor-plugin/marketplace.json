@@ -10,7 +10,7 @@
         {
             "name": "cursor-drive",
             "source": ".cursor-plugin",
-            "description": "AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen."
+            "description": "AI pair-programming driver for Cursor. Marketplace plugin SKU; optional VSIX for Agent Screen + MCP."
         }
     ]
 }

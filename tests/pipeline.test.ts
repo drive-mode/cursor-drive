@@ -347,4 +347,47 @@ describe("runPipeline", () => {
       expect(mockShowWarningMessage).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("slash command routing", () => {
+    it("/plan routes to plan mode", async () => {
+      const ctx: DriveContext = {
+        driveActive: true,
+        sessionMemory: mockSessionMemory(""),
+      };
+      const result = await runPipeline("/plan clarify auth boundaries", ctx);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.route.mode).toBe("plan");
+        expect(result.route.reason).toMatch(/\/plan/i);
+        expect(result.prompt).toContain("auth");
+      }
+    });
+
+    it("/ask routes to ask mode", async () => {
+      const ctx: DriveContext = {
+        driveActive: true,
+        sessionMemory: mockSessionMemory(""),
+      };
+      const result = await runPipeline("/ask what does this module do", ctx);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.route.mode).toBe("ask");
+      }
+    });
+
+    it("/switch uses operator registry", async () => {
+      const switchTo = jest.fn().mockReturnValue({ id: "1", name: "Beta" });
+      const ctx: DriveContext = {
+        driveActive: true,
+        sessionMemory: mockSessionMemory(""),
+        operatorRegistry: { switchTo } as unknown as DriveContext["operatorRegistry"],
+      };
+      const result = await runPipeline("/switch Beta", ctx);
+      expect(result.ok).toBe(true);
+      expect(switchTo).toHaveBeenCalledWith("Beta");
+      if (result.ok) {
+        expect(result.tangentAck).toContain("Beta");
+      }
+    });
+  });
 });

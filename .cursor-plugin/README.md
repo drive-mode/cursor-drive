@@ -1,43 +1,51 @@
-# cursor-drive Cursor Plugin
+# Cursor Drive (plugin)
 
-This directory contains the distributable Cursor plugin manifest for cursor-drive.
+AI pair-programming **persona and operator skills** for Cursor. Install from the marketplace — no extension required for core behavior.
 
-## Structure
+## Install
 
-The Cursor plugin format requires all components (skills, rules, commands, hooks, agents) to live under the plugin root with relative paths (no `..`). The canonical source for these components is `.cursor/` in the project root.
+1. Install **cursor-drive** from the Cursor plugin marketplace.
+2. Open Agent chat and work as usual — Drive rules and the `drive-persona` skill apply.
+3. Optional slash skills: `/tangent`, `/switch`, `/merge`.
 
-For local development, `.cursor/` is live and used directly by Cursor. This `.cursor-plugin/` directory is for marketplace distribution.
-
-## Component status
-
-| Component | Source | Plugin path | Status |
-|-----------|--------|-------------|--------|
-| agents | `.cursor/agents/` | `agents/` | Synced |
-| skills | `.cursor/skills/` | `skills/` | Needs copy |
-| rules | `.cursor/rules/` | `rules/` | Needs copy |
-| commands | `.cursor/commands/` | `commands/` | Needs copy |
-| hooks | `.cursor/hooks/` + `.cursor/hooks.json` | `hooks/` | Needs copy |
-
-## Agents (synced)
-
-The following agents are already in `agents/` (copied from `.cursor/agents/`):
-
-- `plan-orchestrator.md` — multi-phase plan execution orchestrator
-- `verifier.md` — skeptical validator for completed work
-- `plan-governor.md` — plan sync, dep audit, gate error reporting
-
-**Keep these in sync** with `.cursor/agents/` when updated.
-
-## Distribution setup
-
-To prepare a full distributable plugin, run from the repo root:
+### Local install (dev)
 
 ```bash
 npm run build:plugin
+# Copy or link this directory to:
+#   ~/.cursor/plugins/local/cursor-drive
 ```
 
-This copies agents, commands, rules, skills, and hooks from `.cursor/` to `.cursor-plugin/`, filters hooks to user-facing (drive-preprocessor only), adds `.mcp.json` and `assets/logo.svg`, and removes `__pycache__`. Run before marketplace submission and commit the result.
+On Windows: `%USERPROFILE%\.cursor\plugins\local\cursor-drive`.
 
-## Note on split components
+## What works offline (no VSIX)
 
-Some components in `.cursor/` are development-workflow tools (plan-*, doc-*, dep-auditor) rather than user-facing features. When submitting to the marketplace, consider filtering to user-facing components only (drive-persona skill, drive-modes/drive-concise rules, verifier agent).
+- Persona + policy / mode / routing rules
+- `drive-preprocessor` hook (filler / mode / tangent hints)
+- Commands and skills as chat guidance
+
+## Full UI (optional VSIX)
+
+Agent Screen, TTS, status bar, and the live MCP server (`127.0.0.1:7891`) ship in the **VSIX companion** from this repo (`vsce package` / CI artifact). After installing the VSIX:
+
+1. Toggle Drive mode.
+2. Confirm MCP in **Output → Drive** (port may fall back from 7891).
+3. Keep `cursorDrive.mcp.enableApps` enabled for inline Agent Screen in chat (Cursor 2.6+).
+
+This plugin intentionally **does not** ship a required `.mcp.json`, so install never fails when the extension is absent.
+
+## Components (marketplace allowlist)
+
+| Kind | Entries |
+|------|---------|
+| Skills | `drive-persona`, `tangent`, `switch`, `merge`, `drive-modes`, `drive-concise` |
+| Rules | `policy-pack`, `operator-hierarchy`, `tiered-model-routing`, `drive-modes` |
+| Agents | `drive-operator`, `drive-reviewer`, `verifier` |
+| Commands | `tangent`, `switch`, `merge` |
+| Hooks | `drive-preprocessor` only |
+
+Rebuild from repo root: `npm run build:plugin` (fails if allowlisted paths are missing).
+
+## Advanced
+
+Architecture and ADRs live in the repository `docs/` tree — not required for everyday use.

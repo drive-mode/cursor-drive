@@ -14,8 +14,11 @@ Usage: registered in hooks.json or .cursor/hooks/ for beforeSubmitPrompt event.
 """
 
 import json
+import os
 import re
 import sys
+import urllib.error
+import urllib.request
 from typing import Any, Dict, List
 
 # ── Filler patterns (mirrors extension/src/fillerCleaner.ts) ─────────────────
@@ -93,6 +96,28 @@ def emit(decision: str, message: str, details: Dict[str, Any] | None = None) -> 
     if details:
         payload["details"] = details
     print(json.dumps(payload), flush=True)
+
+
+def _try_pipeline_bridge(prompt: str, details: Dict[str, Any]) -> None:
+    """Fail-soft POST to Drive MCP /pipeline. Attaches result or agent hint."""
+    base = os.environ.get("DRIVE_MCP_URL", "http://127.0.0.1:7891").rstrip("/")
+    url = f"{base}/pipeline"
+    body = json.dumps({"prompt": prompt}).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=1.0) as resp:
+            raw = resp.read().decode("utf-8")
+            details["drive_pipeline_result"] = json.loads(raw)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError):
+        details["drive_pipeline_hint"] = (
+            "Drive MCP /pipeline unreachable. "
+            "When Drive is active, call drive_run_pipeline with the user prompt."
+        )
 
 
 def main() -> None:
@@ -175,6 +200,8 @@ def main() -> None:
         details["drive_hint"] = details.get("drive_hint", "") + (
             " Submit word detected — proceeding immediately."
         )
+
+    _try_pipeline_bridge(prompt, details)
 
     if details:
         emit("allow", "drive preprocessor: context added", details)

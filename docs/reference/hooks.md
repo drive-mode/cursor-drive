@@ -1,6 +1,6 @@
 # Cursor Hooks Reference
 
-Drive uses Cursor's `beforeSubmitPrompt` hook as the primary pipeline entry when Drive is active. This document describes the hook contract, capabilities, and the boundary between hooks and the extension.
+The `beforeSubmitPrompt` hook adds context and an optional fail-soft HTTP bridge to `POST /pipeline`. It is not the TypeScript `runPipeline` itself. Agents should call `drive_run_pipeline` when Drive is active. See [pipeline-submit-contract.md](./pipeline-submit-contract.md).
 
 ## Hook Contract
 
@@ -78,8 +78,8 @@ The `drive-preprocessor.py` hook currently **adds context only** — it does not
 
 ### Handoff
 
-- **Current**: Python hook adds context (cleaned prompt preview, mode hints, tangent hints). The TypeScript pipeline (`runPipeline`) runs in the extension when invoked (e.g. via MCP tool `drive_run_pipeline` or future HTTP `/pipeline` endpoint for hook→extension).
-- **Future**: Hook can call `http://127.0.0.1:<mcpPort>/pipeline` with `{ prompt, driveActive }` to run the full TypeScript pipeline and receive `{ prompt, route, model }` for emission. This keeps prompt transforms in one place (TypeScript) while the hook remains the interception point.
+- **Current**: Python hook adds context (cleaned prompt preview, mode hints, tangent hints). It may POST `{ prompt }` to `DRIVE_MCP_URL` or `http://127.0.0.1:7891/pipeline` with a ~1s fail-soft timeout, attaching `drive_pipeline_result` or `drive_pipeline_hint`.
+- **Authoritative TS entry**: MCP tool `drive_run_pipeline` or HTTP `POST /pipeline`. Both call `runPipeline` in the extension.
 
 ## References
 

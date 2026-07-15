@@ -1,8 +1,0 @@
----
-description: Check architecture before major feature work
-globs: ['src/**/*.ts', 'src/**/*.js']
----
-
-# Architecture Before Coding
-
-Major features: update architecture docs and ADRs first. Map tasks to architecture + plan. See `docs/architecture/README.md`.

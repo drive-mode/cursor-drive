@@ -355,6 +355,22 @@ export class DriveMcpServer {
           total_count,
           current_todo
         );
+        if (enableApps()) {
+          return {
+            content: [{
+              type: "text" as const,
+              text: JSON.stringify({
+                kind: "plan" as const,
+                plan_id,
+                plan_name,
+                completed_count,
+                total_count,
+                current_todo,
+              }),
+            }],
+            _meta: { ui: { resourceUri: AGENT_SCREEN_APP_RESOURCE_URI } },
+          };
+        }
         return { content: [{ type: "text" as const, text: "ok" }] };
       }
     );
@@ -365,6 +381,12 @@ export class DriveMcpServer {
       {},
       async () => {
         AgentScreenPanel.getInstance()?.postEvent({ type: "clear" });
+        if (enableApps()) {
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ kind: "clear" as const }) }],
+            _meta: { ui: { resourceUri: AGENT_SCREEN_APP_RESOURCE_URI } },
+          };
+        }
         return { content: [{ type: "text" as const, text: "Agent Screen cleared" }] };
       }
     );
@@ -1459,23 +1481,31 @@ export class DriveMcpServer {
           // Fallback to esm.sh if bundle missing (e.g. dev without prepublish)
         }
       }
-      const { registerAppResource, RESOURCE_MIME_TYPE } = await import("@modelcontextprotocol/ext-apps/server");
-      // Cast needed: SDK CJS vs ext-apps ESM type resolution mismatch on registerResource overloads
-      registerAppResource(
-        mcpServer as unknown as Parameters<typeof registerAppResource>[0],
+      let mod: { registerAppResource: Function; RESOURCE_MIME_TYPE: string };
+      try {
+        mod = require("@modelcontextprotocol/ext-apps/server");
+      } catch {
+        mod = await import("@modelcontextprotocol/ext-apps/server");
+      }
+      mod.registerAppResource(
+        mcpServer,
         "Agent Screen",
         AGENT_SCREEN_APP_RESOURCE_URI,
-        { mimeType: RESOURCE_MIME_TYPE },
+        { mimeType: mod.RESOURCE_MIME_TYPE },
         async () => ({
           contents: [{
             uri: AGENT_SCREEN_APP_RESOURCE_URI,
-            mimeType: RESOURCE_MIME_TYPE,
+            mimeType: mod.RESOURCE_MIME_TYPE,
             text: buildAgentScreenAppHtml(bundle),
           }],
         })
       );
     } catch (err) {
-      // ESM dynamic import can fail in CJS test runners (e.g. Jest without experimental-vm-modules)
+      const inTest =
+        process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === "test";
+      if (inTest) {
+        throw err;
+      }
       console.warn("[Drive MCP] MCP App resource registration skipped:", err instanceof Error ? err.message : String(err));
     }
   }
@@ -1485,7 +1515,7 @@ export class DriveMcpServer {
     return {
       name: "Cursor Drive",
       description: "AI pair-programming driver for Cursor. Voice-first, multi-agent, Agent Screen. Integrates via MCP tools and A2A Task endpoints.",
-      version: "0.3.0",
+      version: "0.4.0",
       supportedInterfaces: [
         {
           url: `${baseUrl}/mcp`,

@@ -1,21 +1,21 @@
 {
   "name": "cursor-drive",
   "displayName": "Cursor Drive",
-  "version": "0.3.1",
-  "description": "AI pair-programming driver for Cursor. Voice-first, multi-agent, share-screen. Senior engineer on call — faster.",
+  "version": "0.4.0",
+  "description": "AI pair-programming driver for Cursor. Persona, multi-operator skills, and hooks — optional VSIX companion for Agent Screen, TTS, and live MCP.",
   "author": {
-    "name": "Drive Mode"
+    "name": "Drive Mode",
+    "email": "harrison@quant-h2.com"
   },
   "homepage": "https://github.com/drive-mode/cursor-drive#readme",
   "repository": "https://github.com/drive-mode/cursor-drive",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "keywords": [
     "drive",
     "pair-programming",
-    "voice",
     "multi-agent",
-    "tts",
-    "share-screen"
+    "persona",
+    "cursor-plugin"
   ],
   "logo": "assets/logo.svg",
   "agents": "agents/",

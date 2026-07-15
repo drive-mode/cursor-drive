@@ -53,7 +53,9 @@ auth.*
 
 # Local / misc (sync scripts in .local/ — never tracked)
 .local/
-scripts/
+# Ignore untracked scripts; force-add or un-ignore exceptions to ship new levers
+scripts/*
+!scripts/check-mcp-health.mjs
 .logs
 
 # Commit-rewrite artifact (legacy script leftover)

@@ -15,12 +15,25 @@ describe("agentScreenApp", () => {
       expect(html).toContain("</html>");
     });
 
-    it("contains activity-feed and panel elements for MCP App", () => {
+    it("contains Live / Activity / Files / Decisions / Sync / Artifacts panels", () => {
       const html = buildAgentScreenAppHtml();
+      expect(html).toContain('data-testid="panel-live"');
+      expect(html).toContain('data-testid="panel-activity"');
+      expect(html).toContain('data-testid="panel-files"');
+      expect(html).toContain('data-testid="panel-decisions"');
+      expect(html).toContain('data-testid="panel-sync"');
+      expect(html).toContain('data-testid="panel-artifacts"');
+      expect(html).toContain('data-testid="tab-sync"');
+      expect(html).toContain('data-testid="tab-artifacts"');
       expect(html).toContain('id="activity-feed"');
-      expect(html).toContain('id="panel-activity"');
-      expect(html).toContain('id="panel-files"');
-      expect(html).toContain('id="panel-decisions"');
+      expect(html).toContain('id="live-feed"');
+      expect(html).toContain('id="sync-empty"');
+      expect(html).toContain('id="artifacts-empty"');
+      expect(html).toContain('data-testid="plan-section"');
+      expect(html).toContain('data-testid="operator-badge"');
+      expect(html).toContain("__driveScreen");
+      expect(html).toContain("renderSyncSnapshot");
+      expect(html).toContain("cloudAgentArtifact");
     });
 
     it("does not reference acquireVsCodeApi", () => {
@@ -28,16 +41,16 @@ describe("agentScreenApp", () => {
       expect(html).not.toContain("acquireVsCodeApi");
     });
 
-    it("includes data-testid for panel-activity", () => {
-      const html = buildAgentScreenAppHtml();
-      expect(html).toContain('data-testid="panel-activity"');
-    });
-
     it("uses blob URL when bundle provided (CSP-compliant, no external script)", () => {
       const html = buildAgentScreenAppHtml("/* minimal bundle */");
       expect(html).toContain("createObjectURL");
       expect(html).toContain("Blob");
       expect(html).not.toContain("esm.sh");
+    });
+
+    it("reports App version 0.4.0", () => {
+      const html = buildAgentScreenAppHtml();
+      expect(html).toContain("version: '0.4.0'");
     });
   });
 });

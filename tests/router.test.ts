@@ -12,6 +12,14 @@ describe("route — slash command overrides", () => {
   it("returns agent for /drive command", () => {
     expect(route({ prompt: "anything", command: "drive" }).mode).toBe("agent");
   });
+
+  it("returns ask for /ask command", () => {
+    expect(route({ prompt: "anything", command: "ask" }).mode).toBe("ask");
+  });
+
+  it("returns debug for /debug command", () => {
+    expect(route({ prompt: "anything", command: "debug" }).mode).toBe("debug");
+  });
 });
 
 describe("route — drive sub-mode hints", () => {

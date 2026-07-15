@@ -235,6 +235,79 @@ export async function runPipeline(
     void ctx.persistentMemory.appendToDaily(text, "user");
   }
 
+  // Slash commands: /plan /run /drive /ask /debug /tangent /switch /merge
+  let slashCommand: string | undefined;
+  const slashMatch = text.match(/^\/(plan|run|drive|ask|debug|tangent|switch|merge)(?:\s+([\s\S]*))?$/i);
+  if (slashMatch) {
+    slashCommand = slashMatch[1].toLowerCase();
+    text = (slashMatch[2] ?? "").trim();
+
+    if (slashCommand === "switch" && ctx.operatorRegistry) {
+      const target = text.trim();
+      if (!target) {
+        return {
+          ok: true,
+          prompt: "",
+          route: { mode: "ask", reason: "/switch missing operator name" },
+          model: "execution",
+          tangentAck: "Usage: /switch <operator name>",
+        };
+      }
+      const op = ctx.operatorRegistry.switchTo(target);
+      if (!op) {
+        return {
+          ok: true,
+          prompt: "",
+          route: { mode: "ask", reason: "/switch operator not found" },
+          model: "execution",
+          tangentAck: `No operator named "${target}"`,
+        };
+      }
+      AgentScreenPanel.getInstance()?.logActivity("Drive", `Switched to ${op.name}`);
+      pipelineStats.successCount++;
+      updateAvgLatency(Date.now() - startTime);
+      return {
+        ok: true,
+        prompt: "",
+        route: { mode: "agent", reason: "Slash /switch" },
+        model: "execution",
+        tangentAck: `Foreground: ${op.name}`,
+      };
+    }
+
+    if (slashCommand === "merge" && ctx.operatorRegistry) {
+      const mergeMatch = text.match(/^(.+?)\s+into\s+(.+)$/i);
+      if (!mergeMatch) {
+        return {
+          ok: true,
+          prompt: "",
+          route: { mode: "ask", reason: "/merge bad syntax" },
+          model: "execution",
+          tangentAck: "Usage: /merge <source> into <target>",
+        };
+      }
+      const ok = ctx.operatorRegistry.merge(mergeMatch[1].trim(), mergeMatch[2].trim());
+      pipelineStats.successCount++;
+      updateAvgLatency(Date.now() - startTime);
+      return {
+        ok: true,
+        prompt: "",
+        route: { mode: "agent", reason: "Slash /merge" },
+        model: "execution",
+        tangentAck: ok
+          ? `Merged ${mergeMatch[1].trim()} into ${mergeMatch[2].trim()}`
+          : "Merge failed — check operator names",
+      };
+    }
+
+    if (slashCommand === "tangent") {
+      // Reuse tangent keyword path below by rewriting to "<keyword> <task>"
+      const tangentKeyword = cfg.get<string>("agents.tangentKeyword", "tangent");
+      text = `${tangentKeyword} ${text}`.trim();
+      slashCommand = undefined;
+    }
+  }
+
   // pwm-06: Submit word — if ends with any submit word, strip and set skipOptimizer
   const submitWordRaw = cfg.get<string>("submitWord", "send it");
   const submitWords = submitWordRaw
@@ -374,6 +447,7 @@ export async function runPipeline(
   // Route
   const routeDecision = route({
     prompt: text,
+    command: slashCommand,
     driveSubMode: ctx.driveSubMode,
   });
 
